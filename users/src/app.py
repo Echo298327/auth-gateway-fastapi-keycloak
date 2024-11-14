@@ -1,6 +1,6 @@
+import manager
 import uvicorn
 from fastapi import FastAPI, Depends
-import manager
 from config import settings
 from schemas import CreateUser, UpdateUser, GetUser, DeleteUser
 from typing import Tuple, List, Any

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Extra
 from typing import Optional
 
 
@@ -10,7 +10,7 @@ class CreateUser(BaseModel):
     email: EmailStr
 
     class Config:
-        model_config = {'extra': 'forbid'}
+        extra = Extra.forbid
 
 
 class UpdateUser(BaseModel):
@@ -21,18 +21,18 @@ class UpdateUser(BaseModel):
     role_id: Optional[str] = None
 
     class Config:
-        model_config = {'extra': 'forbid'}
+        extra = Extra.forbid
 
 
 class DeleteUser(BaseModel):
     user_id: str
 
     class Config:
-        model_config = {'extra': 'forbid'}
+        extra = Extra.forbid
 
 
 class GetUser(BaseModel):
     user_id: str
 
     class Config:
-        model_config = {'extra': 'forbid'}
+        extra = Extra.forbid

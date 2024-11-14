@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
+from mongoengine import connect
 import os
 
 load_dotenv()
@@ -16,6 +17,8 @@ class Settings(BaseSettings):
     APP_EMAIL: str = os.getenv("APP_EMAIL", "email")
     APP_PASSWORD: str = os.getenv("APP_PASSWORD", "password")
 
+    def connect_db(self):
+        connect(host=self.MONGO_CONNECTION_STRING, db=self.DB_NAME)
+
 
 settings = Settings()
-c

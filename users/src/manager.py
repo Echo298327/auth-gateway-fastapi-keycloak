@@ -4,13 +4,13 @@ from mongoengine.errors import DoesNotExist, ValidationError
 try:
     from config import settings
     from password_gen import generate_password
-    from email import send_password_email
+    from email_handler import send_password_email
     from mongo_models import User
     from logger import init_logger
 except ImportError:
     from .config import settings
     from .password_gen import generate_password
-    from .email import send_password_email
+    from .email_handler import send_password_email
     from .mongo_models import User
     from .logger import init_logger
 
