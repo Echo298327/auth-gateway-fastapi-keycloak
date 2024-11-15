@@ -9,6 +9,9 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
@@ -23,10 +26,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r users/requirements.txt
         pip install pytest pytest-asyncio
-
-    - name: Set PYTHONPATH
-      run: |
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
 
     - name: Run Users Unit Tests
       run: |
