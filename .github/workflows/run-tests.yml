@@ -1,4 +1,4 @@
-name: Run Unit Tests
+name: Run Unit Tests for Users Microservice
 
 on:
   pull_request:
@@ -18,12 +18,12 @@ jobs:
       with:
         python-version: '3.12'
 
-    - name: Install dependencies
+    - name: Install Users dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r users/requirements.txt
         pip install pytest pytest-asyncio
 
-    - name: Run Unit Tests
+    - name: Run Users Unit Tests
       run: |
-        pytest users/test/test_manager.py
+        pytest users/test
