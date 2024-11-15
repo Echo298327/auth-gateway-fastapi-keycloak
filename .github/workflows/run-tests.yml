@@ -24,6 +24,10 @@ jobs:
         pip install -r users/requirements.txt
         pip install pytest pytest-asyncio
 
+    - name: Set PYTHONPATH
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+
     - name: Run Users Unit Tests
       run: |
         pytest users/test
