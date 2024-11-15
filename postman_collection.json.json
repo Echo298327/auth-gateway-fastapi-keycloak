@@ -1,0 +1,155 @@
+{
+	"info": {
+		"_postman_id": "1c8a5aa2-bfc3-4942-8bdb-b6aaa453fbbf",
+		"name": "auth-gateway-fastapi-keycloak-API",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25483342"
+	},
+	"item": [
+		{
+			"name": "users",
+			"item": [
+				{
+					"name": "create",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_name\": \"{{$randomUserName}}\",\r\n    \"first_name\": \"{{$randomFirstName}}\",\r\n    \"last_name\": \"{{$randomLastName}}\",\r\n    \"role_id\": \"{{$randomInt}}\",\r\n    \"email\": \"{{$randomEmail}}\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GatewayApp}}/api/user/create",
+							"host": [
+								"{{GatewayApp}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GatewayApp}}:8081/update",
+							"host": [
+								"{{GatewayApp}}"
+							],
+							"port": "8081",
+							"path": [
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GatewayApp}}/api/user/delete",
+							"host": [
+								"{{GatewayApp}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"delete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\": \"673705219be7cf97902405e9\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GatewayApp}}/api/user/get",
+							"host": [
+								"{{GatewayApp}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"get"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "GatewayApp",
+			"value": "http://127.0.0.1:8080",
+			"type": "string"
+		}
+	]
+}
