@@ -49,7 +49,7 @@ Make sure you have the following installed:
 
 4. Access the services:
 
-   - **Gateway App:** [http://localhost:8000](http://localhost:8000)
+   - **Gateway App:** [http://localhost:8080](http://localhost:8080)
    - **Keycloak Admin Console:** [http://localhost:9000](http://localhost:9000)
 
 ---
@@ -119,7 +119,7 @@ PROJECT_NAME=FastAPIStarter
 
 # Gateway
 GATEWAY_HOST=localhost
-GATEWAY_PORT=8000
+GATEWAY_PORT=8080
 
 # User Manager
 USER_MANAGER_HOST=localhost
