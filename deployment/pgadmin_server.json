@@ -1,0 +1,15 @@
+{
+    "Servers": {
+        "1": {
+            "Name": "Keycloak DB",
+            "Group": "Servers",
+            "Host": "postgresP",
+            "Port": 5432,
+            "MaintenanceDB": "keycloakDB",
+            "Username": "admin",
+            "SSLMode": "prefer",
+            "Timeout": 10,
+            "UseSSHTunnel": 0
+        }
+    }
+}
