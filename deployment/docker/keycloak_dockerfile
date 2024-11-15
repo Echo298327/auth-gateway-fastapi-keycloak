@@ -1,0 +1,4 @@
+FROM quay.io/keycloak/keycloak:latest
+
+# Copy the custom configuration file to the container
+COPY keycloak.conf /opt/keycloak/conf
