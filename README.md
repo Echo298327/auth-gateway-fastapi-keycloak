@@ -67,20 +67,23 @@ Make sure you have the following installed:
 ## Project Structure
 
 ```plaintext
-.
 │   .env
 │   docker-compose.yml
 │   LICENSE
-│   README.md
 │   postman_collection.json
+│   README.md
 │
 ├───.github
 │   └───workflows
 │           run-tests.yml
 │
 ├───deployment
+│   │   pgadmin_server.json
+│   │
 │   └───docker
 │           gateway_dockerfile
+│           keycloak.conf
+│           keycloak_dockerfile
 │           users_dockerfile
 │
 ├───gateway
@@ -117,6 +120,7 @@ Make sure you have the following installed:
         │   test_manager.py
         │   __init__.py
 ```
+
 
 ---
 
