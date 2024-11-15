@@ -50,7 +50,7 @@ Make sure you have the following installed:
 4. Access the services:
 
    - **Gateway App:** [http://localhost:8000](http://localhost:8000)
-   - **Keycloak Admin Console:** [http://localhost:8080](http://localhost:8080)
+   - **Keycloak Admin Console:** [http://localhost:9000](http://localhost:9000)
 
 ---
 
@@ -126,7 +126,7 @@ USER_MANAGER_HOST=localhost
 USER_MANAGER_PORT=8001
 
 # Keycloak
-KEYCLOAK_URL=http://localhost:8080
+KEYCLOAK_URL=http://localhost:9000
 REALM=your-realm-name
 CLIENT_ID=your-client-id
 CLIENT_SECRET=your-client-secret
@@ -145,7 +145,7 @@ CLIENT_SECRET=your-client-secret
 
 ### Keycloak Configuration
 
-1. Access the Keycloak Admin Console at [http://localhost:8080](http://localhost:8080).
+1. Access the Keycloak Admin Console at [http://localhost:9000](http://localhost:9000).
 2. Create a realm, client, and user roles as needed.
 3. Update the `.env` file with the new configuration.
 
