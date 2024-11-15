@@ -6,7 +6,7 @@ from schemas import CreateUser, UpdateUser, GetUser, DeleteUser
 from typing import Tuple, List, Any
 from request_handler import parse_json_request, response
 
-app = FastAPI(title="user.manager")
+app = FastAPI(title="User App")
 
 
 @app.on_event("startup")

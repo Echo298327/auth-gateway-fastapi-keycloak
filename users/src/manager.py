@@ -70,6 +70,9 @@ async def update_user(data):
         user_name = user_data.get("user_name")
         del user_data["user_id"]
 
+        if all(value is None for value in user_data.values()):
+            return {"status": "failed", "message": "No data to update"}
+
         user = User.objects(id=user_id).first()
         if not user:
             logger.error(f"User not found: {user_id}")
