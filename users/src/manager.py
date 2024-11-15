@@ -55,7 +55,8 @@ async def create_user(data):
             logger.error("Failed to verify the saved user.")
             return {"status": "failed", "message": "Failed to save user."}
 
-        send_password_email(user.first_name, user.email, user.user_name, password)
+        # send_password_email(user.first_name, user.email, user.user_name, password)
+        logger.info(f"User created: {user.id}")
         return {"status": "success", "user_id": str(user.id), "message": "User created successfully"}
 
     except Exception as e:

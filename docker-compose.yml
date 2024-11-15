@@ -1,0 +1,29 @@
+services:
+  gateway:
+    container_name: gateway
+    build:
+      context: ./gateway
+      dockerfile: ../deployment/docker/gateway_dockerfile
+
+    ports:
+      - "8080:8080"
+    environment:
+      - GATEWAY_PORT=8080
+      - GATEWAY_HOST=0.0.0.0
+      - USERS_URL=http://users:8081
+
+  users:
+    container_name: users
+    build:
+      context: ./users
+      dockerfile: ../deployment/docker/users_dockerfile
+
+    ports:
+      - "8081:8081"
+    environment:
+      - CONNECTION_STRING=mongodb://host.docker.internal:27017
+      - DB_NAME=templateApp
+      - USERS_PORT=8081
+      - USERS_HOST=0.0.0.0
+      - APP_EMAIL=app
+      - APP_PASSWORD=app

@@ -26,7 +26,7 @@ async def process_request(
             "message": "Service not found",
             "status_code": status.HTTP_404_NOT_FOUND
         }
-
+    logger.info(f"Forwarding request to: {url}")
     return await forward_request_and_process_response(url, request.method, content_type, request_data)
 
 
