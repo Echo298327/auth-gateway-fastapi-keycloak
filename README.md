@@ -58,24 +58,53 @@ Make sure you have the following installed:
 
 ```plaintext
 .
-├── gateway
-│   ├── app
-│   │   ├── main.py           # Entry point for Gateway
-│   │   ├── routers           # Route definitions
-│   │   └── dependencies.py   # Dependency injections
-│   └── Dockerfile
-├── user_manager
-│   ├── app
-│   │   ├── main.py           # Entry point for User Manager
-│   │   ├── models.py         # User models
-│   │   └── routes.py         # Authentication routes
-│   └── Dockerfile
-├── keycloak
-│   └── docker-compose.yml    # Keycloak service configuration
-├── docker-compose.yml         # Main Docker Compose file
-├── .env.example               # Example environment variables
-├── README.md                  # Project documentation
-└── .gitignore
+│   .env
+│   docker-compose.yml
+│   LICENSE
+│   README.md
+│
+├───.github
+│   └───workflows
+│           run-tests.yml
+│
+├───deployment
+│   └───docker
+│           gateway_dockerfile
+│           users_dockerfile
+│
+├───gateway
+│   │   requirements.txt
+│   │
+│   ├───src
+│   │   │   app.py
+│   │   │   config.py
+│   │   │   logger.py
+│   │   │   manager.py
+│   │   │   requests.py
+│   │   │   request_handler.py
+│   │   │   __init__.py
+│   │
+│   └───test
+│           __init__.py
+│
+└───users
+    │   requirements.txt
+    │
+    ├───src
+    │   │   app.py
+    │   │   config.py
+    │   │   email_handler.py
+    │   │   logger.py
+    │   │   manager.py
+    │   │   mongo_models.py
+    │   │   password_gen.py
+    │   │   request_handler.py
+    │   │   schemas.py
+    │   │   __init__.py
+    │
+    └───test
+        │   test_manager.py
+        │   __init__.py
 ```
 
 ---
