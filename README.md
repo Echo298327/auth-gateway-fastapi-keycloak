@@ -13,6 +13,12 @@ This repository provides a starter template for building scalable microservices 
 
 ---
 
+## Database
+This project uses MongoDB as the primary database for storing information. 
+The user microservice (users) connects to a MongoDB instance, which is configurable via environment variables.
+
+Ensure you have MongoDB installed and running locally, or use a cloud-hosted MongoDB service like [MongoDB Atlas](https://www.mongodb.com/products/platform/atlas-database).
+
 ## Postman Collection
 
 You can use the Postman collection provided to test the API endpoints easily. Import the `postman_collection.json` file into Postman to get started.
@@ -119,16 +125,23 @@ Make sure you have the following installed:
 Ensure your `.env` file includes the following variables:
 
 ```plaintext
-# General
-PROJECT_NAME=FastAPIStarter
+# MongoDB
+CONNECTION_STRING=mongodb://localhost:27017
+DB_NAME=templateApp
+
+# APP Email
+APP_EMAIL=
+APP_PASSWORD=
 
 # Gateway
-GATEWAY_HOST=localhost
 GATEWAY_PORT=8080
+GATEWAY_HOST=localhost
+GATEWAY_URL=http://${GATEWAY_HOST}:${GATEWAY_PORT}
 
-# User Manager
-USER_MANAGER_HOST=localhost
-USER_MANAGER_PORT=8001
+# Users
+USERS_PORT=8081
+USERS_HOST=localhost
+USERS_URL=http://${USERS_HOST}:${USERS_PORT}
 
 # Keycloak
 KEYCLOAK_URL=http://localhost:9000
