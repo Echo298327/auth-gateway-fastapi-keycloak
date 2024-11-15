@@ -14,6 +14,13 @@ class User(Document):
         if not self.keycloak_uid:
             raise ValidationError("keycloak_uid must be provided.")
 
+    meta = {
+        'collection': 'users'
+    }
+
+
+
+
 
 
 
