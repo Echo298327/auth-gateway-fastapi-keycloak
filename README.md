@@ -13,6 +13,10 @@ This repository provides a starter template for building scalable microservices 
 
 ---
 
+## Postman Collection
+
+You can use the Postman collection provided to test the API endpoints easily. Import the `postman_collection.json` file into Postman to get started.
+
 ## Getting Started
 
 ### Prerequisites
@@ -54,7 +58,7 @@ Make sure you have the following installed:
 
 ---
 
-### Project Structure
+## Project Structure
 
 ```plaintext
 .
@@ -62,6 +66,7 @@ Make sure you have the following installed:
 │   docker-compose.yml
 │   LICENSE
 │   README.md
+│   postman_collection.json
 │
 ├───.github
 │   └───workflows
