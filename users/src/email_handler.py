@@ -25,7 +25,7 @@ def send_password_email(first_name, user_email, user_name, generated_password):
         <html>
         <body>
         <p>Hi {first_name},<br>
-        Welcome! Your new user was created with the following details:<br>
+        Welcome! Your new user was created with the following details: <br>
         Your user name is: <b>{user_name}</b><br>
         Your password is: <b>{generated_password}</b><br>
         Please change it upon your first login.<br>
