@@ -23,12 +23,19 @@ services:
     environment:
       - CONNECTION_STRING=mongodb://host.docker.internal:27017
       - DB_NAME=templateApp
+      - KEYCLOAK_CREDENTIALS=/app/keycloak-credentials.json
       - USERS_PORT=8081
       - USERS_HOST=0.0.0.0
       - APP_EMAIL=app
       - APP_PASSWORD=app
+    volumes:
+        - type: bind
+          source: ./keycloak-credentials.json
+          target: /app/keycloak-credentials.json
     networks:
       - app-network
+    depends_on:
+        - keycloak
 
   keycloak:
       container_name: keycloak

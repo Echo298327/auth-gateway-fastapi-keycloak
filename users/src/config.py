@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     # email settings
     APP_EMAIL: str = os.getenv("APP_EMAIL", "email")
     APP_PASSWORD: str = os.getenv("APP_PASSWORD", "password")
+    # keycloak settings
+    KEYCLOAK_CREDENTIALS: str = os.getenv("KEYCLOAK_CREDENTIALS", "keycloak-credentials.json")
 
     def connect_db(self):
         connect(host=self.MONGO_CONNECTION_STRING, db=self.DB_NAME)
