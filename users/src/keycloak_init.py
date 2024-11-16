@@ -136,6 +136,36 @@ async def create_client():
         return False
 
 
+async def enable_edit_username():
+    admin_token = await get_admin_token()
+    if not admin_token:
+        return False
+
+    url = f"{KEYCLOAK_URL}/admin/realms/{KEYCLOAK_REALM}"
+    headers = {
+        'Authorization': f'Bearer {admin_token}',
+        'Content-Type': 'application/json'
+    }
+
+    payload = {
+        "realm": KEYCLOAK_REALM,
+        "editUsernameAllowed": True  # Enable editing the username
+    }
+
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.put(url, headers=headers, json=payload) as response:
+                if response.status == 204:
+                    logger.info(f"Enabled edit username for realm '{KEYCLOAK_REALM}' successfully")
+                    return True
+                else:
+                    logger.error(f"Failed to enable edit username. Status: {response.status}, Response: {await response.text()}")
+                    return False
+    except aiohttp.ClientError as e:
+        logger.error(f"Connection error while enabling edit username: {e}")
+        return False
+
+
 async def initialize_keycloak_server(max_retries=30, retry_delay=5):
     # wait for Keycloak server to start
     for attempt in range(max_retries):
@@ -147,6 +177,10 @@ async def initialize_keycloak_server(max_retries=30, retry_delay=5):
             is_client_created = await create_client()
             if not is_client_created:
                 logger.error("Failed to create client")
+                return False
+            is_edit_username_enabled = await enable_edit_username()
+            if not is_edit_username_enabled:
+                logger.error("Failed to enable edit username")
                 return False
             return True
         logger.warning(f"Attempt {attempt + 1}/{max_retries} failed. Retrying in {retry_delay} seconds...")
