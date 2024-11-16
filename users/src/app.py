@@ -1,3 +1,5 @@
+import time
+
 import manager
 import uvicorn
 from fastapi import FastAPI, Depends
@@ -5,6 +7,7 @@ from config import settings
 from schemas import CreateUser, UpdateUser, GetUser, DeleteUser
 from typing import Tuple, List, Any
 from request_handler import parse_json_request, response
+from keycloak_init import initialize_keycloak_server
 
 app = FastAPI(title="User App")
 
@@ -12,6 +15,10 @@ app = FastAPI(title="User App")
 @app.on_event("startup")
 async def startup_event():
     settings.connect_db()
+    # wait a bit for the Keycloak server to start
+    is_initialized = await initialize_keycloak_server()
+    if not is_initialized:
+        raise Exception("Failed to initialize Keycloak server")
 
 
 async def handle_request(
