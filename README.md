@@ -19,9 +19,10 @@ The user microservice (users) connects to a MongoDB instance, which is configura
 
 Ensure you have MongoDB running locally, or use a cloud-hosted MongoDB service.
 
-## Postman Collection
-
-You can use the Postman collection provided to test the API endpoints easily. Import the `postman_collection.json` file into Postman to get started.
+## Documentation
+- [API Documentation](API.md)
+- [Postman Collection](postman_collection.json)
+<br><br>You can use the Postman collection provided to test the API endpoints easily. Import the `postman_collection.json` file into Postman to get started.
 
 ## Getting Started
 
