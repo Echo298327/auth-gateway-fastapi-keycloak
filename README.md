@@ -69,6 +69,7 @@ Make sure you have the following installed:
 │   .env
 │   LICENSE
 │   README.md
+|   SECURITY.md
 │   docker-compose.yml
 │   keycloak-credentials.json
 │   postman_collection.json
