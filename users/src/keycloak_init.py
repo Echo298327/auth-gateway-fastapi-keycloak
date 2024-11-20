@@ -42,7 +42,6 @@ async def get_admin_token():
         'grant_type': 'password',
         'client_id': 'admin-cli'
     }
-    logger.info(f"Sending request to {url}")
     try:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, data=payload) as response:
@@ -65,7 +64,6 @@ async def create_realm():
         return False
 
     url = f"{KEYCLOAK_URL}/admin/realms"
-    logger.info(f"Sending request to {url}")
     headers = {
         'Authorization': f'Bearer {admin_token}',
         'Content-Type': 'application/json'
@@ -98,7 +96,6 @@ async def create_client():
         return False
 
     url = f"{KEYCLOAK_URL}/admin/realms/{KEYCLOAK_REALM}/clients"
-    logger.info(f"Sending request to {url}")
     headers = {
         'Authorization': f'Bearer {admin_token}',
         'Content-Type': 'application/json'
