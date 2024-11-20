@@ -47,9 +47,12 @@ Make sure you have the following installed:
    cd repository-name
    ```
 
-2. __Optional__ Copy the `.env.example` file to `.env` and configure it if you plan to run the services locally<br> (without Docker Compose):
-   <br> __Note:__ The .env file is not required for Docker Compose. It is used for running the services locally without containers.
-   For Docker Compose, the environment variables are already handled within the docker-compose.yml file.
+2. **Optional:** Copy the `.env.example` file to `.env` and configure it if you plan to run the services locally (without using Docker Compose).  
+
+   **Note:**  
+   - The `.env` file is not required when running with Docker Compose. Environment variables for Docker Compose are already handled within the `docker-compose.yml` file.
+   - The `.env` file is only needed if you intend to run the services locally without containers.
+
 
 3. Start the services using Docker Compose:
 
