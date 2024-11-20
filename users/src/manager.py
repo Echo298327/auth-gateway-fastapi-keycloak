@@ -7,12 +7,14 @@ try:
     from email_handler import send_password_email
     from mongo_models import User
     from logger import init_logger
+    from keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 except ImportError:
     from .config import settings
     from .password_gen import generate_password
     from .email_handler import send_password_email
     from .mongo_models import User
     from .logger import init_logger
+    from .keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 
 
 logger = init_logger("user.manager")
@@ -30,15 +32,15 @@ async def create_user(data):
             return {"status": "failed", "message": "User name already exists"}
 
         password = generate_password()
-        # response = await add_user_to_keycloak(user_name, first_name, last_name, email, password)
-        # if response.get('status') != 'success':
-        #     logger.error(f"Failed to create user in Keycloak: {response.get('message')}")
-        #     return response
-        #
-        # if not response.get('keycloakUserId'):
-        #     logger.error("Failed to get keycloak user id")
-        #     return {"status": "failed", "message": "Failed to get keycloak user id"}
-        # keycloak_uid = response.get('keycloakUserId')
+        response = await add_user_to_keycloak(user_name, first_name, last_name, email, password)
+        if response.get('status') != 'success':
+            logger.error(f"Failed to create user in Keycloak: {response.get('message')}")
+            return response
+
+        if not response.get('keycloakUserId'):
+            logger.error("Failed to get keycloak user id")
+            return {"status": "failed", "message": "Failed to get keycloak user id"}
+        keycloak_uid = response.get('keycloakUserId')
 
         user = User(
             user_name=user_name,
@@ -46,7 +48,7 @@ async def create_user(data):
             last_name=last_name,
             role_id=user_data.get('role_id'),
             email=email,
-            keycloak_uid='keycloak_uid',
+            keycloak_uid=keycloak_uid,
             creation_date=time.strftime("%Y-%m-%d %H:%M:%S"),
         )
         user.save()
@@ -85,6 +87,14 @@ async def update_user(data):
 
         update_data = {key: value for key, value in user_data.items() if value is not None}
         User.objects(id=user.id).update(**update_data)
+
+        response = await update_user_in_keycloak(
+            user.keycloak_uid, user_name, user.first_name, user.last_name, user.email
+        )
+        if response.get('status') != 'success':
+            logger.error(f"Error from Keycloak: {str(response['message'])}")
+            return {'status': 'fail', 'message': str(response['message'])}
+
         logger.info(f"User updated: {user_id}")
         return {"status": "success", "message": "User updated successfully"}
 
@@ -106,10 +116,10 @@ async def delete_user(data):
             logger.error(f"User not found: {user_id}")
             return {"status": "failed", "message": "User not found"}
 
-        # keycloak_response = await delete_user_from_keycloak(user.keycloak_uid)
-        # if keycloak_response.get('status') != 'success':
-        #     logger.error(f"Error from Keycloak: {str(keycloak_response['message'])}")
-        #     return {'status': 'fail', 'message': str(keycloak_response['message'])}
+        keycloak_response = await delete_user_from_keycloak(user.keycloak_uid)
+        if keycloak_response.get('status') != 'success':
+            logger.error(f"Error from Keycloak: {str(keycloak_response['message'])}")
+            return {'status': 'fail', 'message': str(keycloak_response['message'])}
 
         user.delete()
         logger.info(f"User deleted: {user_id}")
