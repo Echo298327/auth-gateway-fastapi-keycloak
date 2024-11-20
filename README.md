@@ -17,7 +17,7 @@ This repository provides a starter template for building scalable microservices 
 This project uses MongoDB as the primary database for storing information. 
 The user microservice (users) connects to a MongoDB instance, which is configurable via environment variables.
 
-Ensure you have MongoDB installed and running locally, or use a cloud-hosted MongoDB service like [MongoDB Atlas](https://www.mongodb.com/products/platform/atlas-database).
+Ensure you have MongoDB running locally, or use a cloud-hosted MongoDB service.
 
 ## Postman Collection
 
@@ -32,6 +32,7 @@ Make sure you have the following installed:
 - [Docker](https://www.docker.com/get-started)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 - [Python 3.10+](https://www.python.org/)
+- [MongoDB](https://www.mongodb.com/products/platform/atlas-database)
 - Git CLI
 
 ---
@@ -45,11 +46,9 @@ Make sure you have the following installed:
    cd repository-name
    ```
 
-2. Copy the `.env.example` file to `.env` and configure it:
-
-   ```bash
-   cp .env.example .env
-   ```
+2. __Optional__ Copy the `.env.example` file to `.env` and configure it if you plan to run the services locally (without Docker Compose):
+   <br> __Note:__ The .env file is not required for Docker Compose. It is used for running the services locally without containers.
+   For Docker Compose, the environment variables are already handled within the docker-compose.yml file.
 
 3. Start the services using Docker Compose:
 
@@ -68,10 +67,11 @@ Make sure you have the following installed:
 
 ```plaintext
 │   .env
-│   docker-compose.yml
 │   LICENSE
-│   postman_collection.json
 │   README.md
+│   docker-compose.yml
+│   keycloak-credentials.json
+│   postman_collection.json
 │
 ├───.github
 │   └───workflows
@@ -108,6 +108,8 @@ Make sure you have the following installed:
     │   │   app.py
     │   │   config.py
     │   │   email_handler.py
+    │   │   keycloak_init.py
+    │   │   keycloak_manager.py
     │   │   logger.py
     │   │   manager.py
     │   │   mongo_models.py
@@ -126,7 +128,12 @@ Make sure you have the following installed:
 
 ### Environment Variables
 
-Ensure your `.env` file includes the following variables:
+The `.env` file contains configuration for running the application.
+* __Docker Compose:__ The default variables work seamlessly with the Docker Compose setup.
+* __Local Development:__ If you want to run the services locally without Docker Compose, ensure you adjust the variables accordingly.
+
+
+
 
 ```plaintext
 # MongoDB
@@ -149,7 +156,6 @@ GATEWAY_URL=http://${GATEWAY_HOST}:${GATEWAY_PORT}
 USERS_PORT=8081
 USERS_HOST=localhost
 USERS_URL=http://${USERS_HOST}:${USERS_PORT}
-
 ```
 
 ---
@@ -167,7 +173,6 @@ USERS_URL=http://${USERS_HOST}:${USERS_PORT}
 
 1. Access the Keycloak Admin Console at [http://localhost:9000](http://localhost:9000).
 2. Create a realm, client, and user roles as needed.
-3. Update the `.env` file with the new configuration.
 
 ---
 
