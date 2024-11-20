@@ -10,11 +10,12 @@ except ImportError:
     from .config import settings
 
 logger = init_logger("users.Keycloak_manager")
-with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
-    keycloak_credentials = json.load(file)
 
 
 async def retrieve_token(username, password):
+    with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
+        keycloak_credentials = json.load(file)
+
     client_id = keycloak_credentials.get('client_id')
     client_secret = keycloak_credentials.get('client_secret')
     realm = keycloak_credentials.get('realm')
@@ -47,6 +48,9 @@ async def retrieve_token(username, password):
 
 
 async def get_admin_token():
+    with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
+        keycloak_credentials = json.load(file)
+
     keycloak_url = keycloak_credentials['server_url']
     admin_username = keycloak_credentials['admin_u']
     admin_password = keycloak_credentials['admin_p']
@@ -72,6 +76,9 @@ async def get_admin_token():
 
 
 async def add_user_to_keycloak(user_name, first_name, last_name, email: str, password: str):
+    with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
+        keycloak_credentials = json.load(file)
+
     realm = keycloak_credentials.get('realm')
     server_url = keycloak_credentials.get('server_url')
     try:
@@ -120,6 +127,9 @@ async def add_user_to_keycloak(user_name, first_name, last_name, email: str, pas
 
 async def update_user_in_keycloak(user_id, user_name, first_name, last_name, email):
     try:
+        with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
+            keycloak_credentials = json.load(file)
+
         server_url = keycloak_credentials.get('server_url')
         realm = keycloak_credentials.get('realm')
 
@@ -151,6 +161,9 @@ async def update_user_in_keycloak(user_id, user_name, first_name, last_name, ema
 
 async def delete_user_from_keycloak(user_id):
     try:
+        with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
+            keycloak_credentials = json.load(file)
+
         server_url = keycloak_credentials.get('server_url')
         realm = keycloak_credentials.get('realm')
 

@@ -7,9 +7,19 @@ from users.src.manager import create_user, update_user, delete_user, get_user
 @patch("users.src.manager.User")
 @patch("users.src.manager.generate_password")
 @patch("users.src.manager.send_password_email")
-async def test_create_user(mock_send_password_email, mock_generate_password, mock_user):
+@patch("users.src.manager.add_user_to_keycloak")
+async def test_create_user(mock_add_user_to_keycloak, mock_send_password_email, mock_generate_password, mock_user):
+    # Arrange mocks
     mock_generate_password.return_value = "test_password"
-    mock_user.objects.return_value.first.side_effect = [None, MagicMock(id="test_id")]
+    mock_add_user_to_keycloak.return_value = {"status": "success", "keycloakUserId": "test_id"}
+
+    # Mocking the database lookup for an existing user (no existing user found)
+    mock_user.objects.return_value.first.side_effect = [
+        None,  # No existing user with the given username
+        mock_user  # Returning user instance after saving
+    ]
+
+    # Mocking user creation
     mock_user.return_value.save.return_value = None
     mock_user.return_value.id = "test_id"
 
@@ -32,30 +42,44 @@ async def test_create_user(mock_send_password_email, mock_generate_password, moc
 
 @pytest.mark.asyncio
 @patch("users.src.manager.User")
-async def test_update_user(mock_user):
-    mock_user.objects.return_value.first.side_effect = [MagicMock(id="test_id"), None]
-    mock_user.objects.return_value.update.return_value = None
+@patch("users.src.manager.update_user_in_keycloak")
+async def test_update_user_success(mock_update_user_in_keycloak, mock_user):
+    user_id = "test_id"
 
+    # Mock the data input
     data = MagicMock()
     data.dict.return_value = {
-        "user_id": "test_id",
-        "user_name": "updated_user",
-        "first_name": None,
-        "last_name": "Updated",
-        "role_id": None,
-        "email": None
+        "user_id": user_id,
+        "user_name": "new_username",
+        "first_name": "New",
+        "last_name": "User",
+        "role_id": "new_role",
+        "email": "newuser@example.com"
     }
+
+    # Mocking the database lookup for an existing user
+    mock_user_instance = MagicMock()
+    mock_user.objects.return_value.first.side_effect = [
+        mock_user_instance,  # User found for updating
+        None  # No user found with the new username to avoid conflict
+    ]
+
+    mock_user.objects.return_value.update.return_value = None
+    mock_update_user_in_keycloak.return_value = {"status": "success"}
 
     response = await update_user(data)
 
     assert response["status"] == "success"
     assert response["message"] == "User updated successfully"
+    mock_user.objects.return_value.update.assert_called_once()  # Ensure update is called
 
 
 @pytest.mark.asyncio
 @patch("users.src.manager.User")
-async def test_delete_user(mock_user):
+@patch("users.src.manager.delete_user_from_keycloak")
+async def test_delete_user(mock_delete_user_from_keycloak, mock_user):
     mock_user.objects.return_value.first.return_value = MagicMock(id="test_id")
+    mock_delete_user_from_keycloak.return_value = {"status": "success"}
 
     data = MagicMock()
     data.dict.return_value = {
