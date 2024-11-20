@@ -137,6 +137,9 @@ DB_NAME=templateApp
 APP_EMAIL=
 APP_PASSWORD=
 
+# Keycloak server
+KEYCLOAK_CREDENTIALS=../keycloak-credentials.json
+
 # Gateway
 GATEWAY_PORT=8080
 GATEWAY_HOST=localhost
@@ -147,11 +150,6 @@ USERS_PORT=8081
 USERS_HOST=localhost
 USERS_URL=http://${USERS_HOST}:${USERS_PORT}
 
-# Keycloak
-KEYCLOAK_URL=http://localhost:9000
-REALM=your-realm-name
-CLIENT_ID=your-client-id
-CLIENT_SECRET=your-client-secret
 ```
 
 ---
