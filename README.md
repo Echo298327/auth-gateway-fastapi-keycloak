@@ -190,7 +190,9 @@ Contributions are welcome! Please follow these steps:
 
 ## License
 
-See the [LICENSE](LICENSE) file for details.
+This project is licensed under the [MIT License](LICENSE).  
+You are free to use, modify, and distribute this project in accordance with the terms of the license.
+
 
 ---
 
