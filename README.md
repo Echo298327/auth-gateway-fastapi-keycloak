@@ -72,6 +72,7 @@ Make sure you have the following installed:
 ```plaintext
 │   .env
 │   LICENSE
+|   API.md
 │   README.md
 |   SECURITY.md
 │   docker-compose.yml
