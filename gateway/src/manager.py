@@ -3,7 +3,7 @@ from fastapi import Request, status
 from logger import init_logger
 from typing import Union, Dict, Any
 from config import settings
-from requests import post
+from http_client import post
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from request_handler import parse_request
 
@@ -62,3 +62,18 @@ async def forward_request_and_process_response(
             "message": str(e),
             "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR
         }
+
+
+async def get_by_keycloak_uid(uid):
+    try:
+        url = f"{settings.SERVICE_MAP.get('users')}/get_by_keycloak_uid"
+        body = {
+            "keycloak_uid": uid
+        }
+        response = await post(url, json=body)
+        if "data" in response:
+            return response["data"]
+        return None
+    except Exception as e:
+        logger.error(f"Request error: {e}")
+        return None

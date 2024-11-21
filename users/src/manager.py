@@ -20,7 +20,7 @@ except ImportError:
 logger = init_logger("user.manager")
 
 
-async def create_user(data):
+async def create_user(data) -> dict:
     try:
         user_data = data.dict()
         user_name = user_data.get("user_name")
@@ -66,7 +66,7 @@ async def create_user(data):
         return {"status": "failed", "message": "Internal Server Error"}
 
 
-async def update_user(data):
+async def update_user(data) -> dict:
     try:
         user_data = data.dict()
         user_id = user_data.get("user_id")
@@ -106,7 +106,7 @@ async def update_user(data):
         return {"status": "failed", "message": "Internal Server Error"}
 
 
-async def delete_user(data):
+async def delete_user(data) -> dict:
     try:
         user_data = data.dict()
         user_id = user_data.get("user_id")
@@ -136,13 +136,43 @@ async def delete_user(data):
         return {"status": "failed", "message": "Internal Server Error"}
 
 
-async def get_user(data):
+async def get_user(data) -> dict:
     try:
         user_data = data.dict()
         user_id = user_data.get("user_id")
         user = User.objects(id=user_id).first()
         if not user:
             logger.error(f"User not found: {user_id}")
+            return {"status": "failed", "message": "User not found"}
+
+        data = {
+            "id": str(user.id),
+            "user_name": user.user_name,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role_id": user.role_id,
+            "email": user.email,
+            "keycloak_uid": user.keycloak_uid,
+            "creation_date": user.creation_date,
+        }
+
+        return {"status": "success", "data": data}
+
+    except DoesNotExist:
+        logger.error(f"User not found")
+        return {"status": "failed", "message": "User not found"}
+    except Exception as e:
+        logger.error(f"Error retrieving user: {str(e)}")
+        return {"status": "failed", "message": "Internal Server Error"}
+
+
+async def get_user_by_keycloak_uid(data) -> dict:
+    try:
+        user_data = data.dict()
+        keycloak_uid = user_data.get("keycloak_uid")
+        user = User.objects(keycloak_uid=keycloak_uid).first()
+        if not user:
+            logger.error(f"User not found: {keycloak_uid}")
             return {"status": "failed", "message": "User not found"}
 
         data = {

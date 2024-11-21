@@ -17,7 +17,14 @@ class Settings(BaseSettings):
     APP_EMAIL: str = os.getenv("APP_EMAIL", "email")
     APP_PASSWORD: str = os.getenv("APP_PASSWORD", "password")
     # keycloak settings
-    KEYCLOAK_CREDENTIALS: str = os.getenv("KEYCLOAK_CREDENTIALS", "keycloak-credentials.json")
+    SERVER_URL: str = os.getenv("SERVER_URL", "http://localhost:9002")
+    REALM: str = os.getenv("REALM", "templateRealm")
+    CLIENT_ID: str = os.getenv("CLIENT_ID", "templateApp")
+    SCOPE: str = os.getenv("SCOPE", "openid")
+    AUTHORIZATION_URL: str = os.getenv("AUTHORIZATION_URL")
+    TOKEN_URL: str = os.getenv("TOKEN_URL")
+    ADMIN_U: str = os.getenv("ADMIN_U", "admin")
+    ADMIN_P: str = os.getenv("ADMIN_P", "admin")
 
     def connect_db(self):
         connect(host=self.MONGO_CONNECTION_STRING, db=self.DB_NAME)

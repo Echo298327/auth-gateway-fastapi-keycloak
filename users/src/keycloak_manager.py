@@ -11,23 +11,23 @@ except ImportError:
 
 logger = init_logger("users.Keycloak_manager")
 
+keycloak_url = settings.SERVER_URL
+client_id = settings.CLIENT_ID
+realm = settings.REALM
+server_url = settings.SERVER_URL
+scope = settings.SCOPE
+admin_username = settings.ADMIN_U
+admin_password = settings.ADMIN_P
+
 
 async def retrieve_token(username, password):
-    with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
-        keycloak_credentials = json.load(file)
-
-    client_id = keycloak_credentials.get('client_id')
-    client_secret = keycloak_credentials.get('client_secret')
-    realm = keycloak_credentials.get('realm')
-    server_url = keycloak_credentials.get('server_url')
-    scope = "openid"
     try:
         headers = {
             "Content-Type": "application/x-www-form-urlencoded"
         }
         body = {
             "client_id": client_id,
-            "client_secret": client_secret,
+            # "client_secret": client_secret,
             "scope": scope,
             "username": username,
             "password": password,
@@ -48,12 +48,6 @@ async def retrieve_token(username, password):
 
 
 async def get_admin_token():
-    with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
-        keycloak_credentials = json.load(file)
-
-    keycloak_url = keycloak_credentials['server_url']
-    admin_username = keycloak_credentials['admin_u']
-    admin_password = keycloak_credentials['admin_p']
     url = f"{keycloak_url}/realms/master/protocol/openid-connect/token"
     payload = {
         'username': admin_username,
@@ -76,11 +70,6 @@ async def get_admin_token():
 
 
 async def add_user_to_keycloak(user_name, first_name, last_name, email: str, password: str):
-    with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
-        keycloak_credentials = json.load(file)
-
-    realm = keycloak_credentials.get('realm')
-    server_url = keycloak_credentials.get('server_url')
     try:
         token = await get_admin_token()
         if not token:
@@ -127,12 +116,6 @@ async def add_user_to_keycloak(user_name, first_name, last_name, email: str, pas
 
 async def update_user_in_keycloak(user_id, user_name, first_name, last_name, email):
     try:
-        with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
-            keycloak_credentials = json.load(file)
-
-        server_url = keycloak_credentials.get('server_url')
-        realm = keycloak_credentials.get('realm')
-
         token = await get_admin_token()
         if not token:
             return {'status': 'error', 'message': "Error updating user in keycloak"}
@@ -161,12 +144,6 @@ async def update_user_in_keycloak(user_id, user_name, first_name, last_name, ema
 
 async def delete_user_from_keycloak(user_id):
     try:
-        with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
-            keycloak_credentials = json.load(file)
-
-        server_url = keycloak_credentials.get('server_url')
-        realm = keycloak_credentials.get('realm')
-
         token = await get_admin_token()
         if not token:
             return {'status': 'error', 'message': "Error deleting user from keycloak"}

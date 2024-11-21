@@ -28,6 +28,14 @@ services:
       - USERS_HOST=0.0.0.0
       - APP_EMAIL=app
       - APP_PASSWORD=app
+      - SERVER_URL=http://keycloak:9002
+      - REALM=templateRealm
+      - CLIENT_ID=templateApp
+      - SCOPE=openid
+      - AUTHORIZATION_URL=${SERVER_URL}/auth/realms/${REALM}/protocol/openid-connect/auth
+      - TOKEN_URL=${SERVER_URL}/auth/realms/${REALM}/protocol/openid-connect/token
+      - ADMIN_U=admin
+      - ADMIN_P=admin
     volumes:
         - type: bind
           source: ./keycloak-credentials.json

@@ -4,3 +4,5 @@ pydantic_settings==2.6.1
 python-dotenv==1.0.1
 uvicorn==0.32.0
 httpx==0.27.2
+python-keycloak==3.9.1
+PyJWT==2.6.0
