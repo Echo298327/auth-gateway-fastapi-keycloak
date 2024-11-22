@@ -6,7 +6,7 @@ from typing import Union, Dict, Any
 from config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
-# from request_handler import parse_request
+
 
 logger = init_logger("gateway.manager")
 
