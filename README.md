@@ -76,7 +76,6 @@ Make sure you have the following installed:
 │   README.md
 |   SECURITY.md
 │   docker-compose.yml
-│   keycloak-credentials.json
 │   postman_collection.json
 │
 ├───.github
@@ -98,10 +97,7 @@ Make sure you have the following installed:
 │   ├───src
 │   │   │   app.py
 │   │   │   config.py
-│   │   │   logger.py
 │   │   │   manager.py
-│   │   │   requests.py
-│   │   │   request_handler.py
 │   │   │   __init__.py
 │   │
 │   └───test
@@ -113,14 +109,10 @@ Make sure you have the following installed:
     ├───src
     │   │   app.py
     │   │   config.py
-    │   │   email_handler.py
     │   │   keycloak_init.py
     │   │   keycloak_manager.py
-    │   │   logger.py
     │   │   manager.py
     │   │   mongo_models.py
-    │   │   password_gen.py
-    │   │   request_handler.py
     │   │   schemas.py
     │   │   __init__.py
     │
