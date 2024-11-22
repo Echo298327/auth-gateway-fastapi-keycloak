@@ -1,7 +1,6 @@
-import json
 import asyncio
 import aiohttp
-from logger import init_logger
+from auth_gateway_serverkit.logger import init_logger
 from config import settings
 
 

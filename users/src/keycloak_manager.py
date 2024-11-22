@@ -1,12 +1,10 @@
 import httpx
-import json
 import aiohttp
+from auth_gateway_serverkit.logger import init_logger
 
 try:
     from config import settings
-    from logger import init_logger
 except ImportError:
-    from .logger import init_logger
     from .config import settings
 
 logger = init_logger("users.Keycloak_manager")

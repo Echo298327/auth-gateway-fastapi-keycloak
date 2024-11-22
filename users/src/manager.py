@@ -1,19 +1,16 @@
 import time
 from mongoengine.errors import DoesNotExist, ValidationError
+from auth_gateway_serverkit.logger import init_logger
+from auth_gateway_serverkit.password import generate_password
+from auth_gateway_serverkit.email import send_password_email
 
 try:
     from config import settings
-    from password_gen import generate_password
-    from email_handler import send_password_email
     from mongo_models import User
-    from logger import init_logger
     from keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 except ImportError:
     from .config import settings
-    from .password_gen import generate_password
-    from .email_handler import send_password_email
     from .mongo_models import User
-    from .logger import init_logger
     from .keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 
 
@@ -57,7 +54,7 @@ async def create_user(data) -> dict:
             logger.error("Failed to verify the saved user.")
             return {"status": "failed", "message": "Failed to save user."}
 
-        # send_password_email(user.first_name, user.email, user.user_name, password)
+        # send_password_email(settings.APP_EMAIL, settings.APP_PASSWORD, user.first_name, user.email, user.user_name, password)
         logger.info(f"User created: {user.id}")
         return {"status": "success", "user_id": str(user.id), "message": "User created successfully"}
 
