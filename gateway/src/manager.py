@@ -1,11 +1,12 @@
 import datetime
 from fastapi import Request, status
-from logger import init_logger
+from auth_gateway_serverkit.logger import init_logger
+from auth_gateway_serverkit.http_client import post
 from typing import Union, Dict, Any
 from config import settings
-from requests import post
 from starlette.datastructures import UploadFile as StarletteUploadFile
-from request_handler import parse_request
+from auth_gateway_serverkit.request_handler import parse_request
+# from request_handler import parse_request
 
 logger = init_logger("gateway.manager")
 
@@ -62,3 +63,19 @@ async def forward_request_and_process_response(
             "message": str(e),
             "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR
         }
+
+
+async def get_by_keycloak_uid(uid):
+    try:
+        url = f"{settings.SERVICE_MAP.get('user')}/get_by_keycloak_uid"
+        body = {
+            "keycloak_uid": uid
+        }
+        logger.info(f"settings.SERVICE_MAP.get('user': {settings.SERVICE_MAP.get('user')}")
+        response = await post(url, json=body)
+        if "data" in response:
+            return response["data"]
+        return None
+    except Exception as e:
+        logger.error(f"Request error: {e}")
+        return None

@@ -10,6 +10,12 @@ services:
       - GATEWAY_PORT=8080
       - GATEWAY_HOST=0.0.0.0
       - USERS_URL=http://users:8081
+      - SERVER_URL=http://keycloak:9002
+      - REALM=templateRealm
+      - CLIENT_ID=templateApp
+      - AUTHORIZATION_URL=${SERVER_URL}/auth/realms/${REALM}/protocol/openid-connect/auth
+      - TOKEN_URL=${SERVER_URL}/auth/realms/${REALM}/protocol/openid-connect/token
+
     networks:
       - app-network
 
@@ -23,15 +29,18 @@ services:
     environment:
       - CONNECTION_STRING=mongodb://host.docker.internal:27017
       - DB_NAME=templateApp
-      - KEYCLOAK_CREDENTIALS=/app/keycloak-credentials.json
       - USERS_PORT=8081
       - USERS_HOST=0.0.0.0
       - APP_EMAIL=app
       - APP_PASSWORD=app
-    volumes:
-        - type: bind
-          source: ./keycloak-credentials.json
-          target: /app/keycloak-credentials.json
+      - SERVER_URL=http://keycloak:9002
+      - REALM=templateRealm
+      - CLIENT_ID=templateApp
+      - SCOPE=openid
+      - AUTHORIZATION_URL=${SERVER_URL}/auth/realms/${REALM}/protocol/openid-connect/auth
+      - TOKEN_URL=${SERVER_URL}/auth/realms/${REALM}/protocol/openid-connect/token
+      - ADMIN_U=admin
+      - ADMIN_P=admin
     networks:
       - app-network
     depends_on:

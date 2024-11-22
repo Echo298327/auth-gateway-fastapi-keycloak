@@ -1,28 +1,16 @@
-import json
 import asyncio
-import time
-
 import aiohttp
-from logger import init_logger
+from auth_gateway_serverkit.logger import init_logger
 from config import settings
 
 
 logger = init_logger("user.Keycloak_init")
-with open(settings.KEYCLOAK_CREDENTIALS, 'r') as file:
-    keycloak_config = json.load(file)
-    file.close()
-
-KEYCLOAK_URL = keycloak_config['server_url']
-KEYCLOAK_REALM = keycloak_config['realm']
-CLIENT_ID = keycloak_config['client_id']
-ADMIN_USERNAME = keycloak_config['admin_u']
-ADMIN_PASSWORD = keycloak_config['admin_p']
 
 
 async def check_keycloak_connection():
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(KEYCLOAK_URL) as response:
+            async with session.get(settings.SERVER_URL) as response:
                 if response.status == 200:
                     logger.info("Successfully connected to Keycloak server")
                     return True
@@ -35,10 +23,10 @@ async def check_keycloak_connection():
 
 
 async def get_admin_token():
-    url = f"{KEYCLOAK_URL}/realms/master/protocol/openid-connect/token"
+    url = f"{settings.SERVER_URL}/realms/master/protocol/openid-connect/token"
     payload = {
-        'username': ADMIN_USERNAME,
-        'password': ADMIN_PASSWORD,
+        'username': settings.KEYCLOAK_USER,
+        'password': settings.KEYCLOAK_USER,
         'grant_type': 'password',
         'client_id': 'admin-cli'
     }
@@ -63,13 +51,13 @@ async def create_realm():
     if not admin_token:
         return False
 
-    url = f"{KEYCLOAK_URL}/admin/realms"
+    url = f"{settings.SERVER_URL}/admin/realms"
     headers = {
         'Authorization': f'Bearer {admin_token}',
         'Content-Type': 'application/json'
     }
     payload = {
-        'realm': KEYCLOAK_REALM,
+        'realm': settings.REALM,
         'enabled': True,
         'accessTokenLifespan': 36000,  # Set token lifespan to 10 hours (in seconds)
     }
@@ -77,10 +65,10 @@ async def create_realm():
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, json=payload) as response:
                 if response.status == 201:
-                    logger.info(f"Realm '{KEYCLOAK_REALM}' created successfully")
+                    logger.info(f"Realm '{settings.REALM}' created successfully")
                     return True
                 elif response.status == 409:
-                    logger.info(f"Realm '{KEYCLOAK_REALM}' already exists")
+                    logger.info(f"Realm '{settings.REALM}' already exists")
                     return True
                 else:
                     logger.error(f"Failed to create realm. Status: {response.status}, Response: {await response.text()}")
@@ -95,15 +83,15 @@ async def create_client():
     if not admin_token:
         return False
 
-    url = f"{KEYCLOAK_URL}/admin/realms/{KEYCLOAK_REALM}/clients"
+    url = f"{settings.SERVER_URL}/admin/realms/{settings.REALM}/clients"
     headers = {
         'Authorization': f'Bearer {admin_token}',
         'Content-Type': 'application/json'
     }
 
     payload = {
-        'clientId': CLIENT_ID,
-        'name': CLIENT_ID,
+        'clientId': settings.CLIENT_ID,
+        'name': settings.CLIENT_ID,
         'enabled': True,
         'publicClient': True,  # Set to False if you are using 'client_secret' to authenticate
         'protocol': 'openid-connect',
@@ -120,10 +108,10 @@ async def create_client():
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, json=payload) as response:
                 if response.status == 201:
-                    logger.info(f"Client '{CLIENT_ID}' created successfully")
+                    logger.info(f"Client '{settings.CLIENT_ID}' created successfully")
                     return True
                 elif response.status == 409:
-                    logger.info(f"Client '{CLIENT_ID}' already exists")
+                    logger.info(f"Client '{settings.CLIENT_ID}' already exists")
                     return True
                 else:
                     logger.error(f"Failed to create client. Status: {response.status}, Response: {await response.text()}")
@@ -138,14 +126,14 @@ async def enable_edit_username():
     if not admin_token:
         return False
 
-    url = f"{KEYCLOAK_URL}/admin/realms/{KEYCLOAK_REALM}"
+    url = f"{settings.SERVER_URL}/admin/realms/{settings.REALM}"
     headers = {
         'Authorization': f'Bearer {admin_token}',
         'Content-Type': 'application/json'
     }
 
     payload = {
-        "realm": KEYCLOAK_REALM,
+        "realm": settings.REALM,
         "editUsernameAllowed": True  # Enable editing the username
     }
 
@@ -153,7 +141,7 @@ async def enable_edit_username():
         async with aiohttp.ClientSession() as session:
             async with session.put(url, headers=headers, json=payload) as response:
                 if response.status == 204:
-                    logger.info(f"Enabled edit username for realm '{KEYCLOAK_REALM}' successfully")
+                    logger.info(f"Enabled edit username for realm '{settings.REALM}' successfully")
                     return True
                 else:
                     logger.error(f"Failed to enable edit username. Status: {response.status}, Response: {await response.text()}")

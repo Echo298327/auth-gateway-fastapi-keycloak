@@ -1,12 +1,10 @@
-import time
-
 import manager
 import uvicorn
 from fastapi import FastAPI, Depends
 from config import settings
-from schemas import CreateUser, UpdateUser, GetUser, DeleteUser
+from schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
 from typing import Tuple, List, Any
-from request_handler import parse_json_request, response
+from auth_gateway_serverkit.request_handler import parse_json_request_model, response
 from keycloak_init import initialize_keycloak_server
 
 app = FastAPI(title="User App")
@@ -15,7 +13,6 @@ app = FastAPI(title="User App")
 @app.on_event("startup")
 async def startup_event():
     settings.connect_db()
-    # wait a bit for the Keycloak server to start
     is_initialized = await initialize_keycloak_server()
     if not is_initialized:
         raise Exception("Failed to initialize Keycloak server")
@@ -36,23 +33,28 @@ async def handle_request(
 
 
 @app.post("/create")
-async def create_user(data_errors: Tuple[CreateUser, List[str]] = Depends(parse_json_request(CreateUser))):
+async def create_user(data_errors: Tuple[CreateUser, List[str]] = Depends(parse_json_request_model(CreateUser))):
     return await handle_request(data_errors, manager.create_user)
 
 
 @app.post("/update")
-async def update_user(data_errors: Tuple[UpdateUser, List[str]] = Depends(parse_json_request(UpdateUser))):
+async def update_user(data_errors: Tuple[UpdateUser, List[str]] = Depends(parse_json_request_model(UpdateUser))):
     return await handle_request(data_errors, manager.update_user)
 
 
 @app.post("/delete")
-async def delete_user(data_errors: Tuple[DeleteUser, List[str]] = Depends(parse_json_request(DeleteUser))):
+async def delete_user(data_errors: Tuple[DeleteUser, List[str]] = Depends(parse_json_request_model(DeleteUser))):
     return await handle_request(data_errors, manager.delete_user)
 
 
 @app.post("/get")
-async def get_user(data_errors: Tuple[GetUser, List[str]] = Depends(parse_json_request(GetUser))):
+async def get_user(data_errors: Tuple[GetUser, List[str]] = Depends(parse_json_request_model(GetUser))):
     return await handle_request(data_errors, manager.get_user)
+
+
+@app.post("/get_by_keycloak_uid")
+async def get_user_by_keycloak_uid(data_errors: Tuple[GetUserByKeycloakUid, List[str]] = Depends(parse_json_request_model(GetUserByKeycloakUid))):
+    return await handle_request(data_errors, manager.get_user_by_keycloak_uid)
 
 
 if __name__ == "__main__":

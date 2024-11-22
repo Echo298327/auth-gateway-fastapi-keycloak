@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Request, status
 from starlette.responses import JSONResponse
+from auth import auth
 from typing import Union
 from config import settings
-from manager import process_request
+from manager import process_request, get_by_keycloak_uid
 import uvicorn
 
 
@@ -10,6 +11,7 @@ app = FastAPI(title="Gateway App")
 
 
 @app.post("/api/{service}/{action}")
+@auth(get_user_by_uid=get_by_keycloak_uid)
 async def handle_request(
     request: Request,
     service: Union[str, None] = None,

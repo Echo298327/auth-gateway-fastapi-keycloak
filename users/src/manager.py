@@ -1,26 +1,23 @@
 import time
 from mongoengine.errors import DoesNotExist, ValidationError
+from auth_gateway_serverkit.logger import init_logger
+from auth_gateway_serverkit.password import generate_password
+from auth_gateway_serverkit.email import send_password_email
 
 try:
     from config import settings
-    from password_gen import generate_password
-    from email_handler import send_password_email
     from mongo_models import User
-    from logger import init_logger
     from keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 except ImportError:
     from .config import settings
-    from .password_gen import generate_password
-    from .email_handler import send_password_email
     from .mongo_models import User
-    from .logger import init_logger
     from .keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 
 
 logger = init_logger("user.manager")
 
 
-async def create_user(data):
+async def create_user(data) -> dict:
     try:
         user_data = data.dict()
         user_name = user_data.get("user_name")
@@ -57,7 +54,7 @@ async def create_user(data):
             logger.error("Failed to verify the saved user.")
             return {"status": "failed", "message": "Failed to save user."}
 
-        # send_password_email(user.first_name, user.email, user.user_name, password)
+        # send_password_email(settings.APP_EMAIL, settings.APP_PASSWORD, user.first_name, user.email, user.user_name, password)
         logger.info(f"User created: {user.id}")
         return {"status": "success", "user_id": str(user.id), "message": "User created successfully"}
 
@@ -66,7 +63,7 @@ async def create_user(data):
         return {"status": "failed", "message": "Internal Server Error"}
 
 
-async def update_user(data):
+async def update_user(data) -> dict:
     try:
         user_data = data.dict()
         user_id = user_data.get("user_id")
@@ -106,7 +103,7 @@ async def update_user(data):
         return {"status": "failed", "message": "Internal Server Error"}
 
 
-async def delete_user(data):
+async def delete_user(data) -> dict:
     try:
         user_data = data.dict()
         user_id = user_data.get("user_id")
@@ -136,13 +133,43 @@ async def delete_user(data):
         return {"status": "failed", "message": "Internal Server Error"}
 
 
-async def get_user(data):
+async def get_user(data) -> dict:
     try:
         user_data = data.dict()
         user_id = user_data.get("user_id")
         user = User.objects(id=user_id).first()
         if not user:
             logger.error(f"User not found: {user_id}")
+            return {"status": "failed", "message": "User not found"}
+
+        data = {
+            "id": str(user.id),
+            "user_name": user.user_name,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role_id": user.role_id,
+            "email": user.email,
+            "keycloak_uid": user.keycloak_uid,
+            "creation_date": user.creation_date,
+        }
+
+        return {"status": "success", "data": data}
+
+    except DoesNotExist:
+        logger.error(f"User not found")
+        return {"status": "failed", "message": "User not found"}
+    except Exception as e:
+        logger.error(f"Error retrieving user: {str(e)}")
+        return {"status": "failed", "message": "Internal Server Error"}
+
+
+async def get_user_by_keycloak_uid(data) -> dict:
+    try:
+        user_data = data.dict()
+        keycloak_uid = user_data.get("keycloak_uid")
+        user = User.objects(keycloak_uid=keycloak_uid).first()
+        if not user:
+            logger.error(f"User not found: {keycloak_uid}")
             return {"status": "failed", "message": "User not found"}
 
         data = {

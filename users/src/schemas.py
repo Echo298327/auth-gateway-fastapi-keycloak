@@ -36,3 +36,10 @@ class GetUser(BaseModel):
 
     class Config:
         extra = Extra.forbid
+
+
+class GetUserByKeycloakUid(BaseModel):
+    keycloak_uid: str
+
+    class Config:
+        extra = Extra.forbid
