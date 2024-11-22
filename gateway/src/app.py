@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Request, status
 from starlette.responses import JSONResponse
-from auth import auth
 from typing import Union
 from config import settings
 from manager import process_request, get_by_keycloak_uid
+from auth_gateway_serverkit.middleware.auth import auth
 import uvicorn
 
 
