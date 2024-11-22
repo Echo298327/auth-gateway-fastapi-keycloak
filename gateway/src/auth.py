@@ -3,8 +3,8 @@ from typing import Callable, Any
 from functools import wraps
 from fastapi.security import OAuth2PasswordBearer
 from keycloak import KeycloakOpenID
-from .auth_config import auth_settings
-from .schemas import UserPayload
+from config import settings as auth_settings
+from schemas import UserPayload
 import requests
 import jwt
 

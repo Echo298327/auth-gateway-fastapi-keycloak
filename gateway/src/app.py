@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request, status
 from starlette.responses import JSONResponse
-from middleware.auth import auth
+from auth import auth
 from typing import Union
 from config import settings
 from manager import process_request, get_by_keycloak_uid

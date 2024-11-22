@@ -16,8 +16,8 @@ client_id = settings.CLIENT_ID
 realm = settings.REALM
 server_url = settings.SERVER_URL
 scope = settings.SCOPE
-admin_username = settings.ADMIN_U
-admin_password = settings.ADMIN_P
+admin_username = settings.KEYCLOAK_USER
+admin_password = settings.KEYCLOAK_USER
 
 
 async def retrieve_token(username, password):

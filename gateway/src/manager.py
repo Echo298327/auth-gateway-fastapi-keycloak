@@ -66,10 +66,11 @@ async def forward_request_and_process_response(
 
 async def get_by_keycloak_uid(uid):
     try:
-        url = f"{settings.SERVICE_MAP.get('users')}/get_by_keycloak_uid"
+        url = f"{settings.SERVICE_MAP.get('user')}/get_by_keycloak_uid"
         body = {
             "keycloak_uid": uid
         }
+        logger.info(f"settings.SERVICE_MAP.get('user': {settings.SERVICE_MAP.get('user')}")
         response = await post(url, json=body)
         if "data" in response:
             return response["data"]
