@@ -14,7 +14,7 @@ This repository provides a starter template for building scalable microservices 
 ---
 
 ## Database
-This project uses MongoDB as the primary database for storing information. 
+This project uses MongoDB as the primary database for storing information.
 The user microservice (users) connects to a MongoDB instance, which is configurable via environment variables.
 
 Ensure you have MongoDB running locally, or use a cloud-hosted MongoDB service.
@@ -47,12 +47,10 @@ Make sure you have the following installed:
    cd repository-name
    ```
 
-2. **Optional:** Copy the `.env.example` file to `.env` and configure it if you plan to run the services locally (without using Docker Compose).  
-
-   **Note:**  
+2. **Optional:** The `.env.example` file is already included in the repository, and you can configure it if you plan to run the services locally (without using Docker Compose).
+**Note:**  
    - The `.env` file is not required when running with Docker Compose. Environment variables for Docker Compose are already handled within the `docker-compose.yml` file.
    - The `.env` file is only needed if you intend to run the services locally without containers.
-
 
 3. Start the services using Docker Compose:
 
@@ -121,7 +119,6 @@ Make sure you have the following installed:
         │   __init__.py
 ```
 
-
 ---
 
 ### Environment Variables
@@ -129,32 +126,6 @@ Make sure you have the following installed:
 The `.env` file contains configuration for running the application.
 * __Docker Compose:__ The default variables work seamlessly with the Docker Compose setup.
 * __Local Development:__ If you want to run the services locally without Docker Compose, ensure you adjust the variables accordingly.
-
-
-
-
-```plaintext
-# MongoDB
-CONNECTION_STRING=mongodb://localhost:27017
-DB_NAME=templateApp
-
-# APP Email
-APP_EMAIL=
-APP_PASSWORD=
-
-# Keycloak server
-KEYCLOAK_CREDENTIALS=../keycloak-credentials.json
-
-# Gateway
-GATEWAY_PORT=8080
-GATEWAY_HOST=localhost
-GATEWAY_URL=http://${GATEWAY_HOST}:${GATEWAY_PORT}
-
-# Users
-USERS_PORT=8081
-USERS_HOST=localhost
-USERS_URL=http://${USERS_HOST}:${USERS_PORT}
-```
 
 ---
 
@@ -188,7 +159,6 @@ Contributions are welcome! Please follow these steps:
 
 This project is licensed under the [MIT License](LICENSE).  
 You are free to use, modify, and distribute this project in accordance with the terms of the license.
-
 
 ---
 
