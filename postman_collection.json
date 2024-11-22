@@ -12,6 +12,16 @@
 				{
 					"name": "create",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
@@ -40,11 +50,21 @@
 				{
 					"name": "update",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": \"\"\r\n}",
+							"raw": "{\r\n    \"user_id\": \"67388cb793f72e22d2c72137\",\r\n    \"user_name\": \"Shalom34\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -52,12 +72,13 @@
 							}
 						},
 						"url": {
-							"raw": "{{GatewayApp}}:8081/update",
+							"raw": "{{GatewayApp}}/api/user/update",
 							"host": [
 								"{{GatewayApp}}"
 							],
-							"port": "8081",
 							"path": [
+								"api",
+								"user",
 								"update"
 							]
 						}
@@ -67,11 +88,21 @@
 				{
 					"name": "delete",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": \"\"\r\n}",
+							"raw": "{\r\n    \"user_id\": \"673884f9e16288ab6febaa4b\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -95,11 +126,21 @@
 				{
 					"name": "get",
 					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": \"673705219be7cf97902405e9\"\r\n}",
+							"raw": "{\r\n    \"user_id\": \"6738849ae16288ab6febaa4a\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -115,6 +156,112 @@
 								"api",
 								"user",
 								"get"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_by_keycloak_uid",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"keycloak_uid\": \"ad9c1830-55ec-4a3f-a631-c041112eec5e\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GatewayApp}}/api/user/get_by_keycloak_uid",
+							"host": [
+								"{{GatewayApp}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"get_by_keycloak_uid"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "authentication",
+			"item": [
+				{
+					"name": "get_access_token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse the response to JSON\r",
+									"const response = pm.response.json();\r",
+									"\r",
+									"// Save the token to a collection variable\r",
+									"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "elliott.gibson",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{client}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
+							"host": [
+								"{{KeycloakApp}}"
+							],
+							"path": [
+								"realms",
+								"{{realm}}",
+								"protocol",
+								"openid-connect",
+								"token"
 							]
 						}
 					},
@@ -150,6 +297,25 @@
 			"key": "GatewayApp",
 			"value": "http://127.0.0.1:8080",
 			"type": "string"
+		},
+		{
+			"key": "KeycloakApp",
+			"value": "http://127.0.0.1:9002",
+			"type": "string"
+		},
+		{
+			"key": "realm",
+			"value": "templateRealm",
+			"type": "string"
+		},
+		{
+			"key": "client",
+			"value": "templateApp",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": ""
 		}
 	]
 }
