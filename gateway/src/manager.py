@@ -71,7 +71,6 @@ async def get_by_keycloak_uid(uid):
         body = {
             "keycloak_uid": uid
         }
-        logger.info(f"settings.SERVICE_MAP.get('user': {settings.SERVICE_MAP.get('user')}")
         response = await post(url, json=body)
         if "data" in response:
             return response["data"]
