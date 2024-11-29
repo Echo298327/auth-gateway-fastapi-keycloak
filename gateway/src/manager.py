@@ -1,4 +1,5 @@
 import datetime
+import httpx
 from fastapi import Request, status
 from auth_gateway_serverkit.logger import init_logger
 import auth_gateway_serverkit.http_client as http
@@ -89,6 +90,12 @@ async def forward_request_and_process_response(
         )
         return response
 
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP error: {e.response.status_code} - {e.response.text} - URL: {url}")
+        return {
+            "message": f"HTTP error: {e.response.status_code}",
+            "status_code": e.response.status_code
+        }
     except Exception as e:
         logger.error(f"Error forwarding {method} request to {url}: {str(e)}")
         return {
