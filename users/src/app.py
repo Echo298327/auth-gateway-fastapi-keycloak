@@ -37,23 +37,25 @@ async def create_user(data_errors: Tuple[CreateUser, List[str]] = Depends(parse_
     return await handle_request(data_errors, manager.create_user)
 
 
-@app.post("/update")
+@app.put("/update")
 async def update_user(data_errors: Tuple[UpdateUser, List[str]] = Depends(parse_json_request_model(UpdateUser))):
     return await handle_request(data_errors, manager.update_user)
 
 
-@app.post("/delete")
-async def delete_user(data_errors: Tuple[DeleteUser, List[str]] = Depends(parse_json_request_model(DeleteUser))):
-    return await handle_request(data_errors, manager.delete_user)
+@app.delete("/delete/{user_id}")
+async def delete_user(user_id: str):
+    return await handle_request((DeleteUser(user_id=user_id), []), manager.delete_user)
 
 
-@app.post("/get")
-async def get_user(data_errors: Tuple[GetUser, List[str]] = Depends(parse_json_request_model(GetUser))):
+@app.get("/get/{user_id}")
+async def get_user(user_id: str):
+    data_errors = (GetUser(user_id=user_id), [])
     return await handle_request(data_errors, manager.get_user)
 
 
-@app.post("/get_by_keycloak_uid")
-async def get_user_by_keycloak_uid(data_errors: Tuple[GetUserByKeycloakUid, List[str]] = Depends(parse_json_request_model(GetUserByKeycloakUid))):
+@app.get("/get_by_keycloak_uid/{keycloak_uid}")
+async def get_user_by_keycloak_uid(keycloak_uid: str):
+    data_errors = (GetUserByKeycloakUid(keycloak_uid=keycloak_uid), [])
     return await handle_request(data_errors, manager.get_user_by_keycloak_uid)
 
 
