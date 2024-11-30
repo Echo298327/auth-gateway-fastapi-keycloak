@@ -2,18 +2,20 @@ import time
 from mongoengine.errors import DoesNotExist, ValidationError
 from auth_gateway_serverkit.logger import init_logger
 from auth_gateway_serverkit.password import generate_password
+from auth_gateway_serverkit.keycloak.manager import (
+    add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
+)
 from auth_gateway_serverkit.email import send_password_email
 
 try:
     from config import settings
     from mongo_models import User
     from schemas import AllowedRoles
-    from keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 except ImportError:
+
     from .config import settings
     from .mongo_models import User
     from .schemas import AllowedRoles
-    from .keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 
 
 logger = init_logger("user.manager")

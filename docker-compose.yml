@@ -33,8 +33,10 @@ services:
       - USERS_PORT=8081
       - USERS_HOST=0.0.0.0
       - SYSTEM_ADMIN_USER_NAME=sysadmin
-      -  SYSTEM_ADMIN_FIRST_NAME=System
+      - SYSTEM_ADMIN_FIRST_NAME=System
       - SYSTEM_ADMIN_LAST_NAME=System
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=admin
       - SYSTEM_ADMIN_PASSWORD=sysadminpassword
       - SYSTEM_ADMIN_EMAIL=sysadmin@dev.com
       - APP_EMAIL=app
