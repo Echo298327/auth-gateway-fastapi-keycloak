@@ -7,4 +7,4 @@ python-dotenv==1.0.1
 uvicorn==0.32.0
 httpx==0.27.2
 aiohttp==3.11.2
-auth-gateway-serverkit==0.0.12
+auth-gateway-serverkit==0.0.20

@@ -19,6 +19,13 @@ class Settings(BaseSettings):
     APP_EMAIL: str = os.getenv("APP_EMAIL", "email")
     APP_PASSWORD: str = os.getenv("APP_PASSWORD", "password")
 
+    # system admin settings
+    SYSTEM_ADMIN_USER_NAME: str = os.getenv("SYSTEM_ADMIN_USER_NAME")
+    SYSTEM_ADMIN_FIRST_NAME: str = os.getenv("SYSTEM_ADMIN_FIRST_NAME")
+    SYSTEM_ADMIN_LAST_NAME: str = os.getenv("SYSTEM_ADMIN_LAST_NAME")
+    SYSTEM_ADMIN_EMAIL: str = os.getenv("SYSTEM_ADMIN_EMAIL")
+    SYSTEM_ADMIN_PASSWORD: str = os.getenv("SYSTEM_ADMIN_PASSWORD")
+
     # keycloak settings
     SERVER_URL: str = os.getenv("SERVER_URL", "http://localhost:9002")
     REALM: str = os.getenv("REALM", "templateRealm")

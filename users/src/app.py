@@ -16,6 +16,9 @@ async def startup_event():
     is_initialized = await initialize_keycloak_server()
     if not is_initialized:
         raise Exception("Failed to initialize Keycloak server")
+    is_system_admin_created = await manager.create_system_admin()
+    if not is_system_admin_created:
+        raise Exception("Failed to create system admin")
 
 
 async def handle_request(

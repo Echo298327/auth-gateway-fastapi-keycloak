@@ -1,0 +1,34 @@
+{
+  "policies": [
+    {
+      "name": "SystemAdmin-Access",
+      "description": "Access restricted to system administrators",
+      "roles": ["systemAdmin"]
+    },
+    {
+      "name": "Administrators-Access",
+      "description": "Access restricted to admins and system administrators",
+      "roles": ["admin", "systemAdmin"]
+    },
+    {
+      "name": "Public-Access",
+      "description": "Access available to all users",
+      "roles": ["user", "admin", "systemAdmin"]
+    }
+  ],
+  "permissions": [
+    {
+      "name": "Administrators",
+      "description": "Permission for administrators actions",
+      "policies": ["Administrators-Access"],
+      "resources": ["user/create"]
+    }
+  ],
+  "resources": [
+    {
+      "name": "user/create",
+      "displayName": "Create User Endpoint",
+      "url": "/api/user/create"
+    }
+  ]
+}

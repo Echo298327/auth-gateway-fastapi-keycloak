@@ -7,14 +7,62 @@ from auth_gateway_serverkit.email import send_password_email
 try:
     from config import settings
     from mongo_models import User
+    from schemas import AllowedRoles
     from keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 except ImportError:
     from .config import settings
     from .mongo_models import User
+    from .schemas import AllowedRoles
     from .keycloak_manager import add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 
 
 logger = init_logger("user.manager")
+
+
+async def create_system_admin() -> bool:
+    try:
+        user = User.objects(user_name=settings.SYSTEM_ADMIN_USER_NAME).first()
+        if user:
+            return True
+
+        response = await add_user_to_keycloak(
+            settings.SYSTEM_ADMIN_USER_NAME,
+            settings.SYSTEM_ADMIN_FIRST_NAME,
+            settings.SYSTEM_ADMIN_LAST_NAME,
+            settings.SYSTEM_ADMIN_EMAIL,
+            settings.SYSTEM_ADMIN_PASSWORD,
+            ["systemAdmin"],
+        )
+        if response.get('status') != 'success':
+            logger.error(f"Failed to create system admin in Keycloak: {response.get('message')}")
+            return False
+
+        if not response.get('keycloakUserId'):
+            logger.error("Failed to get keycloak user id")
+            return False
+        keycloak_uid = response.get('keycloakUserId')
+
+        user = User(
+            user_name=settings.SYSTEM_ADMIN_USER_NAME,
+            first_name=settings.SYSTEM_ADMIN_FIRST_NAME,
+            last_name=settings.SYSTEM_ADMIN_LAST_NAME,
+            roles=["systemAdmin"],
+            email=settings.SYSTEM_ADMIN_EMAIL,
+            keycloak_uid=keycloak_uid,
+            creation_date=time.strftime("%d-%m-%Y"),
+        )
+        user.save()
+
+        if not User.objects(id=user.id).first():
+            logger.error("Failed to verify the saved system admin.")
+            return False
+
+        logger.info(f"System admin created: {user.id}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Error creating system admin: {str(e)}")
+        return False
 
 
 async def create_user(data) -> dict:
@@ -24,12 +72,16 @@ async def create_user(data) -> dict:
         first_name = user_data.get("first_name")
         last_name = user_data.get("last_name")
         email = user_data.get("email")
+        roles = user_data.get("roles")
+
+        # Convert Enum instances to their string values
+        roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
 
         if User.objects(user_name__iexact=user_name.lower()).first():
             return {"status": "failed", "message": "User name already exists"}
 
         password = generate_password()
-        response = await add_user_to_keycloak(user_name, first_name, last_name, email, password)
+        response = await add_user_to_keycloak(user_name, first_name, last_name, email, password, roles)
         if response.get('status') != 'success':
             logger.error(f"Failed to create user in Keycloak: {response.get('message')}")
             return response
@@ -43,10 +95,10 @@ async def create_user(data) -> dict:
             user_name=user_name,
             first_name=first_name,
             last_name=last_name,
-            role_id=user_data.get('role_id'),
+            roles=roles,
             email=email,
             keycloak_uid=keycloak_uid,
-            creation_date=time.strftime("%Y-%m-%d %H:%M:%S"),
+            creation_date=time.strftime("%d-%m-%Y"),
         )
         user.save()
 
@@ -67,8 +119,12 @@ async def update_user(data) -> dict:
     try:
         user_data = data.dict()
         user_id = user_data.get("user_id")
-        user_name = user_data.get("user_name")
+        user_name = user_data.get("user_name",None)
+        roles = user_data.get("roles", None)
         del user_data["user_id"]
+
+        # Convert Enum instances to their string values
+        roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
 
         if all(value is None for value in user_data.values()):
             return {"status": "failed", "message": "No data to update"}
@@ -86,7 +142,12 @@ async def update_user(data) -> dict:
         User.objects(id=user.id).update(**update_data)
 
         response = await update_user_in_keycloak(
-            user.keycloak_uid, user_name, user.first_name, user.last_name, user.email
+            user.keycloak_uid,
+            user_name,
+            user.first_name,
+            user.last_name,
+            user.email,
+            roles,
         )
         if response.get('status') != 'success':
             logger.error(f"Error from Keycloak: {str(response['message'])}")
@@ -147,7 +208,7 @@ async def get_user(data) -> dict:
             "user_name": user.user_name,
             "first_name": user.first_name,
             "last_name": user.last_name,
-            "role_id": user.role_id,
+            "roles": user.roles,
             "email": user.email,
             "keycloak_uid": user.keycloak_uid,
             "creation_date": user.creation_date,
@@ -177,7 +238,7 @@ async def get_user_by_keycloak_uid(data) -> dict:
             "user_name": user.user_name,
             "first_name": user.first_name,
             "last_name": user.last_name,
-            "role_id": user.role_id,
+            "roles": user.roles,
             "email": user.email,
             "keycloak_uid": user.keycloak_uid,
             "creation_date": user.creation_date,
