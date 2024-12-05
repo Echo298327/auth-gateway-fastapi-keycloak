@@ -69,14 +69,17 @@ Make sure you have the following installed:
 
 ```plaintext
 │   .env
-│   LICENSE
-|   API.md
-│   README.md
-|   SECURITY.md
+│   .env.docker
+│   API.md
 │   docker-compose.yml
+│   LICENSE
 │   postman_collection.json
+│   README.md
+│   SECURITY.md
 │
 ├───.github
+│   │   CODEOWNERS
+│   │
 │   └───workflows
 │           run-tests.yml
 │
@@ -91,6 +94,7 @@ Make sure you have the following installed:
 │
 ├───gateway
 │   │   requirements.txt
+│   │   __init__.py
 │   │
 │   ├───src
 │   │   │   app.py
@@ -107,8 +111,7 @@ Make sure you have the following installed:
     ├───src
     │   │   app.py
     │   │   config.py
-    │   │   keycloak_init.py
-    │   │   keycloak_manager.py
+    │   │   keycloak_config.json
     │   │   manager.py
     │   │   mongo_models.py
     │   │   schemas.py
