@@ -1,11 +1,12 @@
-import manager
 import uvicorn
 from fastapi import FastAPI, Depends
+from typing import Tuple, List, Any
 from config import settings
 from schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
-from typing import Tuple, List, Any
 from auth_gateway_serverkit.request_handler import parse_json_request_model, response
 from auth_gateway_serverkit.keycloak.initializer import initialize_keycloak_server
+import manager
+
 
 app = FastAPI(title="User App")
 

@@ -6,6 +6,7 @@ from auth_gateway_serverkit.keycloak.manager import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
 from auth_gateway_serverkit.email import send_password_email
+from auth_gateway_serverkit.string import is_valid_user_name
 
 try:
     from config import settings
@@ -76,6 +77,9 @@ async def create_user(data) -> dict:
         email = user_data.get("email")
         roles = user_data.get("roles")
 
+        if not is_valid_user_name(user_name):
+            return {"status": "failed", "message": "Invalid user name"}
+
         # Convert Enum instances to their string values
         roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
 
@@ -124,6 +128,9 @@ async def update_user(data) -> dict:
         user_name = user_data.get("user_name",None)
         roles = user_data.get("roles", None)
         del user_data["user_id"]
+
+        if not is_valid_user_name(user_name):
+            return {"status": "failed", "message": "Invalid user name"}
 
         # Convert Enum instances to their string values
         roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]

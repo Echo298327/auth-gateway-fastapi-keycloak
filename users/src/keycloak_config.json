@@ -1,4 +1,18 @@
 {
+  "realm_roles": [
+    {
+        "name": "user",
+        "description": "Standard user with limited access"
+    },
+    {
+        "name": "admin",
+        "description": "Administrator with elevated privileges"
+    },
+    {
+        "name": "systemAdmin",
+        "description": "System administrator with full access"
+    }
+  ],
   "policies": [
     {
       "name": "SystemAdmin-Access",

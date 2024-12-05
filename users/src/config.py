@@ -1,43 +1,52 @@
-from pydantic_settings import BaseSettings
-from dotenv import load_dotenv
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field
 from mongoengine import connect
-import os
+from dotenv import load_dotenv
 
 load_dotenv()
 
 
 class Settings(BaseSettings):
-    # database
-    MONGO_CONNECTION_STRING: str = os.getenv("CONNECTION_STRING", "mongodb://localhost:27017/")
-    DB_NAME: str = os.getenv("DB_NAME", "inventory")
+    # Database settings
+    MONGO_CONNECTION_STRING: str
+    DB_NAME: str
 
-    # app settings
-    PORT: int = int(os.getenv("USERS_PORT", 8081))
-    HOST: str = os.getenv("USERS_HOST", "0.0.0.0")
+    # App settings
+    PORT: int = Field(alias="USERS_PORT")
+    HOST: str = Field(alias="USERS_HOST")
 
-    # email settings
-    APP_EMAIL: str = os.getenv("APP_EMAIL", "email")
-    APP_PASSWORD: str = os.getenv("APP_PASSWORD", "password")
+    # Email settings
+    APP_EMAIL: str
+    APP_PASSWORD: str
 
-    # system admin settings
-    SYSTEM_ADMIN_USER_NAME: str = os.getenv("SYSTEM_ADMIN_USER_NAME")
-    SYSTEM_ADMIN_FIRST_NAME: str = os.getenv("SYSTEM_ADMIN_FIRST_NAME")
-    SYSTEM_ADMIN_LAST_NAME: str = os.getenv("SYSTEM_ADMIN_LAST_NAME")
-    SYSTEM_ADMIN_EMAIL: str = os.getenv("SYSTEM_ADMIN_EMAIL")
-    SYSTEM_ADMIN_PASSWORD: str = os.getenv("SYSTEM_ADMIN_PASSWORD")
+    # System admin settings
+    SYSTEM_ADMIN_USER_NAME: str
+    SYSTEM_ADMIN_FIRST_NAME: str
+    SYSTEM_ADMIN_LAST_NAME: str
+    SYSTEM_ADMIN_EMAIL: str
+    SYSTEM_ADMIN_PASSWORD: str
 
-    # keycloak settings
-    SERVER_URL: str = os.getenv("SERVER_URL", "http://localhost:9002")
-    REALM: str = os.getenv("REALM", "templateRealm")
-    CLIENT_ID: str = os.getenv("CLIENT_ID", "templateApp")
-    SCOPE: str = os.getenv("SCOPE", "openid")
-    AUTHORIZATION_URL: str = os.getenv("AUTHORIZATION_URL")
-    TOKEN_URL: str = os.getenv("TOKEN_URL")
-    KEYCLOAK_USER: str = os.getenv("KEYCLOAK_USER", "admin")
-    KEYCLOAK_PASSWORD: str = os.getenv("KEYCLOAK_PASSWORD", "admin")
+    # Keycloak settings
+    SERVER_URL: str
+    REALM: str
+    CLIENT_ID: str
+    SCOPE: str
+    AUTHORIZATION_URL: str
+    TOKEN_URL: str
+    KC_BOOTSTRAP_ADMIN_USERNAME: str
+    KC_BOOTSTRAP_ADMIN_USERNAME: str
+
+    # Load environment variables from .env file
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     def connect_db(self):
+        """Connect to the MongoDB database using MongoEngine."""
         connect(host=self.MONGO_CONNECTION_STRING, db=self.DB_NAME)
 
 
-settings = Settings()
+try:
+    settings = Settings()
+except ValueError as e:
+    print(f"Error loading settings: {e}")
+    import sys
+    sys.exit(1)
