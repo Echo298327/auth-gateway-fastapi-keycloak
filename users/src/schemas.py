@@ -1,16 +1,19 @@
 from pydantic import BaseModel, EmailStr, Extra
-from typing import Optional
+from typing import Optional, List
+from enum import Enum
+
+
+class AllowedRoles(str, Enum):
+    user = "user"
+    admin = "admin"
 
 
 class CreateUser(BaseModel):
     user_name: str
     first_name: str
     last_name: str
-    role_id: str
+    roles: List[AllowedRoles]
     email: EmailStr
-
-    class Config:
-        extra = Extra.forbid
 
 
 class UpdateUser(BaseModel):
@@ -18,7 +21,7 @@ class UpdateUser(BaseModel):
     first_name: Optional[str] = None
     user_name: Optional[str] = None
     last_name: Optional[str] = None
-    role_id: Optional[str] = None
+    roles: Optional[List[AllowedRoles]] = None
 
     class Config:
         extra = Extra.forbid

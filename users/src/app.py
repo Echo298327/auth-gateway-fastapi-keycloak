@@ -1,11 +1,12 @@
-import manager
 import uvicorn
 from fastapi import FastAPI, Depends
+from typing import Tuple, List, Any
 from config import settings
 from schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
-from typing import Tuple, List, Any
 from auth_gateway_serverkit.request_handler import parse_json_request_model, response
-from keycloak_init import initialize_keycloak_server
+from auth_gateway_serverkit.keycloak.initializer import initialize_keycloak_server
+import manager
+
 
 app = FastAPI(title="User App")
 
@@ -16,6 +17,9 @@ async def startup_event():
     is_initialized = await initialize_keycloak_server()
     if not is_initialized:
         raise Exception("Failed to initialize Keycloak server")
+    is_system_admin_created = await manager.create_system_admin()
+    if not is_system_admin_created:
+        raise Exception("Failed to create system admin")
 
 
 async def handle_request(
