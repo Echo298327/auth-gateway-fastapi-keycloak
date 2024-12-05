@@ -47,10 +47,15 @@ Make sure you have the following installed:
    cd repository-name
    ```
 
-2. **Optional:** The `.env.example` file is already included in the repository, and you can configure it if you plan to run the services locally (without using Docker Compose).
-**Note:**  
-   - The `.env` file is not required when running with Docker Compose. Environment variables for Docker Compose are already handled within the `docker-compose.yml` file.
-   - The `.env` file is only needed if you intend to run the services locally without containers.
+2. **Configure Environment Variables:**
+   - The project includes two `.env` files for different use cases:
+     - `.env.docker`: Used when running the application with Docker Compose. This file is automatically handled by the `docker-compose.yml` configuration, and no additional setup is required.
+     - `.env`: Used for local development without Docker Compose. You can use the `.env.example` file as a template to create your own `.env` file.
+
+     **Note:**
+     - If you are using Docker Compose, the `.env.docker` file will provide the necessary environment variables.
+     - If you plan to run services locally without Docker Compose, ensure the `.env` file is properly configured.
+     - For local development, services such as Postgres, Keycloak, and optionally PgAdmin must still be run using Docker Compose. You can comment out unnecessary services in the `docker-compose.yml` file if not required.
 
 3. Start the services using Docker Compose:
 
@@ -126,9 +131,12 @@ Make sure you have the following installed:
 
 ### Environment Variables
 
-The `.env` file contains configuration for running the application.
-* __Docker Compose:__ The default variables work seamlessly with the Docker Compose setup.
-* __Local Development:__ If you want to run the services locally without Docker Compose, ensure you adjust the variables accordingly.
+The `.env` files contain configurations for running the application:
+
+- **`.env.docker`**: Used by Docker Compose. This file provides pre-configured environment variables to ensure seamless container orchestration.
+- **`.env`**: Used for local development when running services outside Docker Compose. Configure this file to match your local setup.
+
+Ensure you select the appropriate file based on your use case.
 
 ---
 
