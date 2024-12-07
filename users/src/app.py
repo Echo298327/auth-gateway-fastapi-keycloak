@@ -1,9 +1,10 @@
 import uvicorn
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, status
+from fastapi.responses import JSONResponse
 from typing import Tuple, List, Any
 from config import settings
 from schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
-from auth_gateway_serverkit.request_handler import parse_json_request_model, response
+from auth_gateway_serverkit.request_handler import parse_request_body_to_model, response
 from auth_gateway_serverkit.keycloak.initializer import initialize_keycloak_server
 import manager
 
@@ -36,13 +37,18 @@ async def handle_request(
         return response(error=str(e))
 
 
+@app.get("/ping")
+async def ping():
+    return JSONResponse(content="pong!", status_code=status.HTTP_200_OK)
+
+
 @app.post("/create")
-async def create_user(data_errors: Tuple[CreateUser, List[str]] = Depends(parse_json_request_model(CreateUser))):
+async def create_user(data_errors: Tuple[CreateUser, List[str]] = Depends(parse_request_body_to_model(CreateUser))):
     return await handle_request(data_errors, manager.create_user)
 
 
 @app.put("/update")
-async def update_user(data_errors: Tuple[UpdateUser, List[str]] = Depends(parse_json_request_model(UpdateUser))):
+async def update_user(data_errors: Tuple[UpdateUser, List[str]] = Depends(parse_request_body_to_model(UpdateUser))):
     return await handle_request(data_errors, manager.update_user)
 
 
