@@ -32,7 +32,7 @@ services:
         dockerfile: keycloak_dockerfile
       command: ["start-dev"]
       ports:
-        - "9002:9002"
+        - "9000:9000"
       env_file:
         - .env.docker
       volumes:
