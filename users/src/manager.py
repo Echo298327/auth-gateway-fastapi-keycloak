@@ -6,17 +6,17 @@ from auth_gateway_serverkit.keycloak.manager import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
 from auth_gateway_serverkit.email import send_password_email
-from auth_gateway_serverkit.string import is_valid_user_name
-
 try:
     from config import settings
     from mongo_models import User
     from schemas import AllowedRoles
+    from utils import is_valid_names
 except ImportError:
 
     from .config import settings
     from .mongo_models import User
     from .schemas import AllowedRoles
+    from .utils import is_valid_names
 
 
 logger = init_logger("user.manager")
@@ -70,15 +70,15 @@ async def create_system_admin() -> bool:
 
 async def create_user(data) -> dict:
     try:
-        user_data = data.dict()
-        user_name = user_data.get("user_name")
-        first_name = user_data.get("first_name")
-        last_name = user_data.get("last_name")
-        email = user_data.get("email")
-        roles = user_data.get("roles")
+        user_name = data.user_name
+        first_name = data.first_name
+        last_name = data.last_name
+        email = data.email
+        roles = data.roles
 
-        if not is_valid_user_name(user_name):
-            return {"status": "failed", "message": "Invalid user name"}
+        valid_names, errors = is_valid_names(user_name, first_name, last_name)
+        if not valid_names:
+            return {"status": "failed", "message": ", ".join(errors)}
 
         # Convert Enum instances to their string values
         roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
@@ -121,46 +121,51 @@ async def create_user(data) -> dict:
         return {"status": "failed", "message": "Internal Server Error"}
 
 
-async def update_user(data) -> dict:
+async def update_user(data, user_roles=None) -> dict:
     try:
-        user_data = data.dict()
-        user_id = user_data.get("user_id")
-        user_name = user_data.get("user_name",None)
-        roles = user_data.get("roles", None)
-        del user_data["user_id"]
-
-        if not is_valid_user_name(user_name):
-            return {"status": "failed", "message": "Invalid user name"}
-
-        # Convert Enum instances to their string values
-        roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
-
-        if all(value is None for value in user_data.values()):
-            return {"status": "failed", "message": "No data to update"}
+        user_id = data.user_id
+        user_name = data.user_name
+        roles = data.roles
 
         user = User.objects(id=user_id).first()
         if not user:
             logger.error(f"User not found: {user_id}")
             return {"status": "failed", "message": "User not found"}
 
-        if user_data.get("user_name"):
-            if User.objects(user_name__iexact=user_name.lower()).first():
-                return {"status": "failed", "message": "User name already exists"}
+        data_dict = data.dict()
+        update_data = {key: value for key, value in data_dict.items() if key != "user_id" and value is not None}
 
-        update_data = {key: value for key, value in user_data.items() if value is not None}
+        if not update_data:
+            return {"status": "failed", "message": "No data to update"}
+
+        valid_names, errors = is_valid_names(user_name, data.first_name, data.last_name)
+        if not valid_names:
+            return {"status": "failed", "message": ", ".join(errors)}
+
+        if roles:
+            if not {"admin", "systemAdmin"} & set(user_roles):
+                return {"status": "failed", "message": "Unauthorized to update roles"}
+            roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
+
+        if user_name and User.objects(user_name__iexact=user_name.lower()).first():
+            return {"status": "failed", "message": "User name already exists"}
+
         User.objects(id=user.id).update(**update_data)
 
-        response = await update_user_in_keycloak(
-            user.keycloak_uid,
-            user_name,
-            user.first_name,
-            user.last_name,
-            user.email,
-            roles,
-        )
-        if response.get('status') != 'success':
-            logger.error(f"Error from Keycloak: {str(response['message'])}")
-            return {'status': 'fail', 'message': str(response['message'])}
+        # Check if Keycloak needs an update
+        requires_keycloak_update = any(field in update_data for field in ["user_name", "first_name", "last_name", "email", "roles"])
+        if requires_keycloak_update:
+            response = await update_user_in_keycloak(
+                user.keycloak_uid,
+                user_name or user.user_name,
+                data.first_name or user.first_name,
+                data.last_name or user.last_name,
+                data.email or user.email,
+                roles,
+            )
+            if response.get('status') != 'success':
+                logger.error(f"Error from Keycloak: {response.get('message', 'Unknown error')}")
+                return {"status": "failed", "message": f"Keycloak update error: {response.get('message', 'Unknown error')}"}
 
         logger.info(f"User updated: {user_id}")
         return {"status": "success", "message": "User updated successfully"}
@@ -175,8 +180,7 @@ async def update_user(data) -> dict:
 
 async def delete_user(data) -> dict:
     try:
-        user_data = data.dict()
-        user_id = user_data.get("user_id")
+        user_id = data.user_id
         user = User.objects(id=user_id).first()
 
         if not user:
@@ -205,8 +209,7 @@ async def delete_user(data) -> dict:
 
 async def get_user(data) -> dict:
     try:
-        user_data = data.dict()
-        user_id = user_data.get("user_id")
+        user_id = data.user_id
         user = User.objects(id=user_id).first()
         if not user:
             logger.error(f"User not found: {user_id}")
@@ -219,7 +222,6 @@ async def get_user(data) -> dict:
             "last_name": user.last_name,
             "roles": user.roles,
             "email": user.email,
-            "keycloak_uid": user.keycloak_uid,
             "creation_date": user.creation_date,
         }
 
@@ -235,29 +237,24 @@ async def get_user(data) -> dict:
 
 async def get_user_by_keycloak_uid(data) -> dict:
     try:
-        user_data = data.dict()
-        keycloak_uid = user_data.get("keycloak_uid")
+        keycloak_uid = data.keycloak_uid
         user = User.objects(keycloak_uid=keycloak_uid).first()
         if not user:
             logger.error(f"User not found: {keycloak_uid}")
             return {"status": "failed", "message": "User not found"}
 
-        data = {
-            "id": str(user.id),
-            "user_name": user.user_name,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "roles": user.roles,
-            "email": user.email,
-            "keycloak_uid": user.keycloak_uid,
-            "creation_date": user.creation_date,
-        }
+        # Convert the MongoEngine document to a dictionary
+        user_dict = user.to_mongo().to_dict()
+        user_dict["id"] = str(user_dict["_id"])
+        del user_dict["_id"]
+        user_dict.pop("_cls", None)
 
-        return {"status": "success", "data": data}
+        return {"status": "success", "data": user_dict}
 
     except DoesNotExist:
-        logger.error(f"User not found")
+        logger.error("User not found")
         return {"status": "failed", "message": "User not found"}
     except Exception as e:
         logger.error(f"Error retrieving user: {str(e)}")
         return {"status": "failed", "message": "Internal Server Error"}
+

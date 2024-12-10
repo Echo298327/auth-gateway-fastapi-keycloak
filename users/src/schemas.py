@@ -18,9 +18,10 @@ class CreateUser(BaseModel):
 
 class UpdateUser(BaseModel):
     user_id: str
-    first_name: Optional[str] = None
     user_name: Optional[str] = None
+    first_name: Optional[str] = None
     last_name: Optional[str] = None
+    email: Optional[EmailStr] = None
     roles: Optional[List[AllowedRoles]] = None
 
     class Config:

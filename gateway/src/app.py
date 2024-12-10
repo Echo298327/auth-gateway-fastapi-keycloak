@@ -6,8 +6,12 @@ from manager import process_request, get_by_keycloak_uid
 from auth_gateway_serverkit.middleware.auth import auth
 import uvicorn
 
-
 app = FastAPI(title="Gateway App")
+
+
+@app.get("/ping")
+async def ping():
+    return JSONResponse(content="pong!", status_code=status.HTTP_200_OK)
 
 
 @app.post("/api/{service}/{action}")
@@ -39,11 +43,6 @@ async def handle_request(
             content={"message": f"Internal Server Error: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-
-@app.get("/ping")
-async def ping():
-    return {"message": "pong!", "status_code": status.HTTP_200_OK}
 
 
 if __name__ == "__main__":
