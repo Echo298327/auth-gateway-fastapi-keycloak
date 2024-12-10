@@ -121,7 +121,7 @@ async def create_user(data) -> dict:
         return {"status": "failed", "message": "Internal Server Error"}
 
 
-async def update_user(data) -> dict:
+async def update_user(data, user_roles=None) -> dict:
     try:
         user_id = data.user_id
         user_name = data.user_name
@@ -143,6 +143,8 @@ async def update_user(data) -> dict:
             return {"status": "failed", "message": ", ".join(errors)}
 
         if roles:
+            if not {"admin", "systemAdmin"} & set(user_roles):
+                return {"status": "failed", "message": "Unauthorized to update roles"}
             roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
 
         if user_name and User.objects(user_name__iexact=user_name.lower()).first():

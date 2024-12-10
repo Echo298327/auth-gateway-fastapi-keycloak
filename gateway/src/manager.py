@@ -3,7 +3,7 @@ import httpx
 from fastapi import Request, status
 from auth_gateway_serverkit.logger import init_logger
 import auth_gateway_serverkit.http_client as http
-from typing import Union, Dict, Any
+from typing import Union, Dict, List, Any
 from config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
@@ -20,6 +20,7 @@ async def process_request(
 ):
     # Determine content type and parse accordingly
     request_data, content_type = await parse_request(request)
+    user_roles = request.state.realm_roles
 
     # Construct the URL path, including additional path segments if any
     path_segment = f"/{path}" if path else ""
@@ -37,7 +38,8 @@ async def process_request(
         url,
         request.method,
         content_type,
-        request_data
+        request_data,
+        user_roles
     )
 
 
@@ -45,18 +47,21 @@ async def forward_request_and_process_response(
     url: str,
     method: str,
     content_type: str,
-    request_data: Dict[str, Any]
+    request_data: Dict[str, Any],
+    roles: List[str]
 ) -> Dict[str, Any]:
     try:
         start_time = datetime.datetime.now()
         method = method.upper()
         response = None
 
+        headers = {"X-Roles": ",".join(roles) if roles else ""}
+
         # Handle different HTTP methods
         if method in ["POST", "PUT"]:
             if content_type == "json":
-                response = await http.post(url, json=request_data, timeout=150) if method == "POST" else \
-                    await http.put(url, json=request_data, timeout=150)
+                response = await http.post(url, json=request_data, headers=headers, timeout=150) if method == "POST" else \
+                    await http.put(url, json=request_data, headers=headers, timeout=150)
             elif content_type == "multipart":
                 files = {
                     key: (file.filename, file.file, file.content_type)
@@ -68,15 +73,15 @@ async def forward_request_and_process_response(
                     for key, value in request_data.items()
                     if not isinstance(value, StarletteUploadFile)
                 }
-                response = await http.post(url, data=data, files=files, timeout=150) if method == "POST" else \
+                response = await http.post(url, data=data, files=files, headers=headers, timeout=150) if method == "POST" else \
                     await http.put(url, data=data, files=files, timeout=150)
             else:
-                response = await http.post(url, data=request_data, timeout=150) if method == "POST" else \
-                    await http.put(url, data=request_data, timeout=150)
+                response = await http.post(url, data=request_data, headers=headers, timeout=150) if method == "POST" else \
+                    await http.put(url, data=request_data, headers=headers, timeout=150)
         elif method == "GET":
-            response = await http.get(url, params=request_data, timeout=150)
+            response = await http.get(url, params=request_data, headers=headers, timeout=150)
         elif method == "DELETE":
-            response = await http.delete(url, params=request_data, timeout=150)
+            response = await http.delete(url, params=request_data, headers=headers, timeout=150)
         else:
             return {
                 "message": "Method not supported",
