@@ -89,6 +89,16 @@ class UserManager:
 
     @exception_handler
     async def create_user(self, data) -> dict:
+        """
+        Create a new user in the database and in Keycloak.
+
+        Args:
+            data: Data object containing user information such as user_name,
+                  first_name, last_name, email, and roles.
+
+        Returns:
+            dict: A dictionary containing the result of the operation.
+        """
         db = get_db()
         session = db.client.start_session()
         session.start_transaction()
@@ -156,6 +166,19 @@ class UserManager:
 
     @exception_handler
     async def update_user(self, data, request_user=None) -> dict:
+        """
+        Update an existing user in the database and in Keycloak.
+
+        Args:
+            data: An object containing the user_id and the fields to update.
+            request_user (optional): The user object (dict) making the request.
+                                     This object is provided by the gateway and
+                                     helps determine authorization. It is not
+                                     used by STS requests directly.
+
+        Returns:
+            dict: A dictionary containing the status and message of the operation.
+        """
         db = get_db()
         session = db.client.start_session()
         session.start_transaction()
@@ -231,6 +254,15 @@ class UserManager:
 
     @exception_handler
     async def delete_user(self, data) -> dict:
+        """
+        Delete a user from the database and from Keycloak.
+
+        Args:
+            data: An object containing the user_id of the user to delete.
+
+        Returns:
+            dict: A dictionary containing the status and message of the operation.
+        """
         # No transaction needed for a simple deletion unless required by business logic
         user_id = data.user_id
         user = User.objects(id=user_id).first()
@@ -251,6 +283,20 @@ class UserManager:
 
     @exception_handler
     async def get_user(self, data, request_user=None) -> dict:
+        """
+        Retrieve a user's information from the database.
+
+        Args:
+            data: An object containing the user_id of the user to retrieve.
+            request_user (optional): The user object (dict) making the request.
+                                     This object is provided by the gateway and
+                                     is used to ensure that the requester has
+                                     the necessary permissions. It is not used
+                                     by STS requests directly.
+
+        Returns:
+            dict: A dictionary containing the status and user data if found.
+        """
         if request_user:
             if request_user.get("id") != data.user_id and not {"admin", "systemAdmin"} & set(request_user.get("roles", [])):
                 return {"status": "failed", "message": "Unauthorized access"}
@@ -275,6 +321,15 @@ class UserManager:
 
     @exception_handler
     async def get_user_by_keycloak_uid(self, data) -> dict:
+        """
+        Retrieve a user's information from the database using their Keycloak UID.
+
+        Args:
+            data: An object containing the keycloak_uid of the user.
+
+        Returns:
+            dict: A dictionary containing the status and user data if found.
+        """
         # No transaction needed for a simple read
         keycloak_uid = data.keycloak_uid
         user = User.objects(keycloak_uid=keycloak_uid).first()
