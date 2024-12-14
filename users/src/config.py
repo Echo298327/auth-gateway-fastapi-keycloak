@@ -38,7 +38,11 @@ class Settings(BaseSettings):
     KC_BOOTSTRAP_ADMIN_PASSWORD: str
 
     # Load environment variables from .env file
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+    model_config = SettingsConfigDict(
+        env_file=".env", 
+        env_file_encoding="utf-8",
+        extra="allow"  # This allows extra fields from environment variables
+    )
 
     def connect_db(self):
         """Connect to the MongoDB database using MongoEngine."""
@@ -49,6 +53,13 @@ class Settings(BaseSettings):
         Get a MongoDB client instance for direct session management or transactional operations.
         """
         return MongoClient(self.MONGO_CONNECTION_STRING)
+
+    # Add new fields for gateway and service configuration
+    GATEWAY_PORT: str = "8080"
+    GATEWAY_HOST: str = "localhost"
+    GATEWAY_URL: str = "http://localhost:8080"
+    USERS_URL: str = "http://localhost:8081"
+    KEYCLOAK_FRONTEND_URL: str = "http://keycloak:9000"
 
 
 try:

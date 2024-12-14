@@ -7,23 +7,33 @@ import os
 # Add project root to Python path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-# Set environment variables for Keycloak settings
+# Set environment variables for testing
 os.environ.update({
-    'SERVER_URL': 'http://test-keycloak:8080',
-    'CLIENT_ID': 'test-client',
-    'REALM': 'test-realm',
-    'SCOPE': 'test-scope',
-    'KEYCLOAK_FRONTEND_URL': 'http://test-keycloak:8080',
+    # Keycloak settings
+    'SERVER_URL': 'http://127.0.0.1:9000',
+    'CLIENT_ID': 'templateApp',
+    'REALM': 'templateRealm',
+    'SCOPE': 'openid',
+    'KEYCLOAK_FRONTEND_URL': 'http://keycloak:9000',
     'KC_BOOTSTRAP_ADMIN_USERNAME': 'admin',
     'KC_BOOTSTRAP_ADMIN_PASSWORD': 'admin',
-    # Local settings
-    'SYSTEM_ADMIN_USER_NAME': 'system_admin',
-    'SYSTEM_ADMIN_FIRST_NAME': 'System',
-    'SYSTEM_ADMIN_LAST_NAME': 'Admin',
-    'SYSTEM_ADMIN_EMAIL': 'admin@system.com',
-    'SYSTEM_ADMIN_PASSWORD': 'admin123',
-    'MONGODB_URL': 'mongodb://localhost:27017/testdb',
-    'DATABASE_NAME': 'testdb'
+    'AUTHORIZATION_URL': 'http://127.0.0.1:9000/auth/realms/templateRealm/protocol/openid-connect/auth',
+    'TOKEN_URL': 'http://127.0.0.1:9000/auth/realms/templateRealm/protocol/openid-connect/token',
+
+    # App settings
+    'USERS_PORT': '8081',
+    'USERS_HOST': 'localhost',
+    'MONGO_CONNECTION_STRING': 'mongodb://localhost:27017',
+    'DB_NAME': 'templateApp',
+    'APP_EMAIL': 'admin@example.com',
+    'APP_PASSWORD': 'xxx xxx xxx',
+
+    # System admin settings
+    'SYSTEM_ADMIN_USER_NAME': 'sysadmin',
+    'SYSTEM_ADMIN_FIRST_NAME': 'None',
+    'SYSTEM_ADMIN_LAST_NAME': 'None',
+    'SYSTEM_ADMIN_EMAIL': 'sysadmin@dev.com',
+    'SYSTEM_ADMIN_PASSWORD': 'sysadminpassword'
 })
 
 # Create mock objects for any additional settings that might be needed

@@ -11,6 +11,24 @@ jobs:
 
     env:
       PYTHONPATH: ${{ github.workspace }}
+      SERVER_URL: "http://127.0.0.1:9000"
+      KEYCLOAK_FRONTEND_URL: "http://keycloak:9000"
+      REALM: "templateRealm"
+      CLIENT_ID: "templateApp"
+      SCOPE: "openid"
+      KC_BOOTSTRAP_ADMIN_USERNAME: "admin"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "admin"
+      USERS_PORT: "8081"
+      USERS_HOST: "localhost"
+      MONGO_CONNECTION_STRING: "mongodb://localhost:27017"
+      DB_NAME: "templateApp"
+      APP_EMAIL: "admin@example.com"
+      APP_PASSWORD: "xxx xxx xxx"
+      SYSTEM_ADMIN_USER_NAME: "sysadmin"
+      SYSTEM_ADMIN_FIRST_NAME: "None"
+      SYSTEM_ADMIN_LAST_NAME: "None"
+      SYSTEM_ADMIN_EMAIL: "sysadmin@dev.com"
+      SYSTEM_ADMIN_PASSWORD: "sysadminpassword"
 
     steps:
     - name: Checkout repository
