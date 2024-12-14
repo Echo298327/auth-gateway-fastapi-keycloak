@@ -1,4 +1,4 @@
-name: Run Unit Tests for Users Microservice
+name: Run Microservices Tests
 
 on:
   pull_request:
@@ -6,9 +6,36 @@ on:
       - main
 
 jobs:
-  test:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      users: ${{ steps.filter.outputs.users }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      new-service: ${{ steps.filter.outputs.new-service }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          users:
+            - 'users/**'
+            - '.env'
+            - 'pytest.ini'
+          gateway:
+            - 'gateway/**'
+            - '.env'
+            - 'pytest.ini'
+          new-service:
+            - 'new-service/**'
+            - '.env'
+            - 'pytest.ini'
 
+  test-users:
+    needs: changes
+    if: needs.changes.outputs.users == 'true'
+    name: Test Users Service
+    runs-on: ubuntu-latest
     env:
       PYTHONPATH: ${{ github.workspace }}
       SERVER_URL: "http://127.0.0.1:9000"
@@ -31,20 +58,70 @@ jobs:
       SYSTEM_ADMIN_PASSWORD: "sysadminpassword"
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-
     - name: Install Users dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r users/requirements.txt
         pip install pytest pytest-asyncio mongomock
+    - name: Run Users Tests
+      run: pytest users/test
 
-    - name: Run Users Unit Tests
+  test-gateway:
+    needs: changes
+    if: needs.changes.outputs.gateway == 'true'
+    name: Test Gateway Service
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      # Gateway specific environment variables here
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    - name: Install Gateway dependencies
       run: |
-        pytest users/test
+        python -m pip install --upgrade pip
+        pip install -r gateway/requirements.txt
+        pip install pytest pytest-asyncio
+    - name: Run Gateway Tests
+      run: pytest gateway/test
+
+  test-new-service:
+    needs: changes
+    if: needs.changes.outputs.new-service == 'true'
+    name: Test New Service
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}
+      # New service specific environment variables
+
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r new-service/requirements.txt
+        pip install pytest pytest-asyncio
+    - name: Run Tests
+      run: pytest new-service/test
+
+  notify-success:
+    needs: [changes, test-users, test-gateway, test-new-service]
+    if: |
+      always() && 
+      (needs.changes.outputs.users == 'false' || needs.test-users.result == 'success') &&
+      (needs.changes.outputs.gateway == 'false' || needs.test-gateway.result == 'success') &&
+      (needs.changes.outputs.new-service == 'false' || needs.test-new-service.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+    - name: All Tests Passed
+      run: echo "All relevant microservice tests passed successfully!"
