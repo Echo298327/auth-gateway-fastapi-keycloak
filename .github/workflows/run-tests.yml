@@ -1,4 +1,4 @@
-name: Run Unit Tests for Users Microservice
+name: Run Microservices Tests
 
 on:
   pull_request:
@@ -6,27 +6,67 @@ on:
       - main
 
 jobs:
-  test:
+  changes:
     runs-on: ubuntu-latest
+    outputs:
+      users: ${{ steps.filter.outputs.users }}
+    steps:
+    - uses: actions/checkout@v3
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          users:
+            - 'users/**'
+            - '.env'
+            - 'pytest.ini'
+            - 'docker-compose.yml'
 
+  test-users:
+    needs: changes
+    if: needs.changes.outputs.users == 'true'
+    name: Test Users Service
+    runs-on: ubuntu-latest
     env:
       PYTHONPATH: ${{ github.workspace }}
+      SERVER_URL: "http://127.0.0.1:9000"
+      KEYCLOAK_FRONTEND_URL: "http://keycloak:9000"
+      REALM: "templateRealm"
+      CLIENT_ID: "templateApp"
+      SCOPE: "openid"
+      KC_BOOTSTRAP_ADMIN_USERNAME: "admin"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "admin"
+      USERS_PORT: "8081"
+      USERS_HOST: "localhost"
+      MONGO_CONNECTION_STRING: "mongodb://localhost:27017"
+      DB_NAME: "templateApp"
+      APP_EMAIL: "admin@example.com"
+      APP_PASSWORD: "xxx xxx xxx"
+      SYSTEM_ADMIN_USER_NAME: "sysadmin"
+      SYSTEM_ADMIN_FIRST_NAME: "None"
+      SYSTEM_ADMIN_LAST_NAME: "None"
+      SYSTEM_ADMIN_EMAIL: "sysadmin@dev.com"
+      SYSTEM_ADMIN_PASSWORD: "sysadminpassword"
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
       with:
         python-version: '3.12'
-
     - name: Install Users dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r users/requirements.txt
-        pip install pytest pytest-asyncio
+        pip install pytest pytest-asyncio mongomock
+    - name: Run Users Tests
+      run: pytest users/test
 
-    - name: Run Users Unit Tests
-      run: |
-        pytest users/test
+  notify-success:
+    needs: [changes, test-users]
+    if: |
+      always() && 
+      (needs.changes.outputs.users == 'false' || needs.test-users.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+    - name: All Tests Passed
+      run: echo "All relevant microservice tests passed successfully!"
