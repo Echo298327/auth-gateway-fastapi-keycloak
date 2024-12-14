@@ -6,7 +6,7 @@ from manager import process_request, get_by_keycloak_uid
 from auth_gateway_serverkit.middleware.auth import auth
 import uvicorn
 
-app = FastAPI(title="Gateway App")
+app = FastAPI(title="gateway.app")
 
 
 @app.get("/ping")

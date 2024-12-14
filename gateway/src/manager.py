@@ -1,9 +1,10 @@
 import datetime
 import httpx
+import json
 from fastapi import Request, status
 from auth_gateway_serverkit.logger import init_logger
 import auth_gateway_serverkit.http_client as http
-from typing import Union, Dict, List, Any
+from typing import Union, Dict, Any
 from config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
@@ -20,7 +21,7 @@ async def process_request(
 ):
     # Determine content type and parse accordingly
     request_data, content_type = await parse_request(request)
-    user_roles = request.state.realm_roles
+    user = request.state.user
 
     # Construct the URL path, including additional path segments if any
     path_segment = f"/{path}" if path else ""
@@ -39,7 +40,7 @@ async def process_request(
         request.method,
         content_type,
         request_data,
-        user_roles
+        user
     )
 
 
@@ -48,14 +49,14 @@ async def forward_request_and_process_response(
     method: str,
     content_type: str,
     request_data: Dict[str, Any],
-    roles: List[str]
+    user: Dict[str, Any]
 ) -> Dict[str, Any]:
     try:
         start_time = datetime.datetime.now()
         method = method.upper()
         response = None
-
-        headers = {"X-Roles": ",".join(roles) if roles else ""}
+        # Add the user information to the headers
+        headers = {"X-User": json.dumps(user)}
 
         # Handle different HTTP methods
         if method in ["POST", "PUT"]:
