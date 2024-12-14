@@ -7,34 +7,41 @@ import os
 # Add project root to Python path
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
-# Set environment variables for testing
-os.environ.update({
-    # Keycloak settings
-    'SERVER_URL': 'http://127.0.0.1:9000',
-    'CLIENT_ID': 'templateApp',
-    'REALM': 'templateRealm',
-    'SCOPE': 'openid',
-    'KEYCLOAK_FRONTEND_URL': 'http://keycloak:9000',
-    'KC_BOOTSTRAP_ADMIN_USERNAME': 'admin',
-    'KC_BOOTSTRAP_ADMIN_PASSWORD': 'admin',
-    'AUTHORIZATION_URL': 'http://127.0.0.1:9000/auth/realms/templateRealm/protocol/openid-connect/auth',
-    'TOKEN_URL': 'http://127.0.0.1:9000/auth/realms/templateRealm/protocol/openid-connect/token',
+# Create a mock Settings class
+class MockSettings:
+    def __init__(self):
+        self.SERVER_URL = "http://127.0.0.1:9000"
+        self.CLIENT_ID = "templateApp"
+        self.REALM = "templateRealm"
+        self.SCOPE = "openid"
+        self.KEYCLOAK_FRONTEND_URL = "http://keycloak:9000"
+        self.KC_BOOTSTRAP_ADMIN_USERNAME = "admin"
+        self.KC_BOOTSTRAP_ADMIN_PASSWORD = "admin"
+        self.AUTHORIZATION_URL = f"{self.SERVER_URL}/auth/realms/{self.REALM}/protocol/openid-connect/auth"
+        self.TOKEN_URL = f"{self.SERVER_URL}/auth/realms/{self.REALM}/protocol/openid-connect/token"
+        
+        # App settings
+        self.MONGO_CONNECTION_STRING = "mongodb://localhost:27017"
+        self.DB_NAME = "templateApp"
+        self.PORT = 8081
+        self.HOST = "localhost"
+        self.APP_EMAIL = "admin@example.com"
+        self.APP_PASSWORD = "xxx xxx xxx"
+        
+        # System admin settings
+        self.SYSTEM_ADMIN_USER_NAME = "sysadmin"
+        self.SYSTEM_ADMIN_FIRST_NAME = "None"
+        self.SYSTEM_ADMIN_LAST_NAME = "None"
+        self.SYSTEM_ADMIN_EMAIL = "sysadmin@dev.com"
+        self.SYSTEM_ADMIN_PASSWORD = "sysadminpassword"
 
-    # App settings
-    'USERS_PORT': '8081',
-    'USERS_HOST': 'localhost',
-    'MONGO_CONNECTION_STRING': 'mongodb://localhost:27017',
-    'DB_NAME': 'templateApp',
-    'APP_EMAIL': 'admin@example.com',
-    'APP_PASSWORD': 'xxx xxx xxx',
+# Create mock module
+mock_config = MagicMock()
+mock_config.settings = MockSettings()
+mock_config.Settings = MockSettings
 
-    # System admin settings
-    'SYSTEM_ADMIN_USER_NAME': 'sysadmin',
-    'SYSTEM_ADMIN_FIRST_NAME': 'None',
-    'SYSTEM_ADMIN_LAST_NAME': 'None',
-    'SYSTEM_ADMIN_EMAIL': 'sysadmin@dev.com',
-    'SYSTEM_ADMIN_PASSWORD': 'sysadminpassword'
-})
+# Patch the entire config module
+sys.modules['auth_gateway_serverkit.keycloak.config'] = mock_config
 
 # Create mock objects for any additional settings that might be needed
 local_settings = MagicMock()
