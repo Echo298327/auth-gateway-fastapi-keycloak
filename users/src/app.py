@@ -6,8 +6,7 @@ from config import settings
 from schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
 from auth_gateway_serverkit.request_handler import parse_request_body_to_model, response, get_request_roles
 from auth_gateway_serverkit.keycloak.initializer import initialize_keycloak_server
-import manager
-
+from manager import manager
 
 app = FastAPI(title="User App")
 
