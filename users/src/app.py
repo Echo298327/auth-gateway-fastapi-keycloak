@@ -1,14 +1,14 @@
 import uvicorn
-from fastapi import FastAPI, Depends, status,HTTPException, Request
+from fastapi import FastAPI, Depends, status
 from fastapi.responses import JSONResponse
-from typing import Tuple, List, Any
+from typing import Tuple, List, Any, Dict
 from config import settings
 from schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
-from auth_gateway_serverkit.request_handler import parse_request_body_to_model, response, get_request_roles
+from auth_gateway_serverkit.request_handler import parse_request_body_to_model, response, get_request_user
 from auth_gateway_serverkit.keycloak.initializer import initialize_keycloak_server
 from manager import manager
 
-app = FastAPI(title="User App")
+app = FastAPI(title="user.app")
 
 
 @app.on_event("startup")
@@ -25,14 +25,14 @@ async def startup_event():
 async def handle_request(
     data_errors: Tuple[Any, List[str]],
     action: callable,
-    roles: List[str] = None
+    user: Dict[str, Any] = None
 ):
     try:
         data, errors = data_errors
         if errors:
             return response(validation_errors=errors)
-        if roles:
-            res = await action(data, roles)
+        if user:
+            res = await action(data, user)
         else:
             res = await action(data)
         return response(res=res)
@@ -53,9 +53,9 @@ async def create_user(data_errors: Tuple[CreateUser, List[str]] = Depends(parse_
 @app.put("/update")
 async def update_user(
         data_errors: Tuple[UpdateUser, List[str]] = Depends(parse_request_body_to_model(UpdateUser)),
-        roles: List[str] = Depends(get_request_roles)
+        user: Dict[str, Any] = Depends(get_request_user)
 ):
-    return await handle_request(data_errors, manager.update_user, roles)
+    return await handle_request(data_errors, manager.update_user, user)
 
 
 @app.delete("/delete/{user_id}")
@@ -64,9 +64,9 @@ async def delete_user(user_id: str):
 
 
 @app.get("/get/{user_id}")
-async def get_user(user_id: str):
+async def get_user(user_id: str, user: Dict[str, Any] = Depends(get_request_user)):
     data_errors = (GetUser(user_id=user_id), [])
-    return await handle_request(data_errors, manager.get_user)
+    return await handle_request(data_errors, manager.get_user, user)
 
 
 @app.get("/get_by_keycloak_uid/{keycloak_uid}")

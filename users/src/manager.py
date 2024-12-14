@@ -1,12 +1,12 @@
 import time
-from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError, OperationError
+from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from mongoengine import get_db
 from auth_gateway_serverkit.logger import init_logger
 from auth_gateway_serverkit.password import generate_password
 from auth_gateway_serverkit.keycloak.manager import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
-from auth_gateway_serverkit.email import send_password_email
+# from auth_gateway_serverkit.email import send_password_email
 
 try:
     from config import settings
@@ -144,7 +144,7 @@ class UserManager:
             # Unexpected error case: let the decorator handle returning "Internal Server Error"
             session.abort_transaction()
             if keycloak_uid:
-                # Attempt to rollback the Keycloak user creation
+                # Attempt to roll back the Keycloak user creation
                 rollback_response = await delete_user_from_keycloak(keycloak_uid)
                 if rollback_response.get('status') != 'success':
                     self.logger.error(
@@ -155,14 +155,15 @@ class UserManager:
             session.end_session()
 
     @exception_handler_decorator
-    async def update_user(self, data, user_roles=None) -> dict:
+    async def update_user(self, data, request_user=None) -> dict:
         db = get_db()
         session = db.client.start_session()
         session.start_transaction()
         try:
             user_id = data.user_id
             user_name = data.user_name.lower() if data.user_name else None
-            roles = [role.value if isinstance(role, AllowedRoles) else role for role in data.roles] if data.roles else None
+            roles = \
+                [role.value if isinstance(role, AllowedRoles) else role for role in data.roles] if data.roles else None
 
             user = User.objects(id=user_id).first()
             if not user:
@@ -181,7 +182,7 @@ class UserManager:
                 session.abort_transaction()
                 session.end_session()
                 return {"status": "failed", "message": ", ".join(errors)}
-
+            user_roles = request_user.get("roles") if request_user else None
             if roles and not {"admin", "systemAdmin"} & set(user_roles or []):
                 session.abort_transaction()
                 session.end_session()
@@ -214,7 +215,10 @@ class UserManager:
                 if response.get("status") != "success":
                     session.abort_transaction()
                     session.end_session()
-                    return {"status": "failed", "message": f"Keycloak update error: {response.get('message', 'Unknown error')}"}
+                    return {
+                        "status": "failed",
+                        "message": f"Keycloak update error: {response.get('message', 'Unknown error')}"
+                    }
 
             session.commit_transaction()
             return {"status": "success", "message": "User updated successfully"}
@@ -246,7 +250,11 @@ class UserManager:
         return {"status": "success", "message": "User deleted successfully"}
 
     @exception_handler_decorator
-    async def get_user(self, data) -> dict:
+    async def get_user(self, data, request_user=None) -> dict:
+        if request_user:
+            if request_user.get("id") != data.user_id and not {"admin", "systemAdmin"} & set(request_user.get("roles", [])):
+                return {"status": "failed", "message": "Unauthorized access"}
+
         # No transaction needed for a simple read
         user_id = data.user_id
         user = User.objects(id=user_id).first()
