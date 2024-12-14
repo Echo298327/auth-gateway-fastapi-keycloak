@@ -184,7 +184,8 @@ class TestUserManager:
                 roles=['user']
             )
             
-            result = await user_manager.update_user(data, user_roles=['admin'])
+            request_user = {"roles": ["admin"]}
+            result = await user_manager.update_user(data, request_user=request_user)
             
             assert result['status'] == 'success'
             updated_user = User.objects(id=user.id).first()
@@ -301,14 +302,15 @@ class TestUserManager:
             
             data = MockData(
                 user_id=str(user.id),
-                user_name='testuser',  # Add required fields
+                user_name='testuser',
                 first_name='Test',
                 last_name='User',
                 email='test@example.com',
                 roles=['admin']  # Attempting to update to admin role
             )
             
-            result = await user_manager.update_user(data, user_roles=['user'])
+            request_user = {"roles": ["user"]}
+            result = await user_manager.update_user(data, request_user=request_user)
             
             assert result['status'] == 'failed'
             assert 'Unauthorized to update roles' in result['message']
