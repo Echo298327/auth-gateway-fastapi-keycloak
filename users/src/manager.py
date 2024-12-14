@@ -20,7 +20,7 @@ except ImportError:
     from .utils import is_valid_names
 
 
-def exception_handler_decorator(func):
+def exception_handler(func):
     """A decorator to handle exceptions and return standardized responses."""
     async def wrapper(self, *args, **kwargs):
         try:
@@ -44,7 +44,7 @@ class UserManager:
     def __init__(self):
         self.logger = init_logger("user.manager")
 
-    @exception_handler_decorator
+    @exception_handler
     async def create_system_admin(self) -> bool:
         # No session needed because it's a one-time creation
         user = User.objects(user_name=settings.SYSTEM_ADMIN_USER_NAME).first()
@@ -87,7 +87,7 @@ class UserManager:
         self.logger.info(f"System admin created: {user.id}")
         return True
 
-    @exception_handler_decorator
+    @exception_handler
     async def create_user(self, data) -> dict:
         db = get_db()
         session = db.client.start_session()
@@ -154,7 +154,7 @@ class UserManager:
         finally:
             session.end_session()
 
-    @exception_handler_decorator
+    @exception_handler
     async def update_user(self, data, request_user=None) -> dict:
         db = get_db()
         session = db.client.start_session()
@@ -229,7 +229,7 @@ class UserManager:
         finally:
             session.end_session()
 
-    @exception_handler_decorator
+    @exception_handler
     async def delete_user(self, data) -> dict:
         # No transaction needed for a simple deletion unless required by business logic
         user_id = data.user_id
@@ -249,7 +249,7 @@ class UserManager:
         self.logger.info(f"User deleted: {user_id}")
         return {"status": "success", "message": "User deleted successfully"}
 
-    @exception_handler_decorator
+    @exception_handler
     async def get_user(self, data, request_user=None) -> dict:
         if request_user:
             if request_user.get("id") != data.user_id and not {"admin", "systemAdmin"} & set(request_user.get("roles", [])):
@@ -273,7 +273,7 @@ class UserManager:
         }
         return {"status": "success", "data": user_data}
 
-    @exception_handler_decorator
+    @exception_handler
     async def get_user_by_keycloak_uid(self, data) -> dict:
         # No transaction needed for a simple read
         keycloak_uid = data.keycloak_uid
