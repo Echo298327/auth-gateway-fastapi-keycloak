@@ -61,12 +61,12 @@ This document provides an overview of the API endpoints for the microservices in
   ```
 - **Note:** Query parameter is optional
 
-#### 5. `GET {{GatewayApp}}/api/user/get-by-keycloak<keycloak_uid>`
+#### 5. `GET {{GatewayApp}}/api/user/get_by_keycloak_uid/<keycloak_uid>`
 - **Description:** Get a user by their Keycloak UID.
 - **Method:** GET
 - **Request Example:**
   ```
-  {{GatewayApp}}/api/user/get-by-keycloak/<keycloak_uid>
+  {{GatewayApp}}/api/user/get_by_keycloak_uid/<keycloak_uid>
   ```
 
 ### Notes
