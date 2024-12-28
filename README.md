@@ -93,7 +93,6 @@ Make sure you have the following installed:
 │   │
 │   └───docker
 │           gateway_dockerfile
-│           keycloak.conf
 │           keycloak_dockerfile
 │           users_dockerfile
 │
