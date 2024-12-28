@@ -1,10 +1,13 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from auth_gateway_serverkit.logger import init_logger
 from pydantic import Field
 from mongoengine import connect
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = init_logger("users.config")
 
 
 class Settings(BaseSettings):
@@ -58,6 +61,6 @@ class Settings(BaseSettings):
 try:
     settings = Settings()
 except ValueError as e:
-    print(f"Error loading settings: {e}")
+    logger.error(f"Error loading settings: {e}")
     import sys
     sys.exit(1)
