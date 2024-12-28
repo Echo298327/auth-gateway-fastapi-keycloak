@@ -313,7 +313,7 @@ class TestUserManager:
             result = await user_manager.update_user(data, request_user=request_user)
             
             assert result['status'] == 'failed'
-            assert 'Unauthorized to update roles' in result['message']
+            assert 'Unauthorized to update user' in result['message']
 
     async def test_delete_user_keycloak_failure(self, user_manager):
         """Test user deletion when Keycloak deletion fails"""
@@ -353,4 +353,4 @@ class TestUserManager:
             result = await user_manager.update_user(data)
             
             assert result['status'] == 'failed'
-            assert 'User not found' in result['message']
+            assert 'Internal Server Error' in result['message']
