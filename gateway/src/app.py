@@ -16,6 +16,7 @@ async def ping():
 
 @app.post("/api/{service}/{action}")
 @app.put("/api/{service}/{action}")
+@app.get("/api/{service}/{action}")
 @app.delete("/api/{service}/{action}/{path:path}")
 @app.get("/api/{service}/{action}/{path:path}")
 @auth(get_user_by_uid=get_by_keycloak_uid)

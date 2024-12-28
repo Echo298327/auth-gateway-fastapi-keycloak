@@ -11,6 +11,23 @@
 			"item": [
 				{
 					"name": "create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse the response to JSON\r",
+									"const response = pm.response.json();\r",
+									"\r",
+									"// Save the user_id to a collection variable\r",
+									"pm.collectionVariables.set(\"user_id\", response.user_id);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -26,7 +43,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user_name\": \"{{$randomUserName}}\",\r\n    \"first_name\": \"{{$randomFirstName}}\",\r\n    \"last_name\": \"{{$randomLastName}}\",\r\n    \"role_id\": \"{{$randomInt}}\",\r\n    \"email\": \"{{$randomEmail}}\"\r\n}\r\n",
+							"raw": "{\r\n    \"user_name\": \"{{$randomUserName}}\",\r\n    \"first_name\": \"{{$randomFirstName}}\",\r\n    \"last_name\": \"{{$randomLastName}}\",\r\n    \"roles\": [\"user\"],\r\n    \"email\": \"{{$randomEmail}}\"\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -60,11 +77,17 @@
 								}
 							]
 						},
-						"method": "POST",
-						"header": [],
+						"method": "PUT",
+						"header": [
+							{
+								"key": "user_id",
+								"value": "",
+								"type": "text"
+							}
+						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": \"67388cb793f72e22d2c72137\",\r\n    \"user_name\": \"Shalom34\"\r\n}",
+							"raw": "{\r\n    \"user_id\": \"6749cebbcdd96fbcc2bcf98f\",\r\n    \"roles\": [\"user\",\"admin\"]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -98,7 +121,7 @@
 								}
 							]
 						},
-						"method": "POST",
+						"method": "DELETE",
 						"header": [],
 						"body": {
 							"mode": "raw",
@@ -110,14 +133,15 @@
 							}
 						},
 						"url": {
-							"raw": "{{GatewayApp}}/api/user/delete",
+							"raw": "{{GatewayApp}}/api/user/delete/674ae5e24984d6f2c9a42288",
 							"host": [
 								"{{GatewayApp}}"
 							],
 							"path": [
 								"api",
 								"user",
-								"delete"
+								"delete",
+								"674ae5e24984d6f2c9a42288"
 							]
 						}
 					},
@@ -136,17 +160,8 @@
 								}
 							]
 						},
-						"method": "POST",
+						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": \"6738849ae16288ab6febaa4a\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
 							"raw": "{{GatewayApp}}/api/user/get",
 							"host": [
@@ -162,7 +177,7 @@
 					"response": []
 				},
 				{
-					"name": "get_by_keycloak_uid",
+					"name": "get by keycloak uid",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -174,26 +189,18 @@
 								}
 							]
 						},
-						"method": "POST",
+						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"keycloak_uid\": \"ad9c1830-55ec-4a3f-a631-c041112eec5e\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
-							"raw": "{{GatewayApp}}/api/user/get_by_keycloak_uid",
+							"raw": "{{GatewayApp}}/api/user/get_by_keycloak_uid/f4024bee-b5b9-49fe-8f38-4feaa623c6d3",
 							"host": [
 								"{{GatewayApp}}"
 							],
 							"path": [
 								"api",
 								"user",
-								"get_by_keycloak_uid"
+								"get_by_keycloak_uid",
+								"f4024bee-b5b9-49fe-8f38-4feaa623c6d3"
 							]
 						}
 					},
@@ -205,7 +212,7 @@
 			"name": "authentication",
 			"item": [
 				{
-					"name": "get_access_token",
+					"name": "obtain access token",
 					"event": [
 						{
 							"listen": "test",
@@ -231,7 +238,7 @@
 							"urlencoded": [
 								{
 									"key": "username",
-									"value": "elliott.gibson",
+									"value": "Felipa_Koepp0",
 									"type": "text"
 								},
 								{
@@ -247,6 +254,203 @@
 								{
 									"key": "client_id",
 									"value": "{{client}}",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{client_secret}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
+							"host": [
+								"{{KeycloakApp}}"
+							],
+							"path": [
+								"realms",
+								"{{realm}}",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "obtain sys admin token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse the response to JSON\r",
+									"const response = pm.response.json();\r",
+									"\r",
+									"// Save the token to a collection variable\r",
+									"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "sysadmin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "sysadminpassword",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{client}}",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{client_secret}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
+							"host": [
+								"{{KeycloakApp}}"
+							],
+							"path": [
+								"realms",
+								"{{realm}}",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "obtain key admin token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse the response to JSON\r",
+									"const response = pm.response.json();\r",
+									"\r",
+									"// Save the token to a collection variable\r",
+									"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "username",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "admin",
+									"type": "text"
+								},
+								{
+									"key": "grant_type",
+									"value": "password",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "admin-cli",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{KeycloakApp}}/realms/master/protocol/openid-connect/token",
+							"host": [
+								"{{KeycloakApp}}"
+							],
+							"path": [
+								"realms",
+								"master",
+								"protocol",
+								"openid-connect",
+								"token"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "check entitlement",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "urn:ietf:params:oauth:grant-type:uma-ticket",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{client}}",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{client_secret}}",
+									"type": "text"
+								},
+								{
+									"key": "audience",
+									"value": "{{client}}",
+									"type": "text"
+								},
+								{
+									"key": "permission",
+									"value": "user/create",
 									"type": "text"
 								}
 							]
@@ -314,7 +518,16 @@
 			"type": "string"
 		},
 		{
+			"key": "client_secret",
+			"value": "wXcl3M4pfOPtqEEMtWvqEyEOFKIMFqty"
+		},
+		{
 			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "user_id",
 			"value": ""
 		}
 	]

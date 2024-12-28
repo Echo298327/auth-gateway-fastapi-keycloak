@@ -12,12 +12,12 @@ try:
     from config import settings
     from mongo_models import User
     from schemas import AllowedRoles
-    from utils import is_valid_names
+    from utils import is_valid_names,is_admins
 except ImportError:
     from .config import settings
     from .mongo_models import User
     from .schemas import AllowedRoles
-    from .utils import is_valid_names
+    from .utils import is_valid_names,is_admins
 
 
 def exception_handler(func):
@@ -182,8 +182,16 @@ class UserManager:
         db = get_db()
         session = db.client.start_session()
         session.start_transaction()
+        is_keycloak_update_needed = False
         try:
-            user_id = data.user_id
+            if not data.user_id:
+                user_id = request_user.get("id")
+            else:
+                if not is_admins(request_user.get("roles")) and data.user_id != request_user.get("id"):
+                    session.abort_transaction()
+                    session.end_session()
+                    return {"status": "failed", "message": "Unauthorized to update user"}
+                user_id = data.user_id
             user_name = data.user_name.lower() if data.user_name else None
             roles = \
                 [role.value if isinstance(role, AllowedRoles) else role for role in data.roles] if data.roles else None
@@ -205,8 +213,10 @@ class UserManager:
                 session.abort_transaction()
                 session.end_session()
                 return {"status": "failed", "message": ", ".join(errors)}
+
+            # Check if the requester has the necessary permissions
             user_roles = request_user.get("roles") if request_user else None
-            if roles and not {"admin", "systemAdmin"} & set(user_roles or []):
+            if roles and not is_admins(user_roles):
                 session.abort_transaction()
                 session.end_session()
                 return {"status": "failed", "message": "Unauthorized to update roles"}
@@ -226,6 +236,7 @@ class UserManager:
 
             # Update in Keycloak if needed
             if any(field in data.dict() for field in ["user_name", "first_name", "last_name", "email", "roles"]):
+                is_keycloak_update_needed = True
                 response = await update_user_in_keycloak(
                     user.keycloak_uid,
                     user.user_name,
@@ -244,7 +255,10 @@ class UserManager:
                     }
 
             session.commit_transaction()
-            return {"status": "success", "message": "User updated successfully"}
+            return {
+                "status": "success",
+                "message": f"User updated successfully. {'A new login token will be needed.' if is_keycloak_update_needed else ''}"
+            }
 
         except Exception:
             session.abort_transaction()
@@ -297,12 +311,17 @@ class UserManager:
         Returns:
             dict: A dictionary containing the status and user data if found.
         """
-        if request_user:
-            if request_user.get("id") != data.user_id and not {"admin", "systemAdmin"} & set(request_user.get("roles", [])):
+        # Check if the requester has the necessary permissions
+        if request_user and data.user_id:
+            if request_user.get("id") != data.user_id and not is_admins(request_user.get("roles", [])):
+                self.logger.error("Unauthorized access")
                 return {"status": "failed", "message": "Unauthorized access"}
 
         # No transaction needed for a simple read
-        user_id = data.user_id
+        if request_user and not data.user_id:
+            user_id = request_user.get("id")
+        else:
+            user_id = data.user_id
         user = User.objects(id=user_id).first()
         if not user:
             self.logger.error(f"User not found: {user_id}")
