@@ -54,13 +54,6 @@ class Settings(BaseSettings):
         """
         return MongoClient(self.MONGO_CONNECTION_STRING)
 
-    # Add new fields for gateway and service configuration
-    GATEWAY_PORT: str = "8080"
-    GATEWAY_HOST: str = "localhost"
-    GATEWAY_URL: str = "http://localhost:8080"
-    USERS_URL: str = "http://localhost:8081"
-    KEYCLOAK_FRONTEND_URL: str = "http://keycloak:9000"
-
 
 try:
     settings = Settings()
