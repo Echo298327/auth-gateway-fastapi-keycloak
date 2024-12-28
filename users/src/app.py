@@ -63,8 +63,9 @@ async def delete_user(user_id: str):
     return await handle_request((DeleteUser(user_id=user_id), []), manager.delete_user)
 
 
+@app.get("/get")
 @app.get("/get/{user_id}")
-async def get_user(user_id: str, user: Dict[str, Any] = Depends(get_request_user)):
+async def get_user(user_id: str = None, user: Dict[str, Any] = Depends(get_request_user)):
     data_errors = (GetUser(user_id=user_id), [])
     return await handle_request(data_errors, manager.get_user, user)
 

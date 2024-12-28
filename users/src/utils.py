@@ -16,3 +16,11 @@ def is_valid_names(user_name: str = None, first_name: str = None, last_name: str
 
     return True, []
 
+
+def is_admins(roles: list[str]) -> bool:
+    """
+    Check if the user has admin or systemAdmin roles
+    :param roles:
+    :return: bool
+    """
+    return bool({"admin", "systemAdmin"} & set(roles))

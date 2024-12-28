@@ -17,7 +17,7 @@ class CreateUser(BaseModel):
 
 
 class UpdateUser(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
     user_name: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
@@ -36,7 +36,7 @@ class DeleteUser(BaseModel):
 
 
 class GetUser(BaseModel):
-    user_id: str
+    user_id: Optional[str] = None
 
     class Config:
         extra = Extra.forbid

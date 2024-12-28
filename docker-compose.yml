@@ -44,7 +44,7 @@ services:
 
   postgres:
     container_name: postgresP
-    image: postgres:latest
+    image: postgres:17.2
     ports:
       - "5432:5432"
     env_file:
@@ -56,7 +56,7 @@ services:
 
   pgadmin:
     container_name: pgadmin
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:8.14
     ports:
       - "5050:80"
     env_file:
