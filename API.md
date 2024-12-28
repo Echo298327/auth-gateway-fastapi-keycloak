@@ -15,41 +15,61 @@ This document provides an overview of the API endpoints for the microservices in
 
 #### 1. `POST {{GatewayApp}}/api/user/create`
 - **Description:** Create a new user.
+- **Method:** POST
 - **Request Body Example:**
   ```json
   {
-    "user_name": "exampleUser",
-    "first_name": "FirstName",
-    "last_name": "LastName",
-    "role_id": 1,
-    "email": "example@example.com"
+    "user_name": "john_doe",
+    "first_name": "John",
+    "last_name": "Doe",
+    "roles": ["user", "admin"],
+    "email": "john.doe@example.com"
   }
+  ```
 
-#### 2. `POST {{GatewayApp}}/api/user/update`
-- **Description:** Update an existing user.
+#### 2. `PUT {{GatewayApp}}/api/user/update`
+- **Description:** Update an existing user. If user_id is not provided, updates the requesting user's information.
+- **Method:** PUT
 - **Request Body Example:**
   ```json
   {
-    "user_id": 1,
-    "user_name": "exampleUser",
-    "first_name": "FirstName",
-    "last_name": "LastName",
-    "email": "example@gmail.com"
+    "user_id": "6770217c6c53e3cc94472273",
+    "user_name": "john_doe_updated",
+    "first_name": "Johnny",
+    "last_name": "Doe",
+    "email": "johnny.doe@example.com",
+    "roles": ["user"]
   }
-  
-#### 3. `POST {{GatewayApp}}/api/user/delete`
+  ```
+- **Note:** All fields are optional. Only provided fields will be updated.
+
+#### 3. `DELETE {{GatewayApp}}/api/user/delete/<user_id>`
 - **Description:** Delete a user.
-- **Request Body Example:**
-  ```json
-  {
-    "user_id": 1
-  }
-  
+- **Method:** DELETE
+- **Request Example:**
+  ```
+  {{GatewayApp}}/api/user/delete/<user_id>
+  ```
 
-#### 4. `POST {{GatewayApp}}/api/user/get`
-- **Description:** Get a user by ID.
-- **Request Body Example:**
-  ```json
-  {
-    "user_id": 1
-  }
+
+#### 4. `GET {{GatewayApp}}/api/user/get<user_id>`
+- **Description:** Get a user by ID. If no ID is provided, returns the requesting user's information.
+- **Method:** GET
+- **Request Example:**
+  ```
+  {{GatewayApp}}/api/user/get/<user_id>
+  ```
+- **Note:** Query parameter is optional
+
+#### 5. `GET {{GatewayApp}}/api/user/get-by-keycloak<keycloak_uid>`
+- **Description:** Get a user by their Keycloak UID.
+- **Method:** GET
+- **Request Example:**
+  ```
+  {{GatewayApp}}/api/user/get-by-keycloak/<keycloak_uid>
+  ```
+
+### Notes
+- All fields marked as optional can be omitted from the request
+- Email addresses must be in valid format
+- Available roles: ["user", "admin"] (example roles, adjust as needed)
