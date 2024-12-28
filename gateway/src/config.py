@@ -1,8 +1,11 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from auth_gateway_serverkit.logger import init_logger
 from pydantic import Field
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = init_logger("gateway.config")
 
 
 class Settings(BaseSettings):
@@ -24,4 +27,9 @@ class Settings(BaseSettings):
         }
 
 
-settings = Settings()
+try:
+    settings = Settings()
+except ValueError as e:
+    logger.error(f"Error loading settings: {e}")
+    import sys
+    sys.exit(1)
