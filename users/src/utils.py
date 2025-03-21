@@ -1,3 +1,4 @@
+from mongo_models import User
 from auth_gateway_serverkit.string import is_valid_user_name, is_valid_name
 
 
@@ -24,3 +25,11 @@ def is_admins(roles: list[str]) -> bool:
     :return: bool
     """
     return bool({"admin", "systemAdmin"} & set(roles))
+
+
+def fetch_system_admin_id() -> str:
+    """
+    Fetch the system admin user id
+    :return: str
+    """
+    return User.objects(roles__in=["systemAdmin"], user_name="sysadmin").first().id

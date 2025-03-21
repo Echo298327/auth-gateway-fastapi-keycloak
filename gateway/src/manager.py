@@ -9,7 +9,6 @@ from config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
 
-
 logger = init_logger("gateway.manager")
 
 
@@ -34,6 +33,13 @@ async def process_request(
             "status_code": status.HTTP_404_NOT_FOUND
         }
 
+    # check if user try to access/modify system admin details
+    if await check_unauthorized_access(request_data, user.get("id"), path_segment[1:]):
+        return {
+            "message": "Access denied",
+            "status_code": status.HTTP_403_FORBIDDEN
+        }
+
     logger.info(f"Forwarding request to: {url}")
     return await forward_request_and_process_response(
         url,
@@ -45,11 +51,11 @@ async def process_request(
 
 
 async def forward_request_and_process_response(
-    url: str,
-    method: str,
-    content_type: str,
-    request_data: Dict[str, Any],
-    user: Dict[str, Any]
+        url: str,
+        method: str,
+        content_type: str,
+        request_data: Dict[str, Any],
+        user: Dict[str, Any]
 ) -> Dict[str, Any]:
     try:
         start_time = datetime.datetime.now()
@@ -61,7 +67,8 @@ async def forward_request_and_process_response(
         # Handle different HTTP methods
         if method in ["POST", "PUT"]:
             if content_type == "json":
-                response = await http.post(url, json=request_data, headers=headers, timeout=150) if method == "POST" else \
+                response = await http.post(url, json=request_data, headers=headers,
+                                           timeout=150) if method == "POST" else \
                     await http.put(url, json=request_data, headers=headers, timeout=150)
             elif content_type == "multipart":
                 files = {
@@ -74,10 +81,12 @@ async def forward_request_and_process_response(
                     for key, value in request_data.items()
                     if not isinstance(value, StarletteUploadFile)
                 }
-                response = await http.post(url, data=data, files=files, headers=headers, timeout=150) if method == "POST" else \
+                response = await http.post(url, data=data, files=files, headers=headers,
+                                           timeout=150) if method == "POST" else \
                     await http.put(url, data=data, files=files, timeout=150)
             else:
-                response = await http.post(url, data=request_data, headers=headers, timeout=150) if method == "POST" else \
+                response = await http.post(url, data=request_data, headers=headers,
+                                           timeout=150) if method == "POST" else \
                     await http.put(url, data=request_data, headers=headers, timeout=150)
         elif method == "GET":
             response = await http.get(url, params=request_data, headers=headers, timeout=150)
@@ -120,3 +129,21 @@ async def get_by_keycloak_uid(uid):
     except Exception as e:
         logger.error(f"Request error: {e}")
         return None
+
+
+async def check_unauthorized_access(request_data, user_id, path_segment):
+    try:
+        system_admin_id = await settings.get_system_admin_id()
+        if not system_admin_id:
+            logger.error("Failed to get system admin ID")
+            return False
+        if (request_data.get("id") == system_admin_id or path_segment == system_admin_id or
+                request_data.get("user_id") == system_admin_id):
+            if user_id != system_admin_id:
+                return True
+        return False
+    except Exception as e:
+        logger.error(f"Error checking unauthorized access: {str(e)}")
+        return False
+
+
