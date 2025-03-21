@@ -76,5 +76,10 @@ async def get_user_by_keycloak_uid(keycloak_uid: str):
     return await handle_request(data_errors, manager.get_user_by_keycloak_uid)
 
 
+@app.get("/get_sys_id")
+async def get_system_admin_id():
+    return settings.get_system_admin_id()
+
+
 if __name__ == "__main__":
     uvicorn.run("app:app", host=settings.HOST, port=settings.PORT, reload=True)

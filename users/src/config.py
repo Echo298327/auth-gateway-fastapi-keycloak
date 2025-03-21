@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from auth_gateway_serverkit.logger import init_logger
 from pydantic import Field
+from typing import ClassVar, Optional
 from mongoengine import connect
 from pymongo import MongoClient
 from dotenv import load_dotenv
@@ -47,6 +48,8 @@ class Settings(BaseSettings):
         extra="allow"  # This allows extra fields from environment variables
     )
 
+    SYSTEM_ADMIN_ID: ClassVar[Optional[str]] = None
+
     def connect_db(self):
         """Connect to the MongoDB database using MongoEngine."""
         connect(host=self.MONGO_CONNECTION_STRING, db=self.DB_NAME)
@@ -56,6 +59,16 @@ class Settings(BaseSettings):
         Get a MongoDB client instance for direct session management or transactional operations.
         """
         return MongoClient(self.MONGO_CONNECTION_STRING)
+
+    def get_system_admin_id(self) -> str:
+        """
+        Get the system admin user ID.
+        """
+        if not type(self).SYSTEM_ADMIN_ID:
+            logger.warning("System admin ID not set, fetching from database...")
+            from utils import fetch_system_admin_id
+            type(self).SYSTEM_ADMIN_ID = fetch_system_admin_id()
+        return str(type(self).SYSTEM_ADMIN_ID)
 
 
 try:
