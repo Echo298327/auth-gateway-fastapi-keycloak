@@ -1,5 +1,9 @@
-from mongo_models import User
 from auth_gateway_serverkit.string import is_valid_user_name, is_valid_name
+
+try:
+    from mongo_models import User
+except ImportError:
+    from .mongo_models import User
 
 
 def is_valid_names(user_name: str = None, first_name: str = None, last_name: str = None) -> tuple[bool, list[str]]:
