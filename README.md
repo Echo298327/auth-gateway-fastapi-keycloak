@@ -152,6 +152,19 @@ Ensure you select the appropriate file based on your use case.
 
 1. Access the Keycloak Admin Console at [http://localhost:9000](http://localhost:9000).
 2. Create a realm, client, and user roles as needed.
+3. Get the Client Secret (for use in API requests like Postman):
+
+Go to your realm > Clients.
+
+Click on the client you created (e.g., templateApp).
+
+Go to the Credentials tab.
+
+Copy the Client Secret shown in the interface.
+
+![Client Secret](https://github.com/user-attachments/assets/aba6d6b9-c403-4a03-9b0b-f9ef6c188593)
+
+You’ll need this secret when using tools like Postman to get access tokens or authenticate your requests.
 
 ---
 
