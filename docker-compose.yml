@@ -30,7 +30,7 @@ services:
       build:
         context: ./deployment/docker
         dockerfile: keycloak_dockerfile
-      command: ["start-dev"]
+      command: ["start"]
       ports:
         - "9000:9000"
       env_file:
