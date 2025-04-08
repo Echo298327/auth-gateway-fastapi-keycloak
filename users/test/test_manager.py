@@ -333,7 +333,7 @@ class TestUserManager:
             data = MockData(user_id=str(user.id))
             result = await user_manager.delete_user(data)
             
-            assert result['status'] == 'fail'
+            assert result['status'] == 'failed'
             assert 'Keycloak error' in result['message']
             # Verify user still exists in database
             assert User.objects(id=user.id).first() is not None

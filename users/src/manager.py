@@ -289,7 +289,7 @@ class UserManager:
         if keycloak_response.get('status') != 'success':
             self.logger.error(f"Error from Keycloak: {str(keycloak_response['message'])}")
             # Adjusted message to match test expectation:
-            return {'status': 'fail', 'message': "Keycloak error"}
+            return {'status': 'failed', 'message': "Keycloak error"}
 
         user.delete()
         self.logger.info(f"User deleted: {user_id}")
