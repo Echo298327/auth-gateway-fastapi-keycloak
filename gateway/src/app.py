@@ -5,6 +5,7 @@ from config import settings
 from manager import process_request, get_by_keycloak_uid, handle_login
 from schemas import Login
 from auth_gateway_serverkit.middleware.auth import auth
+from auth_gateway_serverkit.middleware.auth import get_user_info
 import uvicorn
 
 app = FastAPI(title="gateway.app")
@@ -22,11 +23,19 @@ async def login(request: Login):
         if login_response.status_code == status.HTTP_200_OK:
             # Extract the token from the response
             res = login_response.json()
+            user_payload = await get_user_info(res.get("access_token"))
+            user = await get_by_keycloak_uid(user_payload.id)
+            if user is None:
+                return JSONResponse(
+                    content={"message": "User not found"},
+                    status_code=status.HTTP_404_NOT_FOUND
+                )
             data = {
                 "access_token": res.get("access_token"),
                 "expires_in": res.get("expires_in"),
                 "refresh_expires_in": res.get("refresh_expires_in"),
                 "refresh_token": res.get("refresh_token"),
+                "user": user,
             }
             return JSONResponse(content=data, status_code=status.HTTP_200_OK)
         else:
