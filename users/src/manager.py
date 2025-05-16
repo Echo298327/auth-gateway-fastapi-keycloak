@@ -357,6 +357,7 @@ class UserManager:
             return {"status": "failed", "message": "User not found"}
 
         user_dict = user.to_mongo().to_dict()
+        user_dict.pop("keycloak_uid", None)
         user_dict["id"] = str(user_dict["_id"])
         del user_dict["_id"]
         user_dict.pop("_cls", None)
