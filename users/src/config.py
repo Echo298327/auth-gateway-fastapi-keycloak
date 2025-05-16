@@ -19,6 +19,8 @@ class Settings(BaseSettings):
     # App settings
     PORT: int = Field(alias="USERS_PORT")
     HOST: str = Field(alias="USERS_HOST")
+    WORKERS: int = Field(default=1, alias="USERS_WORKERS")
+    ENVIRONMENT: str = Field(default="local", alias="ENVIRONMENT")
 
     # Email settings
     APP_EMAIL: str
@@ -49,6 +51,11 @@ class Settings(BaseSettings):
     )
 
     SYSTEM_ADMIN_ID: ClassVar[Optional[str]] = None
+
+    @property
+    def reload(self) -> bool:
+        """Check if the application should be reloaded based on the environment."""
+        return self.ENVIRONMENT == "local"
 
     def connect_db(self):
         """Connect to the MongoDB database using MongoEngine."""

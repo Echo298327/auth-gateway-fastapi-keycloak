@@ -15,6 +15,9 @@ class CreateUser(BaseModel):
     roles: List[AllowedRoles]
     email: EmailStr
 
+    class Config:
+        extra = Extra.forbid
+
 
 class UpdateUser(BaseModel):
     user_id: Optional[str] = None

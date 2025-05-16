@@ -8,6 +8,7 @@ from typing import Union, Dict, Any
 from config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
+from auth_gateway_serverkit.keycloak.manager import retrieve_client_token
 
 logger = init_logger("gateway.manager")
 
@@ -147,3 +148,9 @@ async def check_unauthorized_access(request_data, user_id, path_segment):
         return False
 
 
+async def handle_login(login_data):
+    try:
+        return await retrieve_client_token(login_data.username, login_data.password)
+    except Exception as e:
+        logger.error(f"Error during login: {str(e)}")
+        raise e
