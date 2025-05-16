@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Extra
+from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from enum import Enum
 
@@ -16,7 +16,7 @@ class CreateUser(BaseModel):
     email: EmailStr
 
     class Config:
-        extra = Extra.forbid
+        extra = 'forbid'
 
 
 class UpdateUser(BaseModel):
@@ -28,25 +28,25 @@ class UpdateUser(BaseModel):
     roles: Optional[List[AllowedRoles]] = None
 
     class Config:
-        extra = Extra.forbid
+        extra = 'forbid'
 
 
 class DeleteUser(BaseModel):
     user_id: str
 
     class Config:
-        extra = Extra.forbid
+        extra = 'forbid'
 
 
 class GetUser(BaseModel):
     user_id: Optional[str] = None
 
     class Config:
-        extra = Extra.forbid
+        extra = 'forbid'
 
 
 class GetUserByKeycloakUid(BaseModel):
     keycloak_uid: str
 
     class Config:
-        extra = Extra.forbid
+        extra = 'forbid'

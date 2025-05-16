@@ -20,7 +20,15 @@ async def login(request: Login):
     try:
         login_response = await handle_login(request)
         if login_response.status_code == status.HTTP_200_OK:
-            return JSONResponse(content=login_response.json(), status_code=status.HTTP_200_OK)
+            # Extract the token from the response
+            res = login_response.json()
+            data = {
+                "access_token": res.get("access_token"),
+                "expires_in": res.get("expires_in"),
+                "refresh_expires_in": res.get("refresh_expires_in"),
+                "refresh_token": res.get("refresh_token"),
+            }
+            return JSONResponse(content=data, status_code=status.HTTP_200_OK)
         else:
             return JSONResponse(content=login_response.json(), status_code=login_response.status_code)
     except Exception as e:
