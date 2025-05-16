@@ -8,7 +8,20 @@ This document provides an overview of the API endpoints for the microservices in
 2. [Users Service](#users-service)
 
 ---
+## Gateway Service
 
+### Endpoints
+
+#### 1. `POST {{GatewayApp}}/api/login`
+- **Description:** Authenticate a user and obtain a JWT token.
+- **Method:** POST
+- **Request Body Example:**
+    ```json
+    {
+        "username": "john_doe",
+        "password": "password123"
+    }
+    ```
 ## Users Service
 
 ### Endpoints

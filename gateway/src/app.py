@@ -2,7 +2,8 @@ from fastapi import FastAPI, Request, status
 from starlette.responses import JSONResponse
 from typing import Union
 from config import settings
-from manager import process_request, get_by_keycloak_uid
+from manager import process_request, get_by_keycloak_uid, handle_login
+from schemas import Login
 from auth_gateway_serverkit.middleware.auth import auth
 import uvicorn
 
@@ -12,6 +13,21 @@ app = FastAPI(title="gateway.app")
 @app.get("/ping")
 async def ping():
     return JSONResponse(content="pong!", status_code=status.HTTP_200_OK)
+
+
+@app.post("/api/login")
+async def login(request: Login):
+    try:
+        login_response = await handle_login(request)
+        if login_response.status_code == status.HTTP_200_OK:
+            return JSONResponse(content=login_response.json(), status_code=status.HTTP_200_OK)
+        else:
+            return JSONResponse(content=login_response.json(), status_code=login_response.status_code)
+    except Exception as e:
+        return JSONResponse(
+            content={"message": f"Internal Server Error: {str(e)}"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @app.post("/api/{service}/{action}")
@@ -47,4 +63,10 @@ async def handle_request(
 
 
 if __name__ == "__main__":
-    uvicorn.run("app:app", host=settings.HOST, port=settings.PORT, reload=True)
+    uvicorn.run(
+        "app:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        workers=settings.WORKERS,
+        reload=settings.reload
+    )

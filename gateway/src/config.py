@@ -14,15 +14,21 @@ class Settings(BaseSettings):
     # app settings
     PORT: int = Field(alias="GATEWAY_PORT")
     HOST: str = Field(alias="USERS_HOST")
+    WORKERS: int = Field(default=1, alias="GATEWAY_WORKERS")
+    ENVIRONMENT: str = Field(default="local", alias="ENVIRONMENT")
 
     # environment-specific URLs
     USERS_URL: str
-
     SERVICE_MAP: dict = {}
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     SYSTEM_ADMIN_ID: ClassVar[Optional[str]] = None
+
+    @property
+    def reload(self) -> bool:
+        """Check if the application should be reloaded based on the environment."""
+        return self.ENVIRONMENT == "local"
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

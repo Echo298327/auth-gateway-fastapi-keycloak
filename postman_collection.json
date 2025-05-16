@@ -7,6 +7,55 @@
 	},
 	"item": [
 		{
+			"name": "gateway",
+			"item": [
+				{
+					"name": "login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse the response to JSON\r",
+									"const response = pm.response.json();\r",
+									"\r",
+									"// Save the token to a collection variable\r",
+									"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"sysadmin\",\r\n    \"password\": \"admin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{GatewayApp}}/api/login",
+							"host": [
+								"{{GatewayApp}}"
+							],
+							"path": [
+								"api",
+								"login"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "users",
 			"item": [
 				{
