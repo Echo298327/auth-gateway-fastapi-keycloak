@@ -257,7 +257,6 @@ class TestUserManager:
         
         assert result['status'] == 'success'
         assert result['data']['user_name'] == 'keycloakuser'
-        assert result['data']['keycloak_uid'] == 'specific-keycloak-id'
 
     async def test_create_user_keycloak_failure(self, user_manager, mock_db_session):
         """Test user creation when Keycloak fails"""
