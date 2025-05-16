@@ -153,4 +153,4 @@ async def handle_login(login_data):
         return await retrieve_client_token(login_data.username, login_data.password)
     except Exception as e:
         logger.error(f"Error during login: {str(e)}")
-        raise e
+        raise
