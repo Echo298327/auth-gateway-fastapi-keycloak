@@ -25,6 +25,11 @@ async def login(request: Login):
             res = login_response.json()
             user_payload = await get_user_info(res.get("access_token"))
             user = await get_by_keycloak_uid(user_payload.id)
+            if not user:
+                return JSONResponse(
+                    content={"message": "User not found"},
+                    status_code=status.HTTP_404_NOT_FOUND
+                )
             data = {
                 "access_token": res.get("access_token"),
                 "expires_in": res.get("expires_in"),
