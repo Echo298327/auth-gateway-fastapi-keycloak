@@ -266,7 +266,7 @@ class UserManager:
                     setattr(user, field, value)
 
             user.save(session=session)
-            self.logger.info(f"roles in update ===>: {roles}")
+
             # Update in Keycloak if needed
             if any(field in data.dict() for field in ["user_name", "first_name", "last_name", "email", "roles"]):
                 is_keycloak_update_needed = True
