@@ -47,7 +47,7 @@
       "name": "public",
       "description": "Permission for public actions",
       "policies": ["Public-Access"],
-      "resources": ["user/update", "user/get"]
+      "resources": ["user/update", "user/get", "user/get_roles"]
     }
 
   ],
@@ -76,6 +76,11 @@
       "name": "user/get_by_keycloak_uid",
       "displayName": "Get User by Keycloak UID Endpoint",
       "url": "/api/user/get_by_keycloak_uid"
+    },
+    {
+      "name": "user/get_roles",
+      "displayName": "Get User Roles Endpoint",
+      "url": "/api/user/get_roles"
     }
   ]
 }

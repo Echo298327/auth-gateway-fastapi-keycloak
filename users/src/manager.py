@@ -6,18 +6,19 @@ from auth_gateway_serverkit.password import generate_password
 from auth_gateway_serverkit.keycloak.user_api import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
+from auth_gateway_serverkit.keycloak.roles_api import get_all_roles, get_role_by_name
 # from auth_gateway_serverkit.email import send_password_email
 
 try:
     from config import settings
     from mongo_models import User
     from schemas import AllowedRoles
-    from utils import is_valid_names,is_admins
+    from utils import is_valid_names, is_admins, is_valid_roles
 except ImportError:
     from .config import settings
     from .mongo_models import User
     from .schemas import AllowedRoles
-    from .utils import is_valid_names,is_admins
+    from .utils import is_valid_names, is_admins,is_valid_roles
 
 
 def exception_handler(func):
@@ -69,11 +70,19 @@ class UserManager:
             self.logger.error("Failed to get keycloak user id")
             return False
 
+        # get the role IDs from Keycloak
+        realm_role = await get_role_by_name("systemAdmin")
+        if not realm_role or realm_role.get('status') != 'success':
+            return False
+
+        role = realm_role.get('role', {})
+        role_ids = [role['id']] if role.get('name') == "systemAdmin" else []
+
         user = User(
             user_name=settings.SYSTEM_ADMIN_USER_NAME,
             first_name=settings.SYSTEM_ADMIN_FIRST_NAME,
             last_name=settings.SYSTEM_ADMIN_LAST_NAME,
-            roles=["systemAdmin"],
+            roles=role_ids,
             email=settings.SYSTEM_ADMIN_EMAIL,
             keycloak_uid=keycloak_uid,
             creation_date=time.strftime("%d-%m-%Y"),
@@ -116,7 +125,15 @@ class UserManager:
                 session.end_session()
                 return {"status": "failed", "message": ", ".join(errors)}
 
+            role_names = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
+            realm_roles = await get_all_roles()
+
+            if not is_valid_roles(role_names, realm_roles.get('roles', [])):
+                session.abort_transaction()
+                session.end_session()
+                return {"status": "failed", "message": "Invalid roles provided"}
             roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
+            role_ids = [role['id'] for role in realm_roles.get('roles', []) if role['name'] in role_names]
 
             password = generate_password()
             response = await add_user_to_keycloak(user_name, first_name, last_name, email, password, roles)
@@ -139,7 +156,7 @@ class UserManager:
                 user_name=user_name,
                 first_name=first_name,
                 last_name=last_name,
-                roles=roles,
+                roles=role_ids,
                 email=email,
                 keycloak_uid=keycloak_uid,
                 creation_date=time.strftime("%d-%m-%Y"),
@@ -184,6 +201,13 @@ class UserManager:
         session.start_transaction()
         is_keycloak_update_needed = False
         try:
+
+            if data.user_id == settings.get_system_admin_id():
+                session.abort_transaction()
+                session.end_session()
+                return {"status": "failed", "message": "this user cannot be updated"}
+
+            roles = data.roles if data.roles else []
             if not data.user_id:
                 user_id = request_user.get("id")
             else:
@@ -193,8 +217,17 @@ class UserManager:
                     return {"status": "failed", "message": "Unauthorized to update user"}
                 user_id = data.user_id
             user_name = data.user_name.lower() if data.user_name else None
-            roles = \
-                [role.value if isinstance(role, AllowedRoles) else role for role in data.roles] if data.roles else None
+
+            if roles:
+                role_names = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
+                realm_roles = await get_all_roles()
+                if not is_valid_roles(role_names, realm_roles.get('roles', [])):
+                    session.abort_transaction()
+                    session.end_session()
+                    return {"status": "failed", "message": "Invalid roles provided"}
+
+                roles = [role.value if isinstance(role, AllowedRoles) else role for role in roles]
+                role_ids = [role['id'] for role in realm_roles.get('roles', []) if role['name'] in role_names]
 
             user = User.objects(id=user_id).first()
             if not user:
@@ -226,14 +259,14 @@ class UserManager:
                 "first_name": data.first_name,
                 "last_name": data.last_name,
                 "email": data.email,
-                "roles": roles
+                "roles": role_ids if roles else None,
             }
             for field, value in update_fields.items():
                 if value is not None:
                     setattr(user, field, value)
 
             user.save(session=session)
-
+            self.logger.info(f"roles in update ===>: {roles}")
             # Update in Keycloak if needed
             if any(field in data.dict() for field in ["user_name", "first_name", "last_name", "email", "roles"]):
                 is_keycloak_update_needed = True
@@ -243,7 +276,7 @@ class UserManager:
                     user.first_name,
                     user.last_name,
                     user.email,
-                    user.roles,
+                    roles if roles else None,
                 )
 
                 if response.get("status") != "success":
@@ -362,6 +395,31 @@ class UserManager:
         del user_dict["_id"]
         user_dict.pop("_cls", None)
         return {"status": "success", "data": user_dict}
+
+    @exception_handler
+    async def get_roles(self) -> dict:
+        """
+        Retrieve all custom (non-default) roles from Keycloak.
+
+        Returns:
+            dict: A dictionary containing the status and list of custom roles.
+        """
+        realm_roles = await get_all_roles()
+        if realm_roles.get('status') != 'success':
+            self.logger.error("Failed to retrieve roles from Keycloak")
+            return {"status": "failed", "message": "Failed to retrieve roles"}
+
+        roles = realm_roles.get('roles', [])
+
+        def is_custom_role(role: dict) -> bool:
+            return not (
+                role["name"].startswith("default-roles-") or
+                role["name"] in {"offline_access", "uma_authorization"} or
+                role.get("description", "").startswith("${role_")
+            )
+
+        custom_roles = [role for role in roles if is_custom_role(role)]
+        return {"status": "success", "data": custom_roles}
 
 
 manager = UserManager()

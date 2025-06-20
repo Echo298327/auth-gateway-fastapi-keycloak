@@ -5,7 +5,7 @@ class User(Document):
     user_name = StringField(required=True, unique=True)
     first_name = StringField(required=True)
     last_name = StringField(required=True)
-    roles = ListField(StringField(choices=["admin", "user", "systemAdmin"]), required=True)
+    roles = ListField(required=True)
     email = EmailField(required=True, unique=True)
     keycloak_uid = StringField(required=False, unique=True)
     creation_date = StringField(required=True)
