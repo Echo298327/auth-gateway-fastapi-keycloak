@@ -3,7 +3,7 @@ from mongoengine.errors import DoesNotExist, ValidationError, NotUniqueError
 from mongoengine import get_db
 from auth_gateway_serverkit.logger import init_logger
 from auth_gateway_serverkit.password import generate_password
-from auth_gateway_serverkit.keycloak.manager import (
+from auth_gateway_serverkit.keycloak.user_api import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
 # from auth_gateway_serverkit.email import send_password_email
