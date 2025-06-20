@@ -24,18 +24,18 @@ def is_valid_roles(provided_role_names: list[str], keycloak_roles: list[dict]) -
         bool: True if all provided roles are valid and role list is well-formed, False otherwise.
     """
     if not isinstance(keycloak_roles, list):
-        print("[ERROR] keycloak_roles is not a list.")
+        logger.error("keycloak_roles is not a list.")
         return False
 
     if not all(isinstance(role, dict) and 'name' in role for role in keycloak_roles):
-        print("[ERROR] keycloak_roles contains invalid entries.")
+        logger.error("keycloak_roles contains invalid entries.")
         return False
 
     valid_role_names = {role['name'] for role in keycloak_roles}
     invalid = [name for name in provided_role_names if name not in valid_role_names]
 
     if invalid:
-        print(f"[DEBUG] Invalid roles requested: {invalid}")
+        logger.error(f"Invalid roles requested: {invalid}")
         return False
 
     return True
