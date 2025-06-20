@@ -82,6 +82,14 @@ This document provides an overview of the API endpoints for the microservices in
   {{GatewayApp}}/api/user/get_by_keycloak_uid/<keycloak_uid>
   ```
 
+#### 6. `GET {{GatewayApp}}/api/user/get_roles`
+- **Description:** Retrieve the list of available user roles.
+- **Method:** GET
+- **Request Example:**
+  ```
+  {{GatewayApp}}/api/user/get_roles
+  ```
+
 ### Notes
 - All fields marked as optional can be omitted from the request
 - Email addresses must be in valid format
