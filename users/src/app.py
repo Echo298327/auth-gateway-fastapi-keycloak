@@ -6,10 +6,13 @@ from config import settings
 from schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
 from auth_gateway_serverkit.request_handler import parse_request_body_to_model, response, get_request_user
 from auth_gateway_serverkit.keycloak.initializer import initialize_keycloak_server
+from auth_gateway_serverkit.logger import init_logger
+from utils import set_admins_role_ids
 from manager import manager
 
 app = FastAPI(title="user.app")
 
+logger = init_logger("users.app")
 
 @app.on_event("startup")
 async def startup_event():
@@ -20,6 +23,10 @@ async def startup_event():
     is_system_admin_created = await manager.create_system_admin()
     if not is_system_admin_created:
         raise Exception("Failed to create system admin")
+    if not settings.has_system_admin_role_id() or not settings.has_admin_role_id():
+        is_set_admins_role_ids = await set_admins_role_ids()
+    if not is_set_admins_role_ids:
+        raise Exception("Failed to set admin role IDs")
 
 
 async def handle_request(
@@ -79,6 +86,15 @@ async def get_user_by_keycloak_uid(keycloak_uid: str):
 @app.get("/get_sys_id")
 async def get_system_admin_id():
     return settings.get_system_admin_id()
+
+
+@app.get("/get_roles")
+async def get_roles():
+    try:
+        roles = await manager.get_roles()
+        return response(res=roles)
+    except Exception as e:
+        return response(error=str(e))
 
 
 if __name__ == "__main__":

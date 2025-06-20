@@ -65,10 +65,15 @@ class TestUserManager:
     async def test_create_system_admin_success(self, user_manager):
         """Test successful system admin creation"""
         with patch('users.src.manager.add_user_to_keycloak') as mock_keycloak, \
+             patch('users.src.manager.get_role_by_name') as mock_get_role, \
              patch('users.src.manager.settings') as mock_settings:
             mock_keycloak.return_value = {
                 'status': 'success',
                 'keycloakUserId': 'test-keycloak-id'
+            }
+            mock_get_role.return_value = {
+                'status': 'success',
+                'role': {'id': 'system-admin-role-id', 'name': 'systemAdmin'}
             }
             mock_settings.SYSTEM_ADMIN_USER_NAME = 'system_admin'
             mock_settings.SYSTEM_ADMIN_FIRST_NAME = 'System'
@@ -81,7 +86,7 @@ class TestUserManager:
             assert result is True
             created_user = User.objects(user_name='system_admin').first()
             assert created_user is not None
-            assert created_user.roles == ['systemAdmin']
+            assert created_user.roles == ['system-admin-role-id']
 
     async def test_create_system_admin_already_exists(self, user_manager):
         """Test system admin creation when admin already exists"""
@@ -113,10 +118,15 @@ class TestUserManager:
         """Test successful user creation"""
         with patch('users.src.manager.get_db') as mock_get_db, \
              patch('users.src.manager.add_user_to_keycloak') as mock_keycloak, \
+             patch('users.src.manager.get_all_roles') as mock_get_roles, \
              patch('users.src.manager.is_valid_names') as mock_validate:
             
             mock_get_db.return_value.client.start_session.return_value = mock_db_session
             mock_keycloak.return_value = {'status': 'success', 'keycloakUserId': 'test-id'}
+            mock_get_roles.return_value = {
+                'status': 'success',
+                'roles': [{'id': 'user-role-id', 'name': 'user'}]
+            }
             mock_validate.return_value = (True, [])
             
             data = MockData(
@@ -169,11 +179,20 @@ class TestUserManager:
 
         with patch('users.src.manager.get_db') as mock_get_db, \
              patch('users.src.manager.update_user_in_keycloak') as mock_keycloak, \
-             patch('users.src.manager.is_valid_names') as mock_validate:
+             patch('users.src.manager.get_all_roles') as mock_get_roles, \
+             patch('users.src.manager.is_valid_names') as mock_validate, \
+             patch('users.src.manager.is_admins') as mock_is_admins, \
+             patch('users.src.manager.settings') as mock_settings:
             
             mock_get_db.return_value.client.start_session.return_value = mock_db_session
             mock_keycloak.return_value = {'status': 'success'}
+            mock_get_roles.return_value = {
+                'status': 'success',
+                'roles': [{'id': 'user-role-id', 'name': 'user'}]
+            }
             mock_validate.return_value = (True, [])
+            mock_is_admins.return_value = True
+            mock_settings.get_system_admin_id.return_value = 'different-admin-id'
             
             data = MockData(
                 user_id=str(user.id),
@@ -262,10 +281,15 @@ class TestUserManager:
         """Test user creation when Keycloak fails"""
         with patch('users.src.manager.get_db') as mock_get_db, \
              patch('users.src.manager.add_user_to_keycloak') as mock_keycloak, \
+             patch('users.src.manager.get_all_roles') as mock_get_roles, \
              patch('users.src.manager.is_valid_names') as mock_validate:
             
             mock_get_db.return_value.client.start_session.return_value = mock_db_session
             mock_keycloak.return_value = {'status': 'failed', 'message': 'Keycloak error'}
+            mock_get_roles.return_value = {
+                'status': 'success',
+                'roles': [{'id': 'user-role-id', 'name': 'user'}]
+            }
             mock_validate.return_value = (True, [])
             
             data = MockData(
