@@ -8,7 +8,7 @@ from typing import Union, Dict, Any
 from config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
-from auth_gateway_serverkit.keycloak.manager import retrieve_client_token
+from auth_gateway_serverkit.keycloak.client_api import retrieve_client_token
 
 logger = init_logger("gateway.manager")
 
