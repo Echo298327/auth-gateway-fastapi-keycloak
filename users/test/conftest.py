@@ -40,8 +40,8 @@ mock_config = MagicMock()
 mock_config.settings = MockSettings()
 mock_config.Settings = MockSettings
 
-# Patch the entire config module
-sys.modules['auth_gateway_serverkit.keycloak.config'] = mock_config
+# Patch the config import that auth_gateway_serverkit uses
+sys.modules['config'] = mock_config
 
 # Create mock objects for any additional settings that might be needed
 local_settings = MagicMock()
