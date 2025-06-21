@@ -120,6 +120,11 @@ Make sure you have the following installed:
     │   │   mongo_models.py
     │   │   schemas.py
     │   │   __init__.py
+    │   └───authorization
+    │       │   roles.json
+    │       │
+    │       └───services
+    │           │   users.json
     │
     └───test
         │   test_manager.py
