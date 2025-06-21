@@ -310,6 +310,8 @@ Contributions are welcome! Please follow these steps:
 2. Create a feature branch.
 3. Commit your changes and open a pull request.
 
+For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ---
 
 ## License
