@@ -21,6 +21,7 @@ Ensure you have MongoDB running locally, or use a cloud-hosted MongoDB service.
 
 ## Documentation
 - [API Documentation](API.md)
+- [Authorization Guide](AUTHORIZATION_GUIDE.md)
 - [Postman Collection](postman_collection.json)
 <br><br>You can use the Postman collection provided to test the API endpoints easily. Import the `postman_collection.json` file into Postman to get started.
 
