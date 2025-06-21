@@ -33,7 +33,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"sysadmin\",\r\n    \"password\": \"admin\"\r\n}",
+							"raw": "{\r\n    \"username\": \"sysadmin\",\r\n    \"password\": \"sysadminpassword\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -48,6 +48,23 @@
 							"path": [
 								"api",
 								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ping",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GatewayApp}}/ping",
+							"host": [
+								"{{GatewayApp}}"
+							],
+							"path": [
+								"ping"
 							]
 						}
 					},
@@ -250,6 +267,35 @@
 								"user",
 								"get_by_keycloak_uid",
 								"f4024bee-b5b9-49fe-8f38-4feaa623c6d3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get_roles",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{access_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{GatewayApp}}/api/user/get_roles",
+							"host": [
+								"{{GatewayApp}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"get_roles"
 							]
 						}
 					},
