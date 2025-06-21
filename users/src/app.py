@@ -17,7 +17,8 @@ logger = init_logger("users.app")
 @app.on_event("startup")
 async def startup_event():
     settings.connect_db()
-    is_initialized = await initialize_keycloak_server()
+    # Set cleanup_and_build=True for fresh deployment
+    is_initialized = await initialize_keycloak_server(cleanup_and_build=True)
     if not is_initialized:
         raise Exception("Failed to initialize Keycloak server")
     is_system_admin_created = await manager.create_system_admin()
