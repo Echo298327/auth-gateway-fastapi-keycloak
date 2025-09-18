@@ -75,65 +75,82 @@ Make sure you have the following installed:
 ## Project Structure
 
 ```plaintext
-│   .env
-│   .env.docker
-│   API.md
-│   docker-compose.yml
-│   LICENSE
-│   postman_collection.json
-│   README.md
-│   SECURITY.md
+auth-gateway-fastapi-keycloak/
 │
-├───.github
-│   │   CODEOWNERS
-│   │
-│   └───workflows
-│           run-tests.yml
+├── .env                           # Local development environment variables
+├── .env.docker                    # Docker environment variables
+├── API.md                         # API documentation
+├── AUTHORIZATION_GUIDE.md         # Authorization system guide
+├── CONTRIBUTING.md               # Contribution guidelines
+├── docker-compose.yml           # Docker Compose configuration
+├── LICENSE                      # MIT License
+├── postman_collection.json     # Postman API collection
+├── pytest.ini                  # Pytest configuration
+├── README.md                   # This file
+├── SECURITY.md                 # Security guidelines
 │
-├───deployment
-│   │   pgadmin_server.json
-│   │
-│   └───docker
-│           gateway_dockerfile
-│           keycloak_dockerfile
-│           users_dockerfile
+├── deployment/                 # Deployment configurations
+│   ├── docker/                # Docker configurations
+│   │   ├── gateway_dockerfile # Gateway service Dockerfile
+│   │   ├── keycloak_dockerfile # Keycloak service Dockerfile
+│   │   ├── keycloak.conf      # Keycloak configuration
+│   │   └── users_dockerfile   # Users service Dockerfile
+│   └── pgadmin_server.json    # PgAdmin configuration
 │
-├───gateway
-│   │   requirements.txt
-│   │   __init__.py
-│   │
-│   ├───src
-│   │   │   app.py
-│   │   │   config.py
-│   │   │   manager.py
-│   │   │   __init__.py
-│   │
-│   └───test
-│           __init__.py
+├── gateway/                   # API Gateway Service
+│   ├── requirements.txt       # Gateway dependencies
+│   ├── src/                   # Gateway source code
+│   │   ├── main.py           # Gateway application entry point
+│   │   ├── api/              # API routes
+│   │   │   └── routes/
+│   │   │       └── gateway.py # Gateway routing logic
+│   │   ├── core/             # Core configurations
+│   │   │   └── config.py     # Gateway configuration
+│   │   ├── schemas/          # Pydantic schemas
+│   │   │   └── gateway.py    # Gateway request/response schemas
+│   │   └── services/         # Business logic
+│   │       └── manager.py    # Gateway service manager
+│   └── test/                 # Gateway tests
 │
-└───users
-    │   requirements.txt
-    │
-    ├───src
-    │   │   app.py
-    │   │   config.py
-    │   │   keycloak_config.json
-    │   │   manager.py
-    │   │   mongo_models.py
-    │   │   schemas.py
-    │   │   __init__.py
-    │   └───authorization
-    │       │   roles.json
-    │       │
-    │       └───services
-    │           │   users.json
-    │
-    └───test
-        │   test_manager.py
-        │   __init__.py
+└── users/                    # Users Microservice
+    ├── requirements.txt      # Users service dependencies
+    ├── src/                  # Users service source code
+    │   ├── main.py          # Users service entry point
+    │   ├── api/             # API layer
+    │   │   └── routes/
+    │   │       └── user.py  # User management endpoints
+    │   ├── authorization/   # Authorization configurations
+    │   │   ├── roles.json   # Role definitions
+    │   │   └── services/
+    │   │       └── users.json # Service authorization config
+    │   ├── core/           # Core configurations
+    │   │   └── config.py   # Database & app configuration
+    │   ├── db/             # Database abstraction layer
+    │   │   └── mongo/      # MongoDB operations
+    │   │       └── user.py # User database operations
+    │   ├── models/         # Data models
+    │   │   └── user.py     # User Beanie document model
+    │   ├── schemas/        # Pydantic schemas
+    │   │   └── user.py     # User request/response schemas
+    │   ├── services/       # Business logic layer
+    │   │   └── user_manager.py # User management service
+    │   └── utils/          # Utility functions
+    │       ├── admin.py    # Admin utilities
+    │       ├── exception_handler.py # Exception handling decorator
+    │       ├── roles.py    # Role validation utilities
+    │       └── validation.py # Input validation utilities
+    └── test/               # Users service tests
 ```
 
----
+### Architecture Overview
+**📁 Layer Structure:**
+- **`api/`** - API endpoints and routing (Presentation Layer)
+- **`services/`** - Business logic and use cases (Application Layer) 
+- **`db/`** - Database operations and data access (Infrastructure Layer)
+- **`models/`** - Domain entities and data models (Domain Layer)
+- **`schemas/`** - Data transfer objects and validation (Interface Layer)
+- **`utils/`** - Cross-cutting concerns and utilities
+
 
 ### Environment Variables
 
