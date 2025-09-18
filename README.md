@@ -62,7 +62,7 @@ Make sure you have the following installed:
 3. Start the services using Docker Compose:
 
    ```bash
-   docker-compose up --build
+   docker-compose up --build -d
    ```
 
 4. Access the services:
