@@ -4,19 +4,29 @@
       "name": "SystemAdmin",
       "description": "Permission for system administrators actions",
       "policies": ["SystemAdmin-Access"],
-      "resources": ["user/get_by_keycloak_uid"]
+      "resources": [
+        "user/get_by_keycloak_uid"
+      ]
     },
     {
       "name": "Administrators",
       "description": "Permission for administrators actions",
       "policies": ["Administrators-Access"],
-      "resources": ["user/create", "user/delete"]
+      "resources":
+      [
+        "user/create",
+        "user/delete"
+      ]
     },
     {
       "name": "public",
       "description": "Permission for public actions",
       "policies": ["Public-Access"],
-      "resources": ["user/update", "user/get", "user/get_roles"]
+      "resources": [
+        "user/update",
+        "user/get",
+        "user/get_roles"
+      ]
     }
 
   ],

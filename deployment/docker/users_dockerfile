@@ -18,4 +18,4 @@ EXPOSE 8080
 COPY ./src/ .
 
 # Specify the command to run when the container starts
-CMD ["python", "app.py"]
+CMD ["python", "main.py"]

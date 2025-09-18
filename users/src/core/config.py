@@ -2,8 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from auth_gateway_serverkit.logger import init_logger
 from pydantic import Field
 from typing import ClassVar, Optional
-from mongoengine import connect
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
+from beanie import init_beanie
 from dotenv import load_dotenv
 import sys
 
@@ -57,13 +57,19 @@ class Settings(BaseSettings):
         extra="allow"  # Accept extra env vars
     )
 
-    def connect_db(self):
-        """Connect to the MongoDB database using MongoEngine."""
-        connect(host=self.MONGO_CONNECTION_STRING, db=self.DB_NAME)
+    async def init_db(self):
+        """Initialize the MongoDB database using Beanie."""
+        from models.user import User
+        
+        client = AsyncIOMotorClient(self.MONGO_CONNECTION_STRING)
+        database = client[self.DB_NAME]
+        
+        await init_beanie(database=database, document_models=[User])
+        return client
 
-    def get_db_client(self) -> MongoClient:
-        """Get a MongoDB client instance."""
-        return MongoClient(self.MONGO_CONNECTION_STRING)
+    def get_motor_client(self) -> AsyncIOMotorClient:
+        """Get an async MongoDB client instance."""
+        return AsyncIOMotorClient(self.MONGO_CONNECTION_STRING)
 
     @property
     def reload(self) -> bool:
@@ -90,12 +96,12 @@ class Settings(BaseSettings):
     def has_admin_role_id(self) -> bool:
         return self._admin_role_id is not None
 
-    def get_system_admin_id(self) -> str:
+    async def get_system_admin_id(self) -> str:
         """Fetch system admin ID (from cache or DB)."""
         if not type(self).SYSTEM_ADMIN_ID:
             logger.warning("System admin ID not set, fetching from database...")
-            from utils import fetch_system_admin_id
-            type(self).SYSTEM_ADMIN_ID = fetch_system_admin_id()
+            from utils.admin import fetch_system_admin_id
+            type(self).SYSTEM_ADMIN_ID = await fetch_system_admin_id()
         return str(type(self).SYSTEM_ADMIN_ID)
 
 

@@ -380,7 +380,7 @@ if is_admins(user["roles"]):
 The system admin cannot be modified by other users:
 
 ```python
-# In gateway/src/manager.py
+# In gateway/src/user_manager.py
 async def check_unauthorized_access(request_data, user_id, path_segment):
     system_admin_id = await settings.get_system_admin_id()
     if (request_data.get("id") == system_admin_id or 
@@ -480,8 +480,8 @@ logger.info(f"User {user_id} role updated to {new_roles}")
 docker-compose up postgres keycloak
 
 # Run services locally for development
-cd gateway && python src/app.py
-cd users && python src/app.py
+cd gateway && python src/main.py
+cd users && python src/main.py
 ```
 
 ### 2. Testing Authorization
