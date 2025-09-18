@@ -1,22 +1,21 @@
-from fastapi import FastAPI, Request, status
+from fastapi import APIRouter, Request, status
 from starlette.responses import JSONResponse
 from typing import Union
-from config import settings
-from manager import process_request, get_by_keycloak_uid, handle_login
-from schemas import Login
+from services.manager import process_request, get_by_keycloak_uid, handle_login
+from schemas.gateway import Login
 from auth_gateway_serverkit.middleware.auth import auth
 from auth_gateway_serverkit.middleware.auth import get_user_info
-import uvicorn
-
-app = FastAPI(title="gateway.app")
 
 
-@app.get("/ping")
+router = APIRouter()
+
+
+@router.get("/ping")
 async def ping():
     return JSONResponse(content="pong!", status_code=status.HTTP_200_OK)
 
 
-@app.post("/api/login")
+@router.post("/api/login")
 async def login(request: Login):
     try:
         login_response = await handle_login(request)
@@ -47,11 +46,11 @@ async def login(request: Login):
         )
 
 
-@app.post("/api/{service}/{action}")
-@app.put("/api/{service}/{action}")
-@app.get("/api/{service}/{action}")
-@app.delete("/api/{service}/{action}/{path:path}")
-@app.get("/api/{service}/{action}/{path:path}")
+@router.post("/api/{service}/{action}")
+@router.put("/api/{service}/{action}")
+@router.get("/api/{service}/{action}")
+@router.delete("/api/{service}/{action}/{path:path}")
+@router.get("/api/{service}/{action}/{path:path}")
 @auth(get_user_by_uid=get_by_keycloak_uid)
 async def handle_request(
     request: Request,
@@ -77,13 +76,3 @@ async def handle_request(
             content={"message": f"Internal Server Error: {str(e)}"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
-
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "app:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        workers=settings.WORKERS,
-        reload=settings.reload
-    )

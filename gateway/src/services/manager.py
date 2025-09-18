@@ -2,12 +2,12 @@ import datetime
 import httpx
 import json
 from fastapi import Request, status
-from auth_gateway_serverkit.logger import init_logger
 import auth_gateway_serverkit.http_client as http
 from typing import Union, Dict, Any
-from config import settings
+from core.config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
+from auth_gateway_serverkit.logger import init_logger
 from auth_gateway_serverkit.keycloak.client_api import retrieve_client_token
 
 logger = init_logger("gateway.manager")

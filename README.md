@@ -62,7 +62,7 @@ Make sure you have the following installed:
 3. Start the services using Docker Compose:
 
    ```bash
-   docker-compose up --build
+   docker-compose up --build -d
    ```
 
 4. Access the services:
@@ -75,65 +75,82 @@ Make sure you have the following installed:
 ## Project Structure
 
 ```plaintext
-│   .env
-│   .env.docker
-│   API.md
-│   docker-compose.yml
-│   LICENSE
-│   postman_collection.json
-│   README.md
-│   SECURITY.md
+auth-gateway-fastapi-keycloak/
 │
-├───.github
-│   │   CODEOWNERS
-│   │
-│   └───workflows
-│           run-tests.yml
+├── .env                           # Local development environment variables
+├── .env.docker                    # Docker environment variables  
+├── API.md
+├── AUTHORIZATION_GUIDE.md
+├── CONTRIBUTING.md
+├── docker-compose.yml
+├── LICENSE
+├── postman_collection.json       # Ready-to-use API testing collection
+├── pytest.ini
+├── README.md
+├── SECURITY.md
 │
-├───deployment
-│   │   pgadmin_server.json
-│   │
-│   └───docker
-│           gateway_dockerfile
-│           keycloak_dockerfile
-│           users_dockerfile
+├── deployment/
+│   ├── docker/
+│   │   ├── gateway_dockerfile
+│   │   ├── keycloak_dockerfile
+│   │   ├── keycloak.conf
+│   │   └── users_dockerfile
+│   └── pgadmin_server.json
 │
-├───gateway
-│   │   requirements.txt
-│   │   __init__.py
-│   │
-│   ├───src
-│   │   │   app.py
-│   │   │   config.py
-│   │   │   manager.py
-│   │   │   __init__.py
-│   │
-│   └───test
-│           __init__.py
+├── gateway/                       # API Gateway Service
+│   ├── requirements.txt
+│   ├── src/
+│   │   ├── main.py               # Application entry point
+│   │   ├── api/
+│   │   │   └── routes/
+│   │   │       └── gateway.py    # Request routing logic
+│   │   ├── core/
+│   │   │   └── config.py
+│   │   ├── schemas/              # Request/response models
+│   │   │   └── gateway.py
+│   │   └── services/             # Business logic
+│   │       └── manager.py
+│   └── test/
 │
-└───users
-    │   requirements.txt
-    │
-    ├───src
-    │   │   app.py
-    │   │   config.py
-    │   │   keycloak_config.json
-    │   │   manager.py
-    │   │   mongo_models.py
-    │   │   schemas.py
-    │   │   __init__.py
-    │   └───authorization
-    │       │   roles.json
-    │       │
-    │       └───services
-    │           │   users.json
-    │
-    └───test
-        │   test_manager.py
-        │   __init__.py
+└── users/                         # Users Microservice
+    ├── requirements.txt
+    ├── src/
+    │   ├── main.py               # Application entry point
+    │   ├── api/
+    │   │   └── routes/
+    │   │       └── user.py       # User management endpoints
+    │   ├── authorization/        # Role & permission configs
+    │   │   ├── roles.json
+    │   │   └── services/
+    │   │       └── users.json
+    │   ├── core/
+    │   │   └── config.py         # Database & app configuration
+    │   ├── db/                   # Database operations
+    │   │   └── mongo/
+    │   │       └── user.py
+    │   ├── models/               # Domain models
+    │   │   └── user.py
+    │   ├── schemas/              # Request/response models  
+    │   │   └── user.py
+    │   ├── services/             # Business logic
+    │   │   └── user_manager.py
+    │   └── utils/                # Helper functions
+    │       ├── admin.py
+    │       ├── exception_handler.py
+    │       ├── roles.py
+    │       └── validation.py
+    └── test/
 ```
 
----
+### Architecture Overview
+**📁 Layer Structure:**
+- **`api/`** - API endpoints and routing (Presentation Layer)
+- **`services/`** - Business logic and use cases (Application Layer) 
+- **`db/`** - Database operations and data access (Infrastructure Layer)
+- **`models/`** - Domain entities and data models (Domain Layer)
+- **`schemas/`** - Data transfer objects and validation (Interface Layer)
+- **`utils/`** - Cross-cutting concerns and utilities
+
 
 ### Environment Variables
 
