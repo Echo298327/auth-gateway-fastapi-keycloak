@@ -1,0 +1,24 @@
+name: Lint
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  flake8:
+    name: Flake8 (Unused Imports)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install Flake8
+      run: pip install flake8
+    - name: Lint IAM
+      run: flake8 iam/src --select=F401,F841 --exclude=__pycache__
+    - name: Lint Gateway
+      run: flake8 gateway/src --select=F401,F841 --exclude=__pycache__
+    - name: Lint Shared
+      run: flake8 shared --select=F401,F841 --exclude=__pycache__
