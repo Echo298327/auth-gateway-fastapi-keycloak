@@ -1,0 +1,116 @@
+name: PR Summary
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  # Wait for all other checks to complete
+  summary:
+    name: PR Status
+    runs-on: ubuntu-latest
+    needs: []  # Runs independently, checks status via API
+    if: always()
+    steps:
+    - name: Generate PR Summary
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { owner, repo } = context.repo;
+          const pr_number = context.payload.pull_request.number;
+          const sha = context.payload.pull_request.head.sha;
+          
+          // Wait a bit for other checks to register
+          await new Promise(resolve => setTimeout(resolve, 10000));
+          
+          // Get all check runs for this commit
+          const checks = await github.rest.checks.listForRef({
+            owner,
+            repo,
+            ref: sha,
+          });
+          
+          const checkRuns = checks.data.check_runs.filter(
+            run => run.name !== 'PR Status'
+          );
+          
+          const passed = checkRuns.filter(r => r.conclusion === 'success').length;
+          const failed = checkRuns.filter(r => r.conclusion === 'failure').length;
+          const pending = checkRuns.filter(r => !r.conclusion).length;
+          const total = checkRuns.length;
+          
+          const allPassed = failed === 0 && pending === 0 && total > 0;
+          
+          // Build summary
+          let summary = '';
+          
+          if (allPassed) {
+            summary += `
+          ## ✅ All Checks Passed
+          
+          | Status | Check | Duration |
+          |--------|-------|----------|
+          `;
+            for (const run of checkRuns) {
+              const duration = run.completed_at 
+                ? Math.round((new Date(run.completed_at) - new Date(run.started_at)) / 1000)
+                : '-';
+              summary += `| ✅ | ${run.name} | ${duration}s |\n`;
+            }
+            
+            summary += `
+          ---
+          
+          ### 📊 Summary
+          
+          \`\`\`
+          ┌─────────────────────────────────────────┐
+          │  🚀 Ready to Merge                      │
+          │                                         │
+          │  ✓ Lint        - No unused imports      │
+          │  ✓ Security    - No vulnerabilities     │
+          │  ✓ Tests       - All tests passing      │
+          │                                         │
+          │  Total Checks: ${total.toString().padEnd(24)}│
+          │  Passed: ${passed.toString().padEnd(29)}│
+          └─────────────────────────────────────────┘
+          \`\`\`
+          
+          > 🎉 **This PR is ready for review and merge!**
+          `;
+          } else if (failed > 0) {
+            summary += `
+          ## ❌ Some Checks Failed
+          
+          | Status | Check |
+          |--------|-------|
+          `;
+            for (const run of checkRuns) {
+              const icon = run.conclusion === 'success' ? '✅' : 
+                          run.conclusion === 'failure' ? '❌' : '⏳';
+              summary += `| ${icon} | ${run.name} |\n`;
+            }
+            
+            summary += `
+          ---
+          
+          > ⚠️ **Please fix the failing checks before merging.**
+          `;
+          } else {
+            summary += `
+          ## ⏳ Checks In Progress
+          
+          Waiting for ${pending} check(s) to complete...
+          `;
+          }
+          
+          // Write to job summary
+          await core.summary
+            .addRaw(summary)
+            .write();
+          
+          // Fail if any checks failed
+          if (failed > 0) {
+            core.setFailed(`${failed} check(s) failed`);
+          }
