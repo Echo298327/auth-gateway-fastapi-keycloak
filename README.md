@@ -1,21 +1,22 @@
 # FastAPI Microservices Starter Template
 
-This repository provides a starter template for building scalable microservices using FastAPI, Docker Compose, and Keycloak for authentication and user management. It includes a gateway app, a user manager, and a pre-configured environment for quick project initialization.
+This repository provides a starter template for building scalable microservices using FastAPI, Docker Compose, and Keycloak for authentication and user management. It includes a gateway app, an IAM (Identity & Access Management) service, and a pre-configured environment for quick project initialization.
 
 ## Features
 
 - **Gateway App:** Acts as an API Gateway, routing requests to appropriate microservices.
-- **User Manager:** Handles user authentication and management, integrated with Keycloak.
+- **IAM Service:** Identity & Access Management service with domain-driven design for users, organizations, and licenses.
 - **Keycloak Integration:** Simplifies authentication and role-based access control.
 - **Docker Compose:** Pre-configured to orchestrate services effortlessly.
 - **Environment Configuration:** Easily adjustable via `.env` files.
+- **CI/CD Pipeline:** Automated linting, security scanning, and testing on pull requests.
 - **Extensible Architecture:** Add more microservices as your project grows.
 
 ---
 
 ## Database
 This project uses MongoDB as the primary database for storing information.
-The user microservice (users) connects to a MongoDB instance, which is configurable via environment variables.
+The IAM microservice connects to a MongoDB instance, which is configurable via environment variables.
 
 Ensure you have MongoDB running locally, or use a cloud-hosted MongoDB service.
 
@@ -79,6 +80,9 @@ auth-gateway-fastapi-keycloak/
 │
 ├── .env                           # Local development environment variables
 ├── .env.docker                    # Docker environment variables  
+├── .github/
+│   └── workflows/
+│       └── ci.yml                # CI pipeline (lint, security, tests)
 ├── API.md
 ├── AUTHORIZATION_GUIDE.md
 ├── CONTRIBUTING.md
@@ -92,10 +96,14 @@ auth-gateway-fastapi-keycloak/
 ├── deployment/
 │   ├── docker/
 │   │   ├── gateway_dockerfile
+│   │   ├── iam_dockerfile
 │   │   ├── keycloak_dockerfile
-│   │   ├── keycloak.conf
-│   │   └── users_dockerfile
+│   │   └── keycloak.conf
 │   └── pgadmin_server.json
+│
+├── shared/                        # Shared utilities across services
+│   └── logging/
+│       └── log_header.py         # Standardized logging functions
 │
 ├── gateway/                       # API Gateway Service
 │   ├── requirements.txt
@@ -112,7 +120,7 @@ auth-gateway-fastapi-keycloak/
 │   │       └── manager.py
 │   └── test/
 │
-└── users/                         # Users Microservice
+└── iam/                           # IAM (Identity & Access Management) Service
     ├── requirements.txt
     ├── src/
     │   ├── main.py               # Application entry point
@@ -125,15 +133,19 @@ auth-gateway-fastapi-keycloak/
     │   │       └── users.json
     │   ├── core/
     │   │   └── config.py         # Database & app configuration
-    │   ├── db/                   # Database operations
-    │   │   └── mongo/
-    │   │       └── user.py
-    │   ├── models/               # Domain models
-    │   │   └── user.py
-    │   ├── schemas/              # Request/response models  
-    │   │   └── user.py
-    │   ├── services/             # Business logic
-    │   │   └── user_manager.py
+    │   ├── domains/              # Domain-Driven Design structure
+    │   │   ├── users/            # User domain
+    │   │   │   ├── models/
+    │   │   │   │   └── user.py
+    │   │   │   ├── schemas/
+    │   │   │   │   └── user.py
+    │   │   │   ├── services/
+    │   │   │   │   └── user_manager.py
+    │   │   │   └── db/
+    │   │   │       └── mongo/
+    │   │   │           └── user.py
+    │   │   ├── organizations/    # Organization domain (placeholder)
+    │   │   └── licenses/         # License domain (placeholder)
     │   └── utils/                # Helper functions
     │       ├── admin.py
     │       ├── exception_handler.py
@@ -143,13 +155,23 @@ auth-gateway-fastapi-keycloak/
 ```
 
 ### Architecture Overview
-**📁 Layer Structure:**
+
+**Domain-Driven Design (IAM Service):**
+The IAM service follows Domain-Driven Design principles with separate domains:
+- **`domains/users/`** - User management domain
+- **`domains/organizations/`** - Organization management (placeholder)
+- **`domains/licenses/`** - License management (placeholder)
+
+**Layer Structure (per domain):**
 - **`api/`** - API endpoints and routing (Presentation Layer)
 - **`services/`** - Business logic and use cases (Application Layer) 
 - **`db/`** - Database operations and data access (Infrastructure Layer)
 - **`models/`** - Domain entities and data models (Domain Layer)
 - **`schemas/`** - Data transfer objects and validation (Interface Layer)
 - **`utils/`** - Cross-cutting concerns and utilities
+
+**Shared Utilities:**
+- **`shared/`** - Common utilities used across all services (logging, etc.)
 
 
 ### Environment Variables
@@ -316,6 +338,21 @@ Go to the Credentials tab.
 Copy the Client Secret shown in the interface.
 
 ![Client Secret](https://github.com/user-attachments/assets/aba6d6b9-c403-4a03-9b0b-f9ef6c188593)
+
+---
+
+## CI/CD Pipeline
+
+This project includes an automated CI pipeline that runs on every pull request to `main`:
+
+| Check | Description |
+|-------|-------------|
+| **Lint** | Flake8 checks for unused imports and variables |
+| **Security (Dependencies)** | Trivy scans for vulnerable packages |
+| **Security (Docker)** | Trivy scans Docker images for vulnerabilities |
+| **Tests** | Runs pytest unit tests |
+
+After all checks complete, an automated summary comment is posted on the PR.
 
 ---
 
