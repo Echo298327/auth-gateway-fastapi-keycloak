@@ -1,7 +1,9 @@
 name: Tests
 
 on:
-  workflow_call:  # Can be called by other workflows
+  pull_request:
+    branches:
+      - main
 
 jobs:
   iam:
