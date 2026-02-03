@@ -7,7 +7,7 @@ on:
 
 jobs:
   iam:
-    name: 🧪 IAM Tests
+    name: IAM Tests
     runs-on: ubuntu-latest
     env:
       PYTHONPATH: ${{ github.workspace }}/iam/src:${{ github.workspace }}

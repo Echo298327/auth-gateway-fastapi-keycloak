@@ -7,7 +7,7 @@ on:
 
 jobs:
   dependencies:
-    name: 🛡️ Scan Dependencies
+    name: Scan Dependencies
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
         severity: 'CRITICAL,HIGH'
 
   docker:
-    name: 🐳 Scan Docker Images
+    name: Scan Docker Images
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
