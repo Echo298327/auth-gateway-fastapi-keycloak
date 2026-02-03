@@ -1,13 +1,11 @@
 name: Lint
 
 on:
-  pull_request:
-    branches:
-      - main
+  workflow_call:  # Can be called by other workflows
 
 jobs:
   flake8:
-    name: Flake8 (Unused Imports)
+    name: 🔍 Flake8
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
