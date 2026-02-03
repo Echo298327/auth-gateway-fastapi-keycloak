@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install Flake8
+      run: pip install flake8
+    - name: Lint IAM
+      run: flake8 iam --select=F401,F841 --exclude=__pycache__
+    - name: Lint Gateway
+      run: flake8 gateway --select=F401,F841 --exclude=__pycache__
+    - name: Lint Shared
+      run: flake8 shared --select=F401,F841 --exclude=__pycache__
+
+  security-deps:
+    name: Security (Dependencies)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Scan IAM dependencies
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: 'iam/requirements.txt'
+        format: 'table'
+        exit-code: '1'
+        severity: 'CRITICAL,HIGH'
+    - name: Scan Gateway dependencies
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: 'gateway/requirements.txt'
+        format: 'table'
+        exit-code: '1'
+        severity: 'CRITICAL,HIGH'
+
+  security-docker:
+    name: Security (Docker)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build IAM Docker image
+      run: docker build -t iam:test -f deployment/docker/iam_dockerfile .
+    - name: Scan IAM Docker image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'iam:test'
+        format: 'table'
+        exit-code: '1'
+        severity: 'CRITICAL'
+    - name: Build Gateway Docker image
+      run: docker build -t gateway:test -f deployment/docker/gateway_dockerfile .
+    - name: Scan Gateway Docker image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'gateway:test'
+        format: 'table'
+        exit-code: '1'
+        severity: 'CRITICAL'
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}/iam/src:${{ github.workspace }}
+      SERVER_URL: "http://127.0.0.1:9000"
+      KEYCLOAK_FRONTEND_URL: "http://keycloak:9000"
+      REALM: "templateRealm"
+      CLIENT_ID: "templateApp"
+      SCOPE: "openid"
+      KC_BOOTSTRAP_ADMIN_USERNAME: "admin"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: "admin"
+      IAM_PORT: "8081"
+      IAM_HOST: "localhost"
+      MONGO_CONNECTION_STRING: "mongodb://localhost:27017"
+      DB_NAME: "templateApp"
+      APP_EMAIL: "admin@example.com"
+      APP_PASSWORD: "xxx xxx xxx"
+      SYSTEM_ADMIN_USER_NAME: "sysadmin"
+      SYSTEM_ADMIN_FIRST_NAME: "None"
+      SYSTEM_ADMIN_LAST_NAME: "None"
+      SYSTEM_ADMIN_EMAIL: "sysadmin@dev.com"
+      SYSTEM_ADMIN_PASSWORD: "sysadminpassword"
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r iam/requirements.txt
+        pip install pytest pytest-asyncio mongomock
+    - name: Run Tests
+      run: pytest iam/test
+
+  summary:
+    name: Summary
+    needs: [lint, security-deps, security-docker, tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+    - name: Post CI Summary
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const pr = context.payload.pull_request.number;
+          const { owner, repo } = context.repo;
+          
+          const results = [
+            { name: 'Lint', status: '${{ needs.lint.result }}' },
+            { name: 'Security (Dependencies)', status: '${{ needs.security-deps.result }}' },
+            { name: 'Security (Docker)', status: '${{ needs.security-docker.result }}' },
+            { name: 'Tests', status: '${{ needs.tests.result }}' }
+          ];
+          
+          const passed = results.filter(r => r.status === 'success').length;
+          const failed = results.filter(r => r.status === 'failure').length;
+          const total = results.length;
+          
+          const icon = (s) => {
+            if (s === 'success') return ':white_check_mark:';
+            if (s === 'failure') return ':x:';
+            if (s === 'skipped') return ':fast_forward:';
+            return ':hourglass:';
+          };
+          
+          const desc = {
+            'Lint': 'Code quality checks passed',
+            'Security (Dependencies)': 'No vulnerable packages found',
+            'Security (Docker)': 'Docker images scanned successfully',
+            'Tests': 'All unit tests passed'
+          };
+          
+          let body = '';
+          
+          if (failed === 0) {
+            body = '## :white_check_mark: All CI Checks Passed\n\n';
+            body += '| Status | Check | Description |\n';
+            body += '|:------:|-------|-------------|\n';
+            for (const r of results) {
+              body += '| ' + icon(r.status) + ' | **' + r.name + '** | ' + desc[r.name] + ' |\n';
+            }
+            body += '\n---\n\n';
+            body += '**Ready for review and merge**\n';
+          } else {
+            body = '## :x: CI Checks Failed\n\n';
+            body += '| Status | Check | Description |\n';
+            body += '|:------:|-------|-------------|\n';
+            for (const r of results) {
+              const d = r.status === 'success' ? desc[r.name] : 'Needs attention';
+              body += '| ' + icon(r.status) + ' | **' + r.name + '** | ' + d + ' |\n';
+            }
+            body += '\n---\n\n';
+            body += '**Please fix the failing checks before merging**\n';
+          }
+          
+          body += '\n<sub>Automated CI Summary</sub>';
+          
+          const comments = await github.rest.issues.listComments({
+            owner, repo, issue_number: pr
+          });
+          
+          const existing = comments.data.find(c => c.body && c.body.includes('Automated CI Summary'));
+          
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner, repo, comment_id: existing.id, body
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner, repo, issue_number: pr, body
+            });
+          }

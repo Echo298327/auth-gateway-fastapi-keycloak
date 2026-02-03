@@ -13,12 +13,12 @@ logger = init_logger("gateway.config")
 class Settings(BaseSettings):
     # app settings
     PORT: int = Field(alias="GATEWAY_PORT")
-    HOST: str = Field(alias="USERS_HOST")
+    HOST: str = Field(alias="GATEWAY_HOST")
     WORKERS: int = Field(default=1, alias="GATEWAY_WORKERS")
     ENVIRONMENT: str = Field(default="local", alias="ENVIRONMENT")
 
     # environment-specific URLs
-    USERS_URL: str
+    IAM_URL: str
     SERVICE_MAP: dict = {}
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.SERVICE_MAP = {
-            "user": self.USERS_URL,
+            "user": self.IAM_URL,
         }
 
     async def get_system_admin_id(self):
