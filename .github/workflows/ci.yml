@@ -10,9 +10,6 @@ permissions:
   pull-requests: write
 
 jobs:
-  # ─────────────────────────────────────────────
-  # Lint
-  # ─────────────────────────────────────────────
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -30,9 +27,6 @@ jobs:
     - name: Lint Shared
       run: flake8 shared --select=F401,F841 --exclude=__pycache__
 
-  # ─────────────────────────────────────────────
-  # Security - Dependencies
-  # ─────────────────────────────────────────────
   security-deps:
     name: Security (Dependencies)
     runs-on: ubuntu-latest
@@ -55,9 +49,6 @@ jobs:
         exit-code: '1'
         severity: 'CRITICAL,HIGH'
 
-  # ─────────────────────────────────────────────
-  # Security - Docker Images
-  # ─────────────────────────────────────────────
   security-docker:
     name: Security (Docker)
     runs-on: ubuntu-latest
@@ -82,9 +73,6 @@ jobs:
         exit-code: '1'
         severity: 'CRITICAL'
 
-  # ─────────────────────────────────────────────
-  # Tests
-  # ─────────────────────────────────────────────
   tests:
     name: Tests
     runs-on: ubuntu-latest
@@ -121,9 +109,6 @@ jobs:
     - name: Run Tests
       run: pytest iam/test
 
-  # ─────────────────────────────────────────────
-  # Summary - Posts comment after all jobs complete
-  # ─────────────────────────────────────────────
   summary:
     name: Summary
     needs: [lint, security-deps, security-docker, tests]
@@ -148,62 +133,29 @@ jobs:
           const failed = results.filter(r => r.status === 'failure').length;
           const total = results.length;
           
-          const getIcon = (status) => {
-            if (status === 'success') return '✅';
-            if (status === 'failure') return '❌';
-            if (status === 'skipped') return '⏭️';
-            return '⏳';
-          };
+          const icon = (s) => s === 'success' ? 'V' : s === 'failure' ? 'X' : '-';
           
           let body = '';
           
           if (failed === 0) {
-            body = `## ✅ All CI Checks Passed!
-
-| Status | Check |
-|:------:|-------|
-`;
+            body = '## All CI Checks Passed!\n\n';
+            body += '| Status | Check |\n|:------:|-------|\n';
             for (const r of results) {
-              body += `| ${getIcon(r.status)} | ${r.name} |\n`;
+              body += '| ' + icon(r.status) + ' | ' + r.name + ' |\n';
             }
-            
-            body += `
----
-
-\`\`\`
-┌─────────────────────────────────────────────┐
-│                                             │
-│   READY TO MERGE                            │
-│                                             │
-│   * Lint        - No unused imports         │
-│   * Security    - No vulnerabilities        │
-│   * Tests       - All tests passing         │
-│                                             │
-│   Checks: ${passed}/${total} passed                       │
-│                                             │
-└─────────────────────────────────────────────┘
-\`\`\`
-
-> **This PR is ready for review and merge!**
-`;
+            body += '\n---\n\n';
+            body += '**This PR is ready for review and merge!**\n';
           } else {
-            body = `## ❌ CI Checks Failed
-
-| Status | Check |
-|:------:|-------|
-`;
+            body = '## CI Checks Failed\n\n';
+            body += '| Status | Check |\n|:------:|-------|\n';
             for (const r of results) {
-              body += `| ${getIcon(r.status)} | ${r.name} |\n`;
+              body += '| ' + icon(r.status) + ' | ' + r.name + ' |\n';
             }
-            
-            body += `
----
-
-> **Please fix the failing checks before merging.**
-`;
+            body += '\n---\n\n';
+            body += '**Please fix the failing checks before merging.**\n';
           }
           
-          body += `\n<sub>Automated CI Summary</sub>`;
+          body += '\n<sub>Automated CI Summary</sub>';
           
           const comments = await github.rest.issues.listComments({
             owner, repo, issue_number: pr
