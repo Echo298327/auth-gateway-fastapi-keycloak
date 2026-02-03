@@ -133,29 +133,34 @@ jobs:
           const failed = results.filter(r => r.status === 'failure').length;
           const total = results.length;
           
-          const icon = (s) => s === 'success' ? 'V' : s === 'failure' ? 'X' : '-';
+          const icon = (s) => {
+            if (s === 'success') return ':white_check_mark:';
+            if (s === 'failure') return ':x:';
+            if (s === 'skipped') return ':fast_forward:';
+            return ':hourglass:';
+          };
           
           let body = '';
           
           if (failed === 0) {
-            body = '## All CI Checks Passed!\n\n';
+            body = '## :rocket: All CI Checks Passed!\n\n';
             body += '| Status | Check |\n|:------:|-------|\n';
             for (const r of results) {
               body += '| ' + icon(r.status) + ' | ' + r.name + ' |\n';
             }
             body += '\n---\n\n';
-            body += '**This PR is ready for review and merge!**\n';
+            body += ':tada: **This PR is ready for review and merge!**\n';
           } else {
-            body = '## CI Checks Failed\n\n';
+            body = '## :warning: CI Checks Failed\n\n';
             body += '| Status | Check |\n|:------:|-------|\n';
             for (const r of results) {
               body += '| ' + icon(r.status) + ' | ' + r.name + ' |\n';
             }
             body += '\n---\n\n';
-            body += '**Please fix the failing checks before merging.**\n';
+            body += ':construction: **Please fix the failing checks before merging.**\n';
           }
           
-          body += '\n<sub>Automated CI Summary</sub>';
+          body += '\n<sub>:robot: Automated CI Summary</sub>';
           
           const comments = await github.rest.issues.listComments({
             owner, repo, issue_number: pr
