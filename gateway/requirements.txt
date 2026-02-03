@@ -1,4 +1,4 @@
-fastapi==0.115.5
+fastapi==0.128.0
 pydantic==2.9.2
 pydantic_settings==2.6.1
 python-dotenv==1.0.1
