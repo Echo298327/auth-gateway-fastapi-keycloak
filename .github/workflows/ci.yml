@@ -140,27 +140,37 @@ jobs:
             return ':hourglass:';
           };
           
+          const desc = {
+            'Lint': 'Code quality checks passed',
+            'Security (Dependencies)': 'No vulnerable packages found',
+            'Security (Docker)': 'Docker images scanned successfully',
+            'Tests': 'All unit tests passed'
+          };
+          
           let body = '';
           
           if (failed === 0) {
-            body = '## :rocket: All CI Checks Passed!\n\n';
-            body += '| Status | Check |\n|:------:|-------|\n';
+            body = '## :white_check_mark: All CI Checks Passed\n\n';
+            body += '| Status | Check | Description |\n';
+            body += '|:------:|-------|-------------|\n';
             for (const r of results) {
-              body += '| ' + icon(r.status) + ' | ' + r.name + ' |\n';
+              body += '| ' + icon(r.status) + ' | **' + r.name + '** | ' + desc[r.name] + ' |\n';
             }
             body += '\n---\n\n';
-            body += ':tada: **This PR is ready for review and merge!**\n';
+            body += '**Ready for review and merge**\n';
           } else {
-            body = '## :warning: CI Checks Failed\n\n';
-            body += '| Status | Check |\n|:------:|-------|\n';
+            body = '## :x: CI Checks Failed\n\n';
+            body += '| Status | Check | Description |\n';
+            body += '|:------:|-------|-------------|\n';
             for (const r of results) {
-              body += '| ' + icon(r.status) + ' | ' + r.name + ' |\n';
+              const d = r.status === 'success' ? desc[r.name] : 'Needs attention';
+              body += '| ' + icon(r.status) + ' | **' + r.name + '** | ' + d + ' |\n';
             }
             body += '\n---\n\n';
-            body += ':construction: **Please fix the failing checks before merging.**\n';
+            body += '**Please fix the failing checks before merging**\n';
           }
           
-          body += '\n<sub>:robot: Automated CI Summary</sub>';
+          body += '\n<sub>Automated CI Summary</sub>';
           
           const comments = await github.rest.issues.listComments({
             owner, repo, issue_number: pr
