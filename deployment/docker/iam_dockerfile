@@ -7,15 +7,15 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
-COPY gateway/requirements.txt .
+COPY iam/requirements.txt .
 
 # Install the required dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-EXPOSE 8080
+EXPOSE 8081
 
 # Copy the application code into the container
-COPY gateway/src/ .
+COPY iam/src/ .
 
 # Copy shared utilities
 COPY shared/ ./shared/
