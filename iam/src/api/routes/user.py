@@ -78,3 +78,4 @@ async def get_roles(user: Dict[str, Any] = Depends(get_request_user)):
         return response(res=roles)
     except Exception as e:
         return response(error=str(e))
+
