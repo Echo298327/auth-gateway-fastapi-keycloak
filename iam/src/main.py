@@ -4,6 +4,7 @@ from core.config import settings
 from auth_gateway_serverkit.keycloak.initializer import initialize_keycloak_server
 from auth_gateway_serverkit.logger import init_logger
 from utils.admin import set_admins_role_ids
+from domains.service_versions.db.mongo.service_version import KEYCLOAK_KEY, get_version, set_version
 from domains.users.services import manager
 from api import init_routes
 from shared.logging import log_header, log_ready, log_shutdown
@@ -20,10 +21,16 @@ async def lifespan(app: FastAPI):
     is_set_admins_role_ids = False
     try:
         await settings.init_db()
-        # Set cleanup_and_build=True for fresh deployment
-        is_initialized = await initialize_keycloak_server(cleanup_and_build=True)
+        current_keycloak_version = await get_version(KEYCLOAK_KEY)
+        expected_keycloak_version = settings.KEYCLOAK_CONFIG_VERSION
+        cleanup_and_build = current_keycloak_version != expected_keycloak_version
+        if cleanup_and_build:
+            logger.info(f"Keycloak config version changed ({current_keycloak_version} -> {expected_keycloak_version}), running full init")
+        is_initialized = await initialize_keycloak_server(cleanup_and_build=cleanup_and_build)
         if not is_initialized:
             raise Exception("Failed to initialize Keycloak server")
+        if cleanup_and_build:
+            await set_version(KEYCLOAK_KEY, expected_keycloak_version)
         is_system_admin_created = await manager.create_system_admin()
         if not is_system_admin_created:
             raise Exception("Failed to create system admin")

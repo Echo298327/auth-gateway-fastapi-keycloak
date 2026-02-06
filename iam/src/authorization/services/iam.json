@@ -25,7 +25,7 @@
       "resources": [
         "user/update",
         "user/get",
-        "user/get_roles"
+        "user/roles"
       ]
     }
 
@@ -57,9 +57,9 @@
       "url": "/api/user/get_by_keycloak_uid"
     },
     {
-      "name": "user/get_roles",
+      "name": "user/roles",
       "displayName": "Get User Roles Endpoint",
-      "url": "/api/user/get_roles"
+      "url": "/api/user/roles"
     }
   ]
 }
