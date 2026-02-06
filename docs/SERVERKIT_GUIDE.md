@@ -36,7 +36,7 @@ The entry point is `initialize_keycloak_server()` in `keycloak/initializer.py`. 
 | **Full init** (`cleanup_and_build=True`) | Config version changed | Connects, creates realm/client/roles, deletes all existing authz config, rebuilds everything from JSON |
 | **Verify only** (`cleanup_and_build=False`) | Config version matches | Connects, gets admin token, returns immediately |
 
-The mode is determined by comparing `KEYCLOAK_CONFIG_VERSION` in `iam/src/core/config.py` with the version stored in MongoDB's `service_versions` collection. See the [README — Keycloak Config Versioning](README.md#keycloak-config-versioning) section.
+The mode is determined by comparing `KEYCLOAK_CONFIG_VERSION` in `iam/src/core/config.py` with the version stored in MongoDB's `service_versions` collection. See the [README — Keycloak Config Versioning](../README.md#keycloak-config-versioning) section.
 
 ### Full Initialization Flow (5 Phases)
 
