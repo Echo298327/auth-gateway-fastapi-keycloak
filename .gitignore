@@ -30,6 +30,9 @@ htmlcov/
 .env.local
 *.local
 
+# Local dev only (machine-specific paths, not for git)
+docker-compose.dev.yml
+
 # OS
 .DS_Store
 Thumbs.db

@@ -71,7 +71,7 @@ async def get_system_admin_id():
     return await settings.get_system_admin_id()
 
 
-@router.get("/get_roles")
+@router.get("/roles")
 async def get_roles(user: Dict[str, Any] = Depends(get_request_user)):
     try:
         roles = await manager.get_roles(user)

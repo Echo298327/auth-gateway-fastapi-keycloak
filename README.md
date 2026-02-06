@@ -1,45 +1,35 @@
-# FastAPI Microservices Starter Template
+# Auth Gateway — IAM, Authentication & Authorization
 
-This repository provides a starter template for building scalable microservices using FastAPI, Docker Compose, and Keycloak for authentication and user management. It includes a gateway app, an IAM (Identity & Access Management) service, and a pre-configured environment for quick project initialization.
+A complete **IAM (Identity & Access Management)** solution with **Keycloak**. Provides authentication, authorization, user management, role-based access control, and an API gateway — ready to plug into any project.
 
-## Features
+## What's Included
 
-- **Gateway App:** Acts as an API Gateway, routing requests to appropriate microservices.
-- **IAM Service:** Identity & Access Management service with domain-driven design for users, organizations, and licenses.
-- **Keycloak Integration:** Simplifies authentication and role-based access control.
-- **Docker Compose:** Pre-configured to orchestrate services effortlessly.
-- **Environment Configuration:** Easily adjustable via `.env` files.
-- **CI/CD Pipeline:** Automated linting, security scanning, and testing on pull requests.
-- **Extensible Architecture:** Add more microservices as your project grows.
-
----
-
-## Database
-This project uses MongoDB as the primary database for storing information.
-The IAM microservice connects to a MongoDB instance, which is configurable via environment variables.
-
-Ensure you have MongoDB running locally, or use a cloud-hosted MongoDB service.
+- **Gateway Service** — routes all API requests, validates JWT tokens, checks permissions via Keycloak
+- **IAM Service** — user management (CRUD), role assignment, Keycloak initialization
+- **Keycloak** — authentication, token issuing, role-based permission evaluation
+- **MongoDB** — stores users, service versions
+- **PostgreSQL** — Keycloak's database
+- **PgAdmin** — PostgreSQL admin UI
+- **auth-gateway-serverkit** — shared library for auth middleware, Keycloak API, request handling
+- **Configurable RBAC** — define roles, policies, and per-endpoint permissions in JSON files
+- **CI/CD Pipeline** — linting, security scanning, and tests on pull requests
 
 ## Documentation
-- [API Documentation](API.md) - Complete API endpoint reference
-- [Authorization Guide](AUTHORIZATION_GUIDE.md) - Detailed authorization system explanation
-- [Postman Collection](postman_collection.json) - Ready-to-use API testing collection
 
-You can use the Postman collection provided to test the API endpoints easily. Import the `postman_collection.json` file into Postman to get started.
+- [API Documentation](API.md) — all endpoint references
+- [Authorization Guide](AUTHORIZATION_GUIDE.md) — how roles, policies, and permissions work; how to add new roles/endpoints/services
+- [Serverkit & Initializer Guide](SERVERKIT_GUIDE.md) — how the Keycloak initializer works, customizing the serverkit, local dev without publishing
+- [Postman Collection](postman_collection.json) — import into Postman to test all endpoints
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-Make sure you have the following installed:
-
-- [Docker](https://www.docker.com/get-started)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- [Python 3.10+](https://www.python.org/)
-- [MongoDB](https://www.mongodb.com/products/platform/atlas-database)
-- Git CLI
-
----
+- [Docker](https://www.docker.com/get-started) and [Docker Compose](https://docs.docker.com/compose/install/)
+- [Python 3.12+](https://www.python.org/)
+- [MongoDB](https://www.mongodb.com/) (running locally or cloud-hosted)
 
 ### Installation
 
@@ -50,334 +40,180 @@ Make sure you have the following installed:
    cd auth-gateway-fastapi-keycloak
    ```
 
-2. **Configure Environment Variables:**
-   - The project includes two `.env` files for different use cases:
-     - `.env.docker`: Used when running the application with Docker Compose. This file is automatically handled by the `docker-compose.yml` configuration, and no additional setup is required.
-     - `.env`: Used for local development without Docker Compose. You can use the `.env.example` file as a template to create your own `.env` file.
+2. Configure environment variables:
+   - `.env.docker` — used by Docker Compose (pre-configured, works out of the box)
+   - `.env` — used for local development without Docker
 
-     **Note:**
-     - If you are using Docker Compose, the `.env.docker` file will provide the necessary environment variables.
-     - If you plan to run services locally without Docker Compose, ensure the `.env` file is properly configured.
-     - For local development, services such as Postgres, Keycloak, and optionally PgAdmin must still be run using Docker Compose. You can comment out unnecessary services in the `docker-compose.yml` file if not required.
-
-3. Start the services using Docker Compose:
+3. Start all services:
 
    ```bash
-   docker-compose up --build -d
+   docker compose up --build -d
    ```
 
 4. Access the services:
 
-   - **Gateway App:** [http://localhost:8080](http://localhost:8080)
-   - **Keycloak Admin Console:** [http://localhost:9000](http://localhost:9000)
+   | Service | URL |
+   |---------|-----|
+   | Gateway | http://localhost:8080 |
+   | IAM | http://localhost:8081 |
+   | Keycloak Admin Console | http://localhost:9000 |
+   | PgAdmin | http://localhost:5050 |
+
+### First Login
+
+A system admin account is created automatically on first startup.
+
+```
+POST http://localhost:8080/api/login
+Body: {
+  "username": "sysadmin",
+  "password": "<SYSTEM_ADMIN_PASSWORD from .env.docker>"
+}
+```
+
+The response contains `access_token`, `refresh_token`, and user data. Use the access token in the `Authorization: Bearer <token>` header for all subsequent requests.
+
+### Postman
+
+1. Import `postman_collection.json` into Postman
+2. Run the Login request
+3. The token is automatically saved to the environment
+4. All other requests use it automatically
 
 ---
 
 ## Project Structure
 
-```plaintext
+```
 auth-gateway-fastapi-keycloak/
-│
-├── .env                           # Local development environment variables
-├── .env.docker                    # Docker environment variables  
-├── .github/
-│   └── workflows/
-│       └── ci.yml                # CI pipeline (lint, security, tests)
-├── API.md
-├── AUTHORIZATION_GUIDE.md
-├── CONTRIBUTING.md
-├── docker-compose.yml
-├── LICENSE
-├── postman_collection.json       # Ready-to-use API testing collection
-├── pytest.ini
-├── README.md
-├── SECURITY.md
-│
-├── deployment/
-│   ├── docker/
-│   │   ├── gateway_dockerfile
-│   │   ├── iam_dockerfile
-│   │   ├── keycloak_dockerfile
-│   │   └── keycloak.conf
-│   └── pgadmin_server.json
-│
-├── shared/                        # Shared utilities across services
-│   └── logging/
-│       └── log_header.py         # Standardized logging functions
-│
-├── gateway/                       # API Gateway Service
-│   ├── requirements.txt
-│   ├── src/
-│   │   ├── main.py               # Application entry point
-│   │   ├── api/
-│   │   │   └── routes/
-│   │   │       └── gateway.py    # Request routing logic
-│   │   ├── core/
-│   │   │   └── config.py
-│   │   ├── schemas/              # Request/response models
-│   │   │   └── gateway.py
-│   │   └── services/             # Business logic
-│   │       └── manager.py
-│   └── test/
-│
-└── iam/                           # IAM (Identity & Access Management) Service
-    ├── requirements.txt
-    ├── src/
-    │   ├── main.py               # Application entry point
-    │   ├── api/
-    │   │   └── routes/
-    │   │       └── user.py       # User management endpoints
-    │   ├── authorization/        # Role & permission configs
-    │   │   ├── roles.json
-    │   │   └── services/
-    │   │       └── users.json
-    │   ├── core/
-    │   │   └── config.py         # Database & app configuration
-    │   ├── domains/              # Domain-Driven Design structure
-    │   │   ├── users/            # User domain
-    │   │   │   ├── models/
-    │   │   │   │   └── user.py
-    │   │   │   ├── schemas/
-    │   │   │   │   └── user.py
-    │   │   │   ├── services/
-    │   │   │   │   └── user_manager.py
-    │   │   │   └── db/
-    │   │   │       └── mongo/
-    │   │   │           └── user.py
-    │   │   ├── organizations/    # Organization domain (placeholder)
-    │   │   └── licenses/         # License domain (placeholder)
-    │   └── utils/                # Helper functions
-    │       ├── admin.py
-    │       ├── exception_handler.py
-    │       ├── roles.py
-    │       └── validation.py
-    └── test/
+|
+|-- .env                              # Local dev environment variables
+|-- .env.docker                       # Docker environment variables
+|-- docker-compose.yml                # All services orchestration
+|-- API.md                            # API endpoint reference
+|-- AUTHORIZATION_GUIDE.md            # Role & permission guide
+|-- postman_collection.json           # Postman collection
+|
+|-- deployment/
+|   |-- docker/
+|   |   |-- gateway_dockerfile
+|   |   |-- iam_dockerfile
+|   |   |-- keycloak_dockerfile
+|   |   |-- keycloak.conf
+|   |-- pgadmin_server.json
+|
+|-- shared/                           # Shared utilities across services
+|   |-- logging/
+|       |-- log_header.py
+|
+|-- gateway/                          # Gateway Service
+|   |-- requirements.txt
+|   |-- src/
+|       |-- main.py
+|       |-- api/routes/
+|       |   |-- gateway.py            # Routes: login, refresh, logout, proxy
+|       |-- core/
+|       |   |-- config.py             # Service map, app settings
+|       |-- schemas/
+|       |   |-- gateway.py            # Login, Refresh request models
+|       |-- services/
+|           |-- manager.py            # Request forwarding, auth handlers
+|
+|-- iam/                              # IAM Service (Identity & Access Management)
+|   |-- requirements.txt
+|   |-- src/
+|       |-- main.py                   # Startup: DB init, Keycloak init, admin creation
+|       |-- api/routes/
+|       |   |-- user.py               # User CRUD endpoints
+|       |-- authorization/            # Role & permission config (JSON)
+|       |   |-- roles.json            # Realm roles + policies
+|       |   |-- services/
+|       |       |-- iam.json          # Resources + permissions for IAM
+|       |-- core/
+|       |   |-- config.py             # DB, Keycloak, app settings
+|       |-- domains/
+|       |   |-- users/                # User domain
+|       |   |   |-- models/user.py    # Beanie document model
+|       |   |   |-- schemas/user.py   # Pydantic schemas + AllowedRoles
+|       |   |   |-- services/user_manager.py
+|       |   |   |-- db/mongo/user.py  # DB operations
+|       |   |-- service_versions/     # Config version tracking
+|       |   |   |-- models/service_version.py
+|       |   |   |-- db/mongo/service_version.py
+|       |   |-- organizations/        # Placeholder for future domain
+|       |   |-- licenses/             # Placeholder for future domain
+|       |-- utils/
+|           |-- admin.py              # System admin helpers
+|           |-- roles.py              # Role validation
+|           |-- validation.py         # Input validation
+|           |-- exception_handler.py
 ```
-
-### Architecture Overview
-
-**Domain-Driven Design (IAM Service):**
-The IAM service follows Domain-Driven Design principles with separate domains:
-- **`domains/users/`** - User management domain
-- **`domains/organizations/`** - Organization management (placeholder)
-- **`domains/licenses/`** - License management (placeholder)
-
-**Layer Structure (per domain):**
-- **`api/`** - API endpoints and routing (Presentation Layer)
-- **`services/`** - Business logic and use cases (Application Layer) 
-- **`db/`** - Database operations and data access (Infrastructure Layer)
-- **`models/`** - Domain entities and data models (Domain Layer)
-- **`schemas/`** - Data transfer objects and validation (Interface Layer)
-- **`utils/`** - Cross-cutting concerns and utilities
-
-**Shared Utilities:**
-- **`shared/`** - Common utilities used across all services (logging, etc.)
-
-
-### Environment Variables
-
-The `.env` files contain configurations for running the application:
-
-- **`.env.docker`**: Used by Docker Compose. This file provides pre-configured environment variables to ensure seamless container orchestration.
-- **`.env`**: Used for local development when running services outside Docker Compose. Configure this file to match your local setup.
-
-Ensure you select the appropriate file based on your use case.
 
 ---
 
-## Authentication & Login
+## Services
 
-### System Admin Login
-
-The system automatically creates a default system administrator account during initialization. You can log in using:
-
-**Default System Admin Credentials:**
-```
-Username: sysadmin
-Password: [Set via SYSTEM_ADMIN_PASSWORD environment variable]
-```
-
-**Note:** The system admin credentials are configured through environment variables. Check your `.env` or `.env.docker` file for the actual password.
-
-### Login Process
-
-#### 1. **API Login Endpoint**
-```
-POST /api/login
-Content-Type: application/json
-
-{
-    "username": "sysadmin",
-    "password": "your-system-admin-password"
-}
-```
-
-#### 2. **Response Format**
-```json
-{
-    "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "expires_in": 3600,
-    "refresh_expires_in": 86400,
-    "refresh_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
-    "user": {
-        "id": "user_id",
-        "user_name": "sysadmin",
-        "email": "admin@example.com",
-        "roles": ["64f8a1b2c3d4e5f6a7b8c9d0"]
-    }
-}
-```
-
-
-#### 3. **Using the Access Token**
-Include the access token in the Authorization header for subsequent requests:
-```
-Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-#### 4. **Postman Integration**
-When using the provided Postman collection:
-1. **Automatic Token Management**: After successful login, the access token is automatically saved to Postman environment variables
-2. **Auto-Authentication**: All subsequent requests in the collection will automatically use the saved token
-3. **Environment Variable**: The token is stored as `{{access_token}}` in your Postman environment
-4. **No Manual Setup**: You don't need to manually copy/paste tokens between requests
-
-**Postman Workflow:**
-```
-1. Import postman_collection.json
-2. Run the Login request
-3. ✅ Token automatically saved to environment
-4. All other requests now work automatically
-```
-
-### User Roles
-
-The system comes with three default user roles, but the entire role system can be customized and extended:
-
-**Default Roles:**
-- **`user`**: Basic user with limited permissions
-- **`admin`**: Administrator with user management capabilities  
-- **`systemAdmin`**: System administrator with full access (cannot be modified by others)
-
-**Fully Customizable Role System:**
-- ✅ **Add new roles**: Create custom roles like `moderator`, `editor`, `viewer`, etc.
-- ✅ **Modify existing roles**: Change permissions for `user`, `admin`, or `systemAdmin`
-- ✅ **Remove default roles**: Delete roles you don't need (except `systemAdmin`)
-- ✅ **Custom permissions**: Define exactly what each role can access
-- ✅ **Hierarchical structure**: Define role inheritance and access levels
-- ✅ **Dynamic assignment**: Users can have multiple roles simultaneously
-
-For detailed instructions on adding new roles and customizing permissions, see the [Authorization Guide](AUTHORIZATION_GUIDE.md).
-
-### Keycloak Admin Console Access
-
-You can also access the Keycloak Admin Console directly for advanced user and realm management:
-
-**Keycloak Admin Console:**
-- **URL**: [http://localhost:9000](http://localhost:9000)
-- **Username**: `admin` (from `KC_BOOTSTRAP_ADMIN_USERNAME` environment variable)
-- **Password**: Check your `.env` or `.env.docker` file for `KC_BOOTSTRAP_ADMIN_PASSWORD`
-
-**Default Keycloak Admin Credentials:**
-```
-Username: admin
-Password: [Set via KC_BOOTSTRAP_ADMIN_PASSWORD environment variable]
-```
-
-**What you can do in Keycloak Admin Console:**
-- Manage users and their roles
-- Configure authentication settings
-- View and modify realm settings
-- Monitor user sessions
-- Configure client settings
-
-### Creating Additional Users And Sending API Requests
-
-Once logged in as system admin, you can create additional users and other API requests in the system .
-
-For example, to create a new user, you can use the following API request:
-
-```bash
-POST /api/user/create
-Authorization: Bearer <your-access-token>
-Content-Type: application/json
-
-{
-    "user_name": "john_doe",
-    "first_name": "John",
-    "last_name": "Doe", 
-    "email": "john@example.com",
-    "roles": ["user"]
-}
-```
-
-For detailed API documentation, see [API.md](API.md) and [AUTHORIZATION_GUIDE.md](AUTHORIZATION_GUIDE.md).
+| Service | Port | Description |
+|---------|------|-------------|
+| Gateway | 8080 | API gateway, JWT validation, permission checks, request routing |
+| IAM | 8081 | User management, Keycloak initialization, role management |
+| Keycloak | 9000 | Identity provider, token issuer, authorization server |
+| PostgreSQL | 5432 | Keycloak database |
+| PgAdmin | 5050 | PostgreSQL admin interface |
 
 ---
 
-## Usage
+## Role System
 
-### Adding a New Microservice
+Three default roles: `user`, `admin`, `systemAdmin`.
 
-1. Create a new directory for the microservice, e.g., `new_service`.
-2. Add a `Dockerfile` and FastAPI app within `new_service`.
-3. Update the `docker-compose.yml` to include the new service.
-4. Add routing to the gateway app to forward requests to the new service.
+- Users can have **multiple roles** at the same time
+- Roles are assigned when creating a user and can be changed via update
+- `systemAdmin` is created automatically and cannot be assigned through the API
+- Roles, policies, and permissions are defined in JSON files under `iam/src/authorization/`
 
-### Keycloak Configuration
+For full details on how to add roles, restrict endpoints, and add new services, see the [Authorization Guide](AUTHORIZATION_GUIDE.md).
 
-1. Access the Keycloak Admin Console at [http://localhost:9000](http://localhost:9000).
-2. Get the Client Secret (if you want to use it for Keycloak API):
+---
 
-Go to your realm > Clients.
+## Keycloak Config Versioning
 
-Click on the client you created (e.g., templateApp).
+The IAM service tracks a `KEYCLOAK_CONFIG_VERSION` in code. On startup it compares with the version stored in MongoDB:
 
-Go to the Credentials tab.
+- **Different**: runs full Keycloak sync (delete + recreate roles, policies, resources, permissions)
+- **Same**: skips, only verifies connection
 
-Copy the Client Secret shown in the interface.
+Bump the version in `iam/src/core/config.py` whenever you change `roles.json` or any file in `authorization/services/`.
 
-![Client Secret](https://github.com/user-attachments/assets/aba6d6b9-c403-4a03-9b0b-f9ef6c188593)
+---
+
+## Keycloak Admin Console
+
+For advanced management you can access Keycloak directly:
+
+- **URL**: http://localhost:9000
+- **Username**: `admin` (from `KC_BOOTSTRAP_ADMIN_USERNAME`)
+- **Password**: from `KC_BOOTSTRAP_ADMIN_PASSWORD` in `.env.docker`
 
 ---
 
 ## CI/CD Pipeline
 
-This project includes an automated CI pipeline that runs on every pull request to `main`:
+Runs automatically on pull requests to `main`:
 
 | Check | Description |
 |-------|-------------|
-| **Lint** | Flake8 checks for unused imports and variables |
-| **Security (Dependencies)** | Trivy scans for vulnerable packages |
-| **Security (Docker)** | Trivy scans Docker images for vulnerabilities |
-| **Tests** | Runs pytest unit tests |
-
-After all checks complete, an automated summary comment is posted on the PR.
+| Lint | Flake8 (unused imports, variables) |
+| Security (Dependencies) | Trivy vulnerability scan |
+| Security (Docker) | Trivy Docker image scan |
+| Tests | pytest |
 
 ---
 
 ## Contributing
 
-Contributions are welcome! Please follow these steps:
-
-1. Fork the repository.
-2. Create a feature branch.
-3. Commit your changes and open a pull request.
-
-For detailed contribution guidelines, see [CONTRIBUTING.md](CONTRIBUTING.md).
-
----
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).  
-You are free to use, modify, and distribute this project in accordance with the terms of the license.
-
----
-
-## Acknowledgments
-
-- [FastAPI](https://fastapi.tiangolo.com/)
-- [Docker](https://www.docker.com/)
-- [Keycloak](https://www.keycloak.org/)
-
+[MIT License](LICENSE)

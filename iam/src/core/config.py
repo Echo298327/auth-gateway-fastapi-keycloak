@@ -34,7 +34,8 @@ class Settings(BaseSettings):
     SYSTEM_ADMIN_EMAIL: str
     SYSTEM_ADMIN_PASSWORD: str
 
-    # Keycloak settings
+    # Keycloak settings (KEYCLOAK_CONFIG_VERSION in code; bump to force full Keycloak authz sync)
+    KEYCLOAK_CONFIG_VERSION: str = "0.0.1"
     SERVER_URL: str
     REALM: str
     CLIENT_ID: str
@@ -60,11 +61,12 @@ class Settings(BaseSettings):
     async def init_db(self):
         """Initialize the MongoDB database using Beanie."""
         from domains.users.models import User
+        from domains.service_versions.models import ServiceVersion
         
         client = AsyncIOMotorClient(self.MONGO_CONNECTION_STRING)
         database = client[self.DB_NAME]
         
-        await init_beanie(database=database, document_models=[User])
+        await init_beanie(database=database, document_models=[User, ServiceVersion])
         return client
 
     def get_motor_client(self) -> AsyncIOMotorClient:

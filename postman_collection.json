@@ -1,629 +1,707 @@
 {
 	"info": {
-		"_postman_id": "1c8a5aa2-bfc3-4942-8bdb-b6aaa453fbbf",
-		"name": "auth-gateway-fastapi-keycloak-API",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "25483342"
+	  "_postman_id": "7f598796-edf1-4f83-90d8-3904018d25f1",
+	  "name": "auth-gateway-fastapi-keycloak-API",
+	  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+	  "_exporter_id": "25483342"
 	},
 	"item": [
-		{
-			"name": "gateway",
-			"item": [
-				{
-					"name": "login",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Parse the response to JSON\r",
-									"const response = pm.response.json();\r",
-									"\r",
-									"// Save the token to a collection variable\r",
-									"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"username\": \"sysadmin\",\r\n    \"password\": \"sysadminpassword\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{GatewayApp}}/api/login",
-							"host": [
-								"{{GatewayApp}}"
-							],
-							"path": [
-								"api",
-								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "ping",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{GatewayApp}}/ping",
-							"host": [
-								"{{GatewayApp}}"
-							],
-							"path": [
-								"ping"
-							]
-						}
-					},
-					"response": []
+	  {
+		"name": "gateway",
+		"item": [
+		  {
+			"name": "login",
+			"event": [
+			  {
+				"listen": "test",
+				"script": {
+				  "exec": [
+					"// Parse the response to JSON\r",
+					"const response = pm.response.json();\r",
+					"\r",
+					"// Save the access token to a collection variable\r",
+					"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
+					"\r",
+					"// Save the refresh token to a collection variable\r",
+					"pm.collectionVariables.set(\"refresh_token\", response.refresh_token);\r",
+					"\r",
+					"// Save the user_id to a collection variable\r",
+					"pm.collectionVariables.set(\"user_id\", response.user.id);\r",
+					"\r",
+					"\r",
+					""
+				  ],
+				  "type": "text/javascript",
+				  "packages": {},
+				  "requests": {}
 				}
-			]
-		},
-		{
-			"name": "users",
-			"item": [
-				{
-					"name": "create",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Parse the response to JSON\r",
-									"const response = pm.response.json();\r",
-									"\r",
-									"// Save the user_id to a collection variable\r",
-									"pm.collectionVariables.set(\"user_id\", response.user_id);\r",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"user_name\": \"{{$randomUserName}}\",\r\n    \"first_name\": \"{{$randomFirstName}}\",\r\n    \"last_name\": \"{{$randomLastName}}\",\r\n    \"roles\": [\"user\"],\r\n    \"email\": \"{{$randomEmail}}\"\r\n}\r\n",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{GatewayApp}}/api/user/create",
-							"host": [
-								"{{GatewayApp}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"create"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "update",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [
-							{
-								"key": "user_id",
-								"value": "",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": \"6749cebbcdd96fbcc2bcf98f\",\r\n    \"roles\": [\"user\",\"admin\"]\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{GatewayApp}}/api/user/update",
-							"host": [
-								"{{GatewayApp}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"update"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "delete",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "DELETE",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"user_id\": \"673884f9e16288ab6febaa4b\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{GatewayApp}}/api/user/delete/674ae5e24984d6f2c9a42288",
-							"host": [
-								"{{GatewayApp}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"delete",
-								"674ae5e24984d6f2c9a42288"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{GatewayApp}}/api/user/get",
-							"host": [
-								"{{GatewayApp}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"get"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get by keycloak uid",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{GatewayApp}}/api/user/get_by_keycloak_uid/f4024bee-b5b9-49fe-8f38-4feaa623c6d3",
-							"host": [
-								"{{GatewayApp}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"get_by_keycloak_uid",
-								"f4024bee-b5b9-49fe-8f38-4feaa623c6d3"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "get_roles",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{GatewayApp}}/api/user/get_roles",
-							"host": [
-								"{{GatewayApp}}"
-							],
-							"path": [
-								"api",
-								"user",
-								"get_roles"
-							]
-						}
-					},
-					"response": []
+			  }
+			],
+			"request": {
+			  "method": "POST",
+			  "header": [],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\r\n    \"username\": \"sysadmin\",\r\n    \"password\": \"sysadminpassword\"\r\n}",
+				"options": {
+				  "raw": {
+					"language": "json"
+				  }
 				}
-			]
-		},
-		{
-			"name": "authentication",
-			"item": [
-				{
-					"name": "obtain access token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Parse the response to JSON\r",
-									"const response = pm.response.json();\r",
-									"\r",
-									"// Save the token to a collection variable\r",
-									"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "Felipa_Koepp0",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "password",
-									"type": "text"
-								},
-								{
-									"key": "grant_type",
-									"value": "password",
-									"type": "text"
-								},
-								{
-									"key": "client_id",
-									"value": "{{client}}",
-									"type": "text"
-								},
-								{
-									"key": "client_secret",
-									"value": "{{client_secret}}",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
-							"host": [
-								"{{KeycloakApp}}"
-							],
-							"path": [
-								"realms",
-								"{{realm}}",
-								"protocol",
-								"openid-connect",
-								"token"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "obtain sys admin token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Parse the response to JSON\r",
-									"const response = pm.response.json();\r",
-									"\r",
-									"// Save the token to a collection variable\r",
-									"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "sysadmin",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "sysadminpassword",
-									"type": "text"
-								},
-								{
-									"key": "grant_type",
-									"value": "password",
-									"type": "text"
-								},
-								{
-									"key": "client_id",
-									"value": "{{client}}",
-									"type": "text"
-								},
-								{
-									"key": "client_secret",
-									"value": "{{client_secret}}",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
-							"host": [
-								"{{KeycloakApp}}"
-							],
-							"path": [
-								"realms",
-								"{{realm}}",
-								"protocol",
-								"openid-connect",
-								"token"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "obtain key admin token",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Parse the response to JSON\r",
-									"const response = pm.response.json();\r",
-									"\r",
-									"// Save the token to a collection variable\r",
-									"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "username",
-									"value": "admin",
-									"type": "text"
-								},
-								{
-									"key": "password",
-									"value": "admin",
-									"type": "text"
-								},
-								{
-									"key": "grant_type",
-									"value": "password",
-									"type": "text"
-								},
-								{
-									"key": "client_id",
-									"value": "admin-cli",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{KeycloakApp}}/realms/master/protocol/openid-connect/token",
-							"host": [
-								"{{KeycloakApp}}"
-							],
-							"path": [
-								"realms",
-								"master",
-								"protocol",
-								"openid-connect",
-								"token"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "check entitlement",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{access_token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "urlencoded",
-							"urlencoded": [
-								{
-									"key": "grant_type",
-									"value": "urn:ietf:params:oauth:grant-type:uma-ticket",
-									"type": "text"
-								},
-								{
-									"key": "client_id",
-									"value": "{{client}}",
-									"type": "text"
-								},
-								{
-									"key": "client_secret",
-									"value": "{{client_secret}}",
-									"type": "text"
-								},
-								{
-									"key": "audience",
-									"value": "{{client}}",
-									"type": "text"
-								},
-								{
-									"key": "permission",
-									"value": "user/create",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
-							"host": [
-								"{{KeycloakApp}}"
-							],
-							"path": [
-								"realms",
-								"{{realm}}",
-								"protocol",
-								"openid-connect",
-								"token"
-							]
-						}
-					},
-					"response": []
+			  },
+			  "url": {
+				"raw": "{{GatewayApp}}/api/login",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "login"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "logout",
+			"request": {
+			  "method": "POST",
+			  "header": [],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\r\n    \"refresh_token\": \"{{refresh_token}}\"\r\n}\r\n",
+				"options": {
+				  "raw": {
+					"language": "json"
+				  }
 				}
-			]
-		}
+			  },
+			  "url": {
+				"raw": "{{GatewayApp}}/api/logout",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "logout"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "refresh",
+			"request": {
+			  "auth": {
+				"type": "bearer",
+				"bearer": [
+				  {
+					"key": "token",
+					"value": "{{access_token}}",
+					"type": "string"
+				  }
+				]
+			  },
+			  "method": "POST",
+			  "header": [],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\r\n    \"refresh_token\": \"{{refresh_token}}\"\r\n}\r\n",
+				"options": {
+				  "raw": {
+					"language": "json"
+				  }
+				}
+			  },
+			  "url": {
+				"raw": "{{GatewayApp}}/api/refresh",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "refresh"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "ping",
+			"request": {
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{GatewayApp}}/ping",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "ping"
+				]
+			  }
+			},
+			"response": []
+		  }
+		]
+	  },
+	  {
+		"name": "users",
+		"item": [
+		  {
+			"name": "create",
+			"event": [
+			  {
+				"listen": "test",
+				"script": {
+				  "exec": [
+					"// Parse the response to JSON\r",
+					"const response = pm.response.json();\r",
+					"\r",
+					"// Save the user_id to a collection variable\r",
+					"pm.collectionVariables.set(\"user_id\", response.user_id);\r",
+					""
+				  ],
+				  "type": "text/javascript",
+				  "packages": {}
+				}
+			  }
+			],
+			"request": {
+			  "auth": {
+				"type": "bearer",
+				"bearer": [
+				  {
+					"key": "token",
+					"value": "{{access_token}}",
+					"type": "string"
+				  }
+				]
+			  },
+			  "method": "POST",
+			  "header": [],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\r\n    \"user_name\": \"{{$randomUserName}}\",\r\n    \"first_name\": \"{{$randomFirstName}}\",\r\n    \"last_name\": \"{{$randomLastName}}\",\r\n    \"roles\": [\"user\"],\r\n    \"email\": \"{{$randomEmail}}\"\r\n}\r\n",
+				"options": {
+				  "raw": {
+					"language": "json"
+				  }
+				}
+			  },
+			  "url": {
+				"raw": "{{GatewayApp}}/api/user/create",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "user",
+				  "create"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "update",
+			"request": {
+			  "auth": {
+				"type": "bearer",
+				"bearer": [
+				  {
+					"key": "token",
+					"value": "{{access_token}}",
+					"type": "string"
+				  }
+				]
+			  },
+			  "method": "PUT",
+			  "header": [
+				{
+				  "key": "user_id",
+				  "value": "",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\r\n    \"user_id\": \"{{user_id}}\",\r\n    \"roles\": [\"user\",\"admin\"]\r\n}",
+				"options": {
+				  "raw": {
+					"language": "json"
+				  }
+				}
+			  },
+			  "url": {
+				"raw": "{{GatewayApp}}/api/user/update",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "user",
+				  "update"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "delete",
+			"request": {
+			  "auth": {
+				"type": "bearer",
+				"bearer": [
+				  {
+					"key": "token",
+					"value": "{{access_token}}",
+					"type": "string"
+				  }
+				]
+			  },
+			  "method": "DELETE",
+			  "header": [],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\r\n    \"user_id\": \"673884f9e16288ab6febaa4b\"\r\n}",
+				"options": {
+				  "raw": {
+					"language": "json"
+				  }
+				}
+			  },
+			  "url": {
+				"raw": "{{GatewayApp}}/api/user/delete/{{user_id}}",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "user",
+				  "delete",
+				  "{{user_id}}"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "get",
+			"request": {
+			  "auth": {
+				"type": "bearer",
+				"bearer": [
+				  {
+					"key": "token",
+					"value": "{{access_token}}",
+					"type": "string"
+				  }
+				]
+			  },
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{GatewayApp}}/api/user/get/{{user_id}}",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "user",
+				  "get",
+				  "{{user_id}}"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "get by keycloak uid",
+			"request": {
+			  "auth": {
+				"type": "bearer",
+				"bearer": [
+				  {
+					"key": "token",
+					"value": "{{access_token}}",
+					"type": "string"
+				  }
+				]
+			  },
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{GatewayApp}}/api/user/get_by_keycloak_uid/4b885aa9-69f6-44a1-bc2d-b375ae9410b1",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "user",
+				  "get_by_keycloak_uid",
+				  "4b885aa9-69f6-44a1-bc2d-b375ae9410b1"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "get roles",
+			"request": {
+			  "auth": {
+				"type": "bearer",
+				"bearer": [
+				  {
+					"key": "token",
+					"value": "{{access_token}}",
+					"type": "string"
+				  }
+				]
+			  },
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{GatewayApp}}/api/user/roles",
+				"host": [
+				  "{{GatewayApp}}"
+				],
+				"path": [
+				  "api",
+				  "user",
+				  "roles"
+				]
+			  }
+			},
+			"response": []
+		  }
+		]
+	  },
+	  {
+		"name": "authentication",
+		"item": [
+		  {
+			"name": "obtain access token",
+			"event": [
+			  {
+				"listen": "test",
+				"script": {
+				  "exec": [
+					"// Parse the response to JSON\r",
+					"const response = pm.response.json();\r",
+					"\r",
+					"// Save the token to a collection variable\r",
+					"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
+					""
+				  ],
+				  "type": "text/javascript",
+				  "packages": {}
+				}
+			  }
+			],
+			"request": {
+			  "method": "POST",
+			  "header": [],
+			  "body": {
+				"mode": "urlencoded",
+				"urlencoded": [
+				  {
+					"key": "username",
+					"value": "Felipa_Koepp0",
+					"type": "text"
+				  },
+				  {
+					"key": "password",
+					"value": "password",
+					"type": "text"
+				  },
+				  {
+					"key": "grant_type",
+					"value": "password",
+					"type": "text"
+				  },
+				  {
+					"key": "client_id",
+					"value": "{{client}}",
+					"type": "text"
+				  },
+				  {
+					"key": "client_secret",
+					"value": "{{client_secret}}",
+					"type": "text"
+				  }
+				]
+			  },
+			  "url": {
+				"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
+				"host": [
+				  "{{KeycloakApp}}"
+				],
+				"path": [
+				  "realms",
+				  "{{realm}}",
+				  "protocol",
+				  "openid-connect",
+				  "token"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "obtain sys admin token",
+			"event": [
+			  {
+				"listen": "test",
+				"script": {
+				  "exec": [
+					"// Parse the response to JSON\r",
+					"const response = pm.response.json();\r",
+					"\r",
+					"// Save the token to a collection variable\r",
+					"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
+					""
+				  ],
+				  "type": "text/javascript",
+				  "packages": {}
+				}
+			  }
+			],
+			"request": {
+			  "method": "POST",
+			  "header": [],
+			  "body": {
+				"mode": "urlencoded",
+				"urlencoded": [
+				  {
+					"key": "username",
+					"value": "sysadmin",
+					"type": "text"
+				  },
+				  {
+					"key": "password",
+					"value": "sysadminpassword",
+					"type": "text"
+				  },
+				  {
+					"key": "grant_type",
+					"value": "password",
+					"type": "text"
+				  },
+				  {
+					"key": "client_id",
+					"value": "{{client}}",
+					"type": "text"
+				  },
+				  {
+					"key": "client_secret",
+					"value": "{{client_secret}}",
+					"type": "text"
+				  }
+				]
+			  },
+			  "url": {
+				"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
+				"host": [
+				  "{{KeycloakApp}}"
+				],
+				"path": [
+				  "realms",
+				  "{{realm}}",
+				  "protocol",
+				  "openid-connect",
+				  "token"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "obtain key admin token",
+			"event": [
+			  {
+				"listen": "test",
+				"script": {
+				  "exec": [
+					"// Parse the response to JSON\r",
+					"const response = pm.response.json();\r",
+					"\r",
+					"// Save the token to a collection variable\r",
+					"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
+					""
+				  ],
+				  "type": "text/javascript",
+				  "packages": {}
+				}
+			  }
+			],
+			"request": {
+			  "method": "POST",
+			  "header": [],
+			  "body": {
+				"mode": "urlencoded",
+				"urlencoded": [
+				  {
+					"key": "username",
+					"value": "admin",
+					"type": "text"
+				  },
+				  {
+					"key": "password",
+					"value": "admin",
+					"type": "text"
+				  },
+				  {
+					"key": "grant_type",
+					"value": "password",
+					"type": "text"
+				  },
+				  {
+					"key": "client_id",
+					"value": "admin-cli",
+					"type": "text"
+				  }
+				]
+			  },
+			  "url": {
+				"raw": "{{KeycloakApp}}/realms/master/protocol/openid-connect/token",
+				"host": [
+				  "{{KeycloakApp}}"
+				],
+				"path": [
+				  "realms",
+				  "master",
+				  "protocol",
+				  "openid-connect",
+				  "token"
+				]
+			  }
+			},
+			"response": []
+		  },
+		  {
+			"name": "check entitlement",
+			"request": {
+			  "auth": {
+				"type": "bearer",
+				"bearer": [
+				  {
+					"key": "token",
+					"value": "{{access_token}}",
+					"type": "string"
+				  }
+				]
+			  },
+			  "method": "POST",
+			  "header": [],
+			  "body": {
+				"mode": "urlencoded",
+				"urlencoded": [
+				  {
+					"key": "grant_type",
+					"value": "urn:ietf:params:oauth:grant-type:uma-ticket",
+					"type": "text"
+				  },
+				  {
+					"key": "client_id",
+					"value": "{{client}}",
+					"type": "text"
+				  },
+				  {
+					"key": "client_secret",
+					"value": "{{client_secret}}",
+					"type": "text"
+				  },
+				  {
+					"key": "audience",
+					"value": "{{client}}",
+					"type": "text"
+				  },
+				  {
+					"key": "permission",
+					"value": "user/create",
+					"type": "text"
+				  }
+				]
+			  },
+			  "url": {
+				"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
+				"host": [
+				  "{{KeycloakApp}}"
+				],
+				"path": [
+				  "realms",
+				  "{{realm}}",
+				  "protocol",
+				  "openid-connect",
+				  "token"
+				]
+			  }
+			},
+			"response": []
+		  }
+		]
+	  }
 	],
 	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"packages": {},
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"packages": {},
-				"exec": [
-					""
-				]
-			}
+	  {
+		"listen": "prerequest",
+		"script": {
+		  "type": "text/javascript",
+		  "packages": {},
+		  "exec": [
+			""
+		  ]
 		}
+	  },
+	  {
+		"listen": "test",
+		"script": {
+		  "type": "text/javascript",
+		  "packages": {},
+		  "exec": [
+			""
+		  ]
+		}
+	  }
 	],
 	"variable": [
-		{
-			"key": "GatewayApp",
-			"value": "http://127.0.0.1:8080",
-			"type": "string"
-		},
-		{
-			"key": "KeycloakApp",
-			"value": "http://127.0.0.1:9002",
-			"type": "string"
-		},
-		{
-			"key": "realm",
-			"value": "templateRealm",
-			"type": "string"
-		},
-		{
-			"key": "client",
-			"value": "templateApp",
-			"type": "string"
-		},
-		{
-			"key": "client_secret",
-			"value": "wXcl3M4pfOPtqEEMtWvqEyEOFKIMFqty"
-		},
-		{
-			"key": "access_token",
-			"value": "",
-			"type": "string"
-		},
-		{
-			"key": "user_id",
-			"value": ""
-		}
+	  {
+		"key": "GatewayApp",
+		"value": "http://127.0.0.1:8080",
+		"type": "string"
+	  },
+	  {
+		"key": "KeycloakApp",
+		"value": "http://127.0.0.1:9002",
+		"type": "string"
+	  },
+	  {
+		"key": "realm",
+		"value": "templateRealm",
+		"type": "string"
+	  },
+	  {
+		"key": "client",
+		"value": "templateApp",
+		"type": "string"
+	  },
+	  {
+		"key": "client_secret",
+		"value": "wXcl3M4pfOPtqEEMtWvqEyEOFKIMFqty"
+	  },
+	  {
+		"key": "access_token",
+		"value": "",
+		"type": "string"
+	  },
+	  {
+		"key": "user_id",
+		"value": ""
+	  },
+	  {
+		"key": "refresh_token",
+		"value": ""
+	  }
 	]
-}
+  }

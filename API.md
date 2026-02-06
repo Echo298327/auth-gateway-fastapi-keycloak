@@ -1,49 +1,88 @@
 # API Documentation
 
 ## Overview
-This document provides an overview of the API endpoints for the microservices in this project. Each microservice is listed below with its respective routes and usage.
+This document provides an overview of the API endpoints. All endpoints go through the Gateway service.
 
 ## Services
 1. [Gateway Service](#gateway-service)
-2. [Users Service](#users-service)
+2. [IAM Service](#iam-service)
 
 ---
+
 ## Gateway Service
 
-### Endpoints
+### `GET /ping`
+- **Description:** Health check.
+- **Response:** `"pong!"`
 
-#### 1. `POST {{GatewayApp}}/api/login`
-- **Description:** Authenticate a user and obtain a JWT token.
-- **Method:** POST
-- **Request Body Example:**
-    ```json
-    {
-        "username": "john_doe",
-        "password": "password123"
-    }
-    ```
-## Users Service
+### `POST /api/login`
+- **Description:** Authenticate a user and obtain JWT tokens.
+- **Request Body:**
+  ```json
+  {
+    "username": "john_doe",
+    "password": "password123"
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "access_token": "...",
+    "expires_in": 36000,
+    "refresh_expires_in": 1800,
+    "refresh_token": "...",
+    "user": { ... }
+  }
+  ```
 
-### Endpoints
+### `POST /api/refresh`
+- **Description:** Refresh an expired access token using a refresh token.
+- **Request Body:**
+  ```json
+  {
+    "refresh_token": "..."
+  }
+  ```
+- **Response:** Same shape as login.
 
-#### 1. `POST {{GatewayApp}}/api/user/create`
-- **Description:** Create a new user.
-- **Method:** POST
-- **Request Body Example:**
+### `POST /api/logout`
+- **Description:** Revoke a refresh token (logout).
+- **Request Body:**
+  ```json
+  {
+    "refresh_token": "..."
+  }
+  ```
+- **Response:**
+  ```json
+  {
+    "message": "Logged out successfully"
+  }
+  ```
+
+---
+
+## IAM Service
+
+All IAM endpoints require `Authorization: Bearer <access_token>` header.
+
+### `POST /api/user/create`
+- **Description:** Create a new user. Requires admin role.
+- **Request Body:**
   ```json
   {
     "user_name": "john_doe",
     "first_name": "John",
     "last_name": "Doe",
-    "roles": ["user", "admin"],
+    "roles": ["user"],
     "email": "john.doe@example.com"
   }
   ```
+- **Note:** `roles` is required. Allowed values: `"user"`, `"admin"`.
 
-#### 2. `PUT {{GatewayApp}}/api/user/update`
-- **Description:** Update an existing user. If user_id is not provided, updates the requesting user's information.
-- **Method:** PUT
-- **Request Body Example:**
+### `PUT /api/user/update`
+- **Description:** Update an existing user. If `user_id` is not provided, updates the requesting user's information. Only admins can change roles or update other users.
+- **Request Body:**
   ```json
   {
     "user_id": "6770217c6c53e3cc94472273",
@@ -51,46 +90,36 @@ This document provides an overview of the API endpoints for the microservices in
     "first_name": "Johnny",
     "last_name": "Doe",
     "email": "johnny.doe@example.com",
-    "roles": ["user"]
+    "roles": ["user", "admin"]
   }
   ```
-- **Note:** All fields are optional. Only provided fields will be updated.
+- **Note:** All fields are optional. Only provided fields will be updated. `roles` replaces the entire role list.
 
-#### 3. `DELETE {{GatewayApp}}/api/user/delete/<user_id>`
-- **Description:** Delete a user.
-- **Method:** DELETE
+### `DELETE /api/user/delete/<user_id>`
+- **Description:** Delete a user. Requires admin role.
 - **Request Example:**
   ```
-  {{GatewayApp}}/api/user/delete/<user_id>
+  /api/user/delete/6770217c6c53e3cc94472273
   ```
 
-
-#### 4. `GET {{GatewayApp}}/api/user/get<user_id>`
+### `GET /api/user/get` or `GET /api/user/get/<user_id>`
 - **Description:** Get a user by ID. If no ID is provided, returns the requesting user's information.
-- **Method:** GET
 - **Request Example:**
   ```
-  {{GatewayApp}}/api/user/get/<user_id>
+  /api/user/get/6770217c6c53e3cc94472273
   ```
-- **Note:** Query parameter is optional
+- **Note:** `user_id` is optional.
 
-#### 5. `GET {{GatewayApp}}/api/user/get_by_keycloak_uid/<keycloak_uid>`
-- **Description:** Get a user by their Keycloak UID.
-- **Method:** GET
+### `GET /api/user/get_by_keycloak_uid/<keycloak_uid>`
+- **Description:** Get a user by their Keycloak UID. Requires systemAdmin role.
 - **Request Example:**
   ```
-  {{GatewayApp}}/api/user/get_by_keycloak_uid/<keycloak_uid>
+  /api/user/get_by_keycloak_uid/a1b2c3d4-5678-...
   ```
 
-#### 6. `GET {{GatewayApp}}/api/user/get_roles`
-- **Description:** Retrieve the list of available user roles.
-- **Method:** GET
+### `GET /api/user/roles`
+- **Description:** Get the list of available roles from Keycloak.
 - **Request Example:**
   ```
-  {{GatewayApp}}/api/user/get_roles
+  /api/user/roles
   ```
-
-### Notes
-- All fields marked as optional can be omitted from the request
-- Email addresses must be in valid format
-- Available roles: ["user", "admin"] (example roles, adjust as needed)
