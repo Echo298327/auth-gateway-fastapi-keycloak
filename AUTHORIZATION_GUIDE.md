@@ -1,507 +1,432 @@
-# Authorization System Guide
-
-## Overview
-
-This FastAPI microservices project implements a comprehensive **Role-Based Access Control (RBAC)** system using **Keycloak** for authentication and authorization. The system follows a gateway pattern where all API requests are routed through a central gateway that validates permissions before forwarding requests to appropriate microservices.
-
-## Architecture
-
-```
-Client Request
-     ↓
-[Gateway Service] ← JWT Token Validation & Permission Check
-     ↓
-[Microservice] ← Authorized Request with User Context
-     ↓
-[Database/Response]
-```
-
-### Key Components
-
-1. **Gateway Service** (`gateway/`): Central API gateway that handles routing and authorization
-2. **Users Service** (`users/`): Manages user data and operations
-3. **Keycloak**: Identity and Access Management (IAM) server
-4. **auth-gateway-serverkit**: Shared library for authentication middleware
-5. **MongoDB**: Database for storing user information
-
-## Authorization Flow
-
-### 1. Authentication Flow
-```
-1. User sends credentials to /api/login
-2. Gateway forwards to Keycloak for token generation
-3. Keycloak validates credentials and returns JWT token
-4. Gateway enriches response with user data from database
-5. Client receives access token for subsequent requests
-```
-
-### 2. Request Authorization Flow
-```
-1. Client sends request with Bearer token in Authorization header
-2. Gateway's @auth decorator validates JWT token with Keycloak
-3. Middleware extracts user roles from token
-4. System checks UMA (User Managed Access) permissions for specific resource
-5. If authorized, request is forwarded to target microservice
-6. Microservice receives request with user context in headers
-```
+# Authorization Guide
 
 ## Role System
 
-### Default Roles
+### How Roles Work
 
-The system defines three hierarchical roles:
+Every user in the system has one or more **roles**. Roles control which API endpoints a user can access.
 
-#### 1. **user** (Basic Role)
-- **Description**: Standard user with limited access
-- **Permissions**: Can update own profile, view own data, get available roles
-- **Default Role**: Assigned to new users
+There are three default roles:
 
-#### 2. **admin** (Administrative Role)
-- **Description**: Administrator with elevated privileges
-- **Permissions**: All user permissions + create/delete users
-- **Use Case**: User management operations
+| Role | What it can do |
+|------|---------------|
+| `user` | View own profile, update own profile, get available roles |
+| `admin` | Everything `user` can + create users, delete users, update other users, change roles |
+| `systemAdmin` | Everything `admin` can + system-level operations (e.g. get user by Keycloak UID) |
 
-#### 3. **systemAdmin** (Super Admin Role)
-- **Description**: System administrator with full access
-- **Permissions**: All admin permissions + system-level operations
-- **Protection**: Cannot be modified or deleted by other users
-- **Creation**: Automatically created during system initialization
+### Users Can Have Multiple Roles
 
-### Role Hierarchy
-```
-systemAdmin (Full Access)
-    ↓
-admin (User Management)
-    ↓
-user (Basic Operations)
-```
+A user can have `["user", "admin"]` at the same time. Their access is the combination of what all their roles allow.
 
-## Configuration Files
+### AllowedRoles Enum
 
-### 1. Global Role Configuration: `users/src/authorization/roles.json`
-
-```json
-{
-  "realm_roles": [
-    {
-        "name": "user",
-        "description": "Standard user with limited access"
-    },
-    {
-        "name": "admin", 
-        "description": "Administrator with elevated privileges"
-    },
-    {
-        "name": "systemAdmin",
-        "description": "System administrator with full access"
-    }
-  ],
-  "policies": [
-    {
-      "name": "SystemAdmin-Access",
-      "description": "Access restricted to system administrators",
-      "roles": ["systemAdmin"]
-    },
-    {
-      "name": "Administrators-Access", 
-      "description": "Access restricted to admins and system administrators",
-      "roles": ["admin", "systemAdmin"]
-    },
-    {
-      "name": "Public-Access",
-      "description": "Access available to all users", 
-      "roles": ["user", "admin", "systemAdmin"]
-    }
-  ]
-}
-```
-
-### 2. Service-Specific Permissions: `users/src/authorization/services/users.json`
-
-```json
-{
-  "permissions": [
-    {
-      "name": "SystemAdmin",
-      "description": "Permission for system administrators actions",
-      "policies": ["SystemAdmin-Access"],
-      "resources": ["user/get_by_keycloak_uid"]
-    },
-    {
-      "name": "Administrators", 
-      "description": "Permission for administrators actions",
-      "policies": ["Administrators-Access"],
-      "resources": ["user/create", "user/delete"]
-    },
-    {
-      "name": "public",
-      "description": "Permission for public actions", 
-      "policies": ["Public-Access"],
-      "resources": ["user/update", "user/get", "user/get_roles"]
-    }
-  ],
-  "resources": [
-    {
-      "name": "user/create",
-      "displayName": "Create User Endpoint",
-      "url": "/api/user/create"
-    },
-    {
-      "name": "user/update",
-      "displayName": "Update User Endpoint", 
-      "url": "/api/user/update"
-    }
-    // ... more resources
-  ]
-}
-```
-
-## How Authorization Works
-
-### 1. JWT Token Validation
-
-**File**: `auth-gateway-serverkit/src/auth_gateway_serverkit/middleware/auth.py`
-
-```python
-@auth(get_user_by_uid=get_by_keycloak_uid)
-async def handle_request(request: Request, service: str, action: str):
-    # 1. Extract Bearer token from Authorization header
-    # 2. Validate JWT signature using Keycloak public key
-    # 3. Extract user ID and roles from token payload
-    # 4. Check UMA permissions for resource access
-    # 5. Forward request if authorized
-```
-
-### 2. Permission Checking Process
-
-1. **Resource Construction**: `service/action` (e.g., "user/create")
-2. **UMA Token Request**: Send permission request to Keycloak
-3. **Policy Evaluation**: Keycloak evaluates user roles against policies
-4. **Authorization Decision**: Grant/deny access based on evaluation
-
-### 3. User Context Injection
-
-Authorized requests include user context in headers:
-```python
-headers = {"X-User": json.dumps(user)}
-```
-
-## Adding New Roles
-
-### Step 1: Update Role Configuration
-
-Edit `users/src/authorization/roles.json`:
-
-```json
-{
-  "realm_roles": [
-    // ... existing roles
-    {
-        "name": "moderator",
-        "description": "Content moderator with specific privileges"
-    }
-  ],
-  "policies": [
-    // ... existing policies  
-    {
-      "name": "Moderator-Access",
-      "description": "Access for moderators and above",
-      "roles": ["moderator", "admin", "systemAdmin"]
-    }
-  ]
-}
-```
-
-### Step 2: Update User Schema
-
-Edit `users/src/schemas.py`:
+In `iam/src/domains/users/schemas/user.py`:
 
 ```python
 class AllowedRoles(str, Enum):
     user = "user"
-    admin = "admin" 
-    moderator = "moderator"  # Add new role
+    admin = "admin"
 ```
 
-### Step 3: Restart Services
+This enum controls which roles can be assigned through the create/update user API. Only roles listed here are accepted.
 
-The role configuration is loaded during Keycloak initialization:
-```bash
-docker-compose down
-docker-compose up --build
+`systemAdmin` is intentionally **not** in this enum. This means no one can assign `systemAdmin` through the API, not even an existing `systemAdmin`. The role is only assigned once, automatically, to the system admin account during the first startup. This prevents privilege escalation: an admin cannot promote themselves or others to `systemAdmin`.
+
+When you add a new role, you must add it to this enum if you want it to be assignable through the API.
+
+### System Admin
+
+Created automatically on first startup using credentials from the environment config (`SYSTEM_ADMIN_USER_NAME`, `SYSTEM_ADMIN_PASSWORD`, etc.). Cannot be modified or deleted by other users. If a non-system-admin tries to access or change the system admin's data, the gateway returns 403.
+
+### Where Roles Live
+
+Roles exist in three places:
+
+**Keycloak** — stores roles by name. This is what the JWT token and authorization checks use:
+
+```
+Keycloak Admin Console > Realm Roles:
+  - user
+  - admin
+  - systemAdmin
 ```
 
-## Adding New API Endpoints with Authorization
-
-### Step 1: Create the Endpoint
-
-In your microservice (e.g., `users/src/app.py`):
-
-```python
-@app.post("/moderate_content")
-async def moderate_content(
-    data_errors: Tuple[ModerateContent, List[str]] = Depends(parse_request_body_to_model(ModerateContent)),
-    user: Dict[str, Any] = Depends(get_request_user)
-):
-    return await handle_request(data_errors, manager.moderate_content, user)
-```
-
-### Step 2: Define Resource and Permission
-
-Edit `users/src/authorization/services/users.json`:
+When a user logs in, their roles appear in the JWT token under `realm_access.roles`:
 
 ```json
 {
-  "permissions": [
-    // ... existing permissions
+  "realm_access": {
+    "roles": ["user", "default-roles-templaterealm"]
+  }
+}
+```
+
+**MongoDB (users collection)** — stores roles as Keycloak role **IDs** (UUIDs), not names:
+
+```json
+{
+  "_id": ObjectId("..."),
+  "keycloak_uid": "a1b2c3d4-...",
+  "user_name": "john",
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john@example.com",
+  "roles": ["f47ac10b-58cc-4372-a567-0e02b2c3d479"],
+  "created_at": "2026-02-06T18:00:00",
+  "updated_at": "2026-02-06T18:00:00"
+}
+```
+
+The role IDs are resolved from Keycloak when creating or updating a user. The application uses these IDs internally (e.g. to check if a user is an admin).
+
+**Authorization JSON files** — reference roles by name in policies:
+
+```json
+{
+  "name": "Administrators-Access",
+  "roles": ["admin", "systemAdmin"]
+}
+```
+
+These names must match the role names in Keycloak exactly.
+
+---
+
+## Configuration Files
+
+All authorization config lives in `iam/src/authorization/`:
+
+```
+iam/src/authorization/
+  roles.json                  <-- Roles and policies (global)
+  services/
+    iam.json                  <-- Resources and permissions for IAM service
+```
+
+### roles.json
+
+Two sections:
+
+**realm_roles** — the roles that exist in the system:
+
+```json
+{
+  "realm_roles": [
+    { "name": "user", "description": "Standard user with limited access" },
+    { "name": "admin", "description": "Administrator with elevated privileges" },
+    { "name": "systemAdmin", "description": "System administrator with full access" }
+  ]
+}
+```
+
+**policies** — named groups of roles. A policy passes if the user has ANY of the listed roles:
+
+```json
+{
+  "policies": [
     {
-      "name": "ContentModeration",
-      "description": "Permission for content moderation", 
-      "policies": ["Moderator-Access"],
-      "resources": ["user/moderate_content"]
-    }
-  ],
-  "resources": [
-    // ... existing resources
+      "name": "Public-Access",
+      "roles": ["user", "admin", "systemAdmin"]
+    },
     {
-      "name": "user/moderate_content",
-      "displayName": "Moderate Content Endpoint",
-      "url": "/api/user/moderate_content" 
+      "name": "Administrators-Access",
+      "roles": ["admin", "systemAdmin"]
+    },
+    {
+      "name": "SystemAdmin-Access",
+      "roles": ["systemAdmin"]
     }
   ]
 }
 ```
 
-### Step 3: Access via Gateway
+### services/*.json
 
-The endpoint becomes available through the gateway:
-```
-POST /api/user/moderate_content
-Authorization: Bearer <jwt_token>
-```
+Each file defines API endpoints (**resources**) and which policies can access them (**permissions**).
 
-## Adding New Microservices
-
-### Step 1: Create Service Authorization Config
-
-Create `users/src/authorization/services/new_service.json`:
+Current `iam.json`:
 
 ```json
 {
+  "resources": [
+    { "name": "user/create", "displayName": "Create User", "url": "/api/user/create" },
+    { "name": "user/update", "displayName": "Update User", "url": "/api/user/update" },
+    { "name": "user/delete", "displayName": "Delete User", "url": "/api/user/delete" },
+    { "name": "user/get", "displayName": "Get User", "url": "/api/user/get" },
+    { "name": "user/get_by_keycloak_uid", "displayName": "Get User by Keycloak UID", "url": "/api/user/get_by_keycloak_uid" },
+    { "name": "user/roles", "displayName": "Get Roles", "url": "/api/user/roles" }
+  ],
   "permissions": [
     {
-      "name": "NewServiceAccess",
-      "description": "Access to new service",
-      "policies": ["Public-Access"], 
-      "resources": ["new_service/endpoint1", "new_service/endpoint2"]
-    }
-  ],
-  "resources": [
+      "name": "public",
+      "policies": ["Public-Access"],
+      "resources": ["user/update", "user/get", "user/roles"]
+    },
     {
-      "name": "new_service/endpoint1",
-      "displayName": "New Service Endpoint 1",
-      "url": "/api/new_service/endpoint1"
+      "name": "Administrators",
+      "policies": ["Administrators-Access"],
+      "resources": ["user/create", "user/delete"]
+    },
+    {
+      "name": "SystemAdmin",
+      "policies": ["SystemAdmin-Access"],
+      "resources": ["user/get_by_keycloak_uid"]
     }
   ]
 }
 ```
 
-### Step 2: Update Gateway Service Map
+This means:
 
-Edit `gateway/src/config.py`:
+| Endpoint | Who can access |
+|----------|---------------|
+| user/update, user/get, user/roles | All authenticated users |
+| user/create, user/delete | admin, systemAdmin |
+| user/get_by_keycloak_uid | systemAdmin only |
+
+---
+
+## How to Add a New Role
+
+Example: adding a `manager` role.
+
+### Step 1: Add the role in `roles.json`
+
+```json
+{
+  "realm_roles": [
+    { "name": "user", "description": "Standard user with limited access" },
+    { "name": "admin", "description": "Administrator with elevated privileges" },
+    { "name": "systemAdmin", "description": "System administrator with full access" },
+    { "name": "manager", "description": "Manager with team-level access" }
+  ]
+}
+```
+
+### Step 2: Create a policy for it in `roles.json`
+
+```json
+{
+  "name": "Managers-Access",
+  "description": "Access for managers, admins, and system admins",
+  "roles": ["manager", "admin", "systemAdmin"]
+}
+```
+
+If you want ONLY managers to access (not admins, not systemAdmin), use:
+
+```json
+{
+  "name": "Managers-Only",
+  "roles": ["manager"]
+}
+```
+
+### Step 3: Add it to `AllowedRoles` in `iam/src/domains/users/schemas/user.py`
 
 ```python
-def __init__(self, **kwargs):
-    super().__init__(**kwargs)
-    self.SERVICE_MAP = {
-        "user": self.USERS_URL,
-        "new_service": self.NEW_SERVICE_URL,  # Add new service
+class AllowedRoles(str, Enum):
+    user = "user"
+    admin = "admin"
+    manager = "manager"
+```
+
+Without this, the role cannot be assigned through the API.
+
+### Step 4: Bump version and restart
+
+Change `KEYCLOAK_CONFIG_VERSION` in `iam/src/core/config.py`:
+
+```python
+KEYCLOAK_CONFIG_VERSION: str = "0.0.2"  # was 0.0.1
+```
+
+Restart the services. The IAM service detects the version change and runs a full Keycloak sync.
+
+---
+
+## How to Add a New API Endpoint
+
+Example: adding a `user/reports` endpoint that only admins can access.
+
+### Step 1: Create the endpoint in the microservice
+
+### Step 2: Add the resource and permission in `services/iam.json`
+
+Add to `resources`:
+
+```json
+{ "name": "user/reports", "displayName": "User Reports", "url": "/api/user/reports" }
+```
+
+Add to `permissions` (or add the resource to an existing permission):
+
+```json
+{
+  "name": "Administrators",
+  "policies": ["Administrators-Access"],
+  "resources": ["user/create", "user/delete", "user/reports"]
+}
+```
+
+### Step 3: Bump `KEYCLOAK_CONFIG_VERSION` and restart
+
+---
+
+## How to Add a New Microservice
+
+Example: adding an `orders` service.
+
+### Step 1: Create a new JSON file `iam/src/authorization/services/orders.json`
+
+```json
+{
+  "resources": [
+    { "name": "order/create", "displayName": "Create Order", "url": "/api/order/create" },
+    { "name": "order/get", "displayName": "Get Order", "url": "/api/order/get" },
+    { "name": "order/delete", "displayName": "Delete Order", "url": "/api/order/delete" }
+  ],
+  "permissions": [
+    {
+      "name": "OrderPublic",
+      "policies": ["Public-Access"],
+      "resources": ["order/create", "order/get"]
+    },
+    {
+      "name": "OrderAdmin",
+      "policies": ["Administrators-Access"],
+      "resources": ["order/delete"]
     }
+  ]
+}
 ```
 
-### Step 3: Implement Authentication in New Service
+All files in `services/` are loaded automatically. No changes needed in the initializer.
+
+### Step 2: Add the service to the gateway service map
+
+In `gateway/src/core/config.py`:
 
 ```python
-from auth_gateway_serverkit.request_handler import get_request_user
-
-@app.post("/endpoint1") 
-async def endpoint1(user: Dict[str, Any] = Depends(get_request_user)):
-    # User context is automatically injected
-    # Access user data: user["id"], user["roles"], etc.
+self.SERVICE_MAP = {
+    "user": self.IAM_URL,
+    "order": self.ORDERS_URL,
+}
 ```
 
-## Permission Management
+And add `ORDERS_URL` to the environment config.
 
-### Understanding Policies
+### Step 3: Bump `KEYCLOAK_CONFIG_VERSION` and restart
 
-**Policies** define WHO can access resources based on roles:
+The gateway will route `/api/order/*` to the orders service and check authorization against the permissions defined in `orders.json`.
 
-- **SystemAdmin-Access**: Only systemAdmin role
-- **Administrators-Access**: admin and systemAdmin roles  
-- **Public-Access**: All authenticated users
-- **Custom policies**: Define your own role combinations
+---
 
-### Understanding Permissions
+## Managing Roles Through the API
 
-**Permissions** define WHAT resources each policy can access:
+### Creating a User
 
-- Map policies to specific API endpoints
-- Support multiple resources per permission
-- Enable fine-grained access control
-
-### Understanding Resources
-
-**Resources** represent individual API endpoints:
-
-- Unique identifier (e.g., "user/create")
-- Display name for admin interface
-- URL pattern for routing
-
-## Advanced Authorization Features
-
-### 1. Dynamic Role Assignment
-
-Users can have multiple roles simultaneously:
-
-```python
-# User with multiple roles
-user_roles = ["user", "moderator"]
-
-# Role checking in business logic
-from users.src.utils import is_admins
-
-if is_admins(user["roles"]):
-    # User has admin or systemAdmin role
-    pass
+```
+POST /api/user/create
+Authorization: Bearer <admin_token>
+Body: {
+  "user_name": "john",
+  "first_name": "John",
+  "last_name": "Doe",
+  "email": "john@example.com",
+  "roles": ["user"]
+}
 ```
 
-### 2. System Admin Protection
+- `roles` is required (no default)
+- Only roles from `AllowedRoles` are accepted
+- Only admins can create users
 
-The system admin cannot be modified by other users:
+### Updating Roles
 
-```python
-# In gateway/src/user_manager.py
-async def check_unauthorized_access(request_data, user_id, path_segment):
-    system_admin_id = await settings.get_system_admin_id()
-    if (request_data.get("id") == system_admin_id or 
-        path_segment == system_admin_id):
-        if user_id != system_admin_id:
-            return True  # Deny access
-    return False
+```
+PUT /api/user/update
+Authorization: Bearer <admin_token>
+Body: {
+  "user_id": "...",
+  "roles": ["user", "admin"]
+}
 ```
 
-### 3. User Context Injection
+- `roles` replaces the entire role list
+- Only admins can change roles
+- Non-admin users can update their own name/email but not roles
 
-All microservices receive user context:
+### Removing a Role
 
-```python
-# In microservice endpoint
-user = json.loads(request.headers.get("X-User", "{}"))
-user_id = user.get("id")
-user_roles = user.get("roles", [])
+Update with the roles you want to keep:
+
+```json
+{ "user_id": "...", "roles": ["user"] }
 ```
 
-## Troubleshooting Authorization Issues
+### Getting Available Roles
 
-### 1. Token Validation Errors
-
-**Problem**: `Invalid token` or `Token has expired`
-**Solution**: 
-- Check Keycloak server connectivity
-- Verify client configuration
-- Ensure token is not expired
-
-### 2. Permission Denied Errors
-
-**Problem**: `Access denied` (403 Forbidden)
-**Solution**:
-- Verify user has required role
-- Check resource is properly configured
-- Ensure policy includes user's role
-
-### 3. Resource Not Found
-
-**Problem**: `Service not found` (404 Not Found)  
-**Solution**:
-- Check service mapping in gateway config
-- Verify resource exists in authorization config
-- Ensure microservice is running
-
-### 4. Role Assignment Issues
-
-**Problem**: New roles not working
-**Solution**:
-- Restart services to reload configuration
-- Check Keycloak admin console for role creation
-- Verify user role assignment
-
-## Security Best Practices
-
-### 1. Token Management
-- Use HTTPS in production
-- Implement token refresh logic
-- Set appropriate token expiration times
-
-### 2. Role Design
-- Follow principle of least privilege
-- Use hierarchical role structure
-- Regular permission audits
-
-### 3. System Administration
-- Protect system admin account
-- Monitor administrative actions
-- Implement role change logging
-
-### 4. Resource Protection
-- Validate all input data
-- Implement rate limiting
-- Use parameterized queries
-
-## Monitoring and Logging
-
-The system includes comprehensive logging:
-
-```python
-# Authentication events
-logger.info(f"User {user_id} authenticated successfully")
-
-# Authorization events  
-logger.error(f"Access denied for user {user_id} to resource {resource}")
-
-# Role management
-logger.info(f"User {user_id} role updated to {new_roles}")
+```
+GET /api/user/roles
+Authorization: Bearer <token>
 ```
 
-## Development Workflow
+Returns all roles from Keycloak. `systemAdmin` is hidden from non-system-admin users.
 
-### 1. Local Development
-```bash
-# Start core services
-docker-compose up postgres keycloak
+---
 
-# Run services locally for development
-cd gateway && python src/main.py
-cd users && python src/main.py
+## Authentication Endpoints
+
+### Login
+
+```
+POST /api/login
+Body: { "username": "...", "password": "..." }
 ```
 
-### 2. Testing Authorization
-- Use Postman collection provided
-- Test with different user roles
-- Verify permission boundaries
+Returns access token, refresh token, expiration times, and user data.
 
-### 3. Production Deployment
-- Use `.env.docker` for container configuration
-- Enable HTTPS/TLS
-- Configure proper monitoring
+### Refresh Token
 
-## Conclusion
+```
+POST /api/refresh
+Body: { "refresh_token": "..." }
+```
 
-This authorization system provides:
+Returns new tokens without requiring login again.
 
-- **Scalable Architecture**: Easy to add new services and endpoints
-- **Fine-grained Control**: Role and resource-based permissions
-- **Security**: JWT token validation and UMA authorization
-- **Flexibility**: Configurable roles and policies
-- **Maintainability**: Clear separation of concerns
+### Logout
 
-The system is designed to grow with your application while maintaining security and performance standards. 
+```
+POST /api/logout
+Body: { "refresh_token": "..." }
+```
+
+Revokes the refresh token so it can no longer be used.
+
+---
+
+## Config Versioning
+
+`KEYCLOAK_CONFIG_VERSION` in `iam/src/core/config.py` controls when the full Keycloak sync runs.
+
+- On startup, IAM compares the config version with the version stored in MongoDB (`service_versions` collection)
+- If different: full sync (delete and recreate all roles, policies, resources, permissions in Keycloak)
+- If same: skip, only verify Keycloak is reachable
+
+**Bump the version** whenever you change `roles.json` or any file in `services/`.
+
+---
+
+## Quick Reference
+
+| I want to... | What to do |
+|--------------|-----------|
+| Add a new role | Add to `roles.json` realm_roles + create a policy + add to `AllowedRoles` + bump version |
+| Restrict endpoint to specific roles | Create/use a policy with those roles, attach it to the resource in a permission |
+| Make endpoint accessible to everyone | Use the `Public-Access` policy |
+| Add a new endpoint | Add resource + permission in the service JSON + bump version |
+| Add a new microservice | Create a new JSON in `services/` + add to gateway service map + bump version |
+| Assign a role to a user | `PUT /api/user/update` with `roles` field (admin only) |
+| Remove a role from a user | `PUT /api/user/update` with the remaining roles |
