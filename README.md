@@ -16,9 +16,10 @@ A complete **IAM (Identity & Access Management)** solution with **Keycloak**. Pr
 
 ## Documentation
 
-- [API Documentation](API.md) — all endpoint references
-- [Authorization Guide](AUTHORIZATION_GUIDE.md) — how roles, policies, and permissions work; how to add new roles/endpoints/services
-- [Serverkit & Initializer Guide](SERVERKIT_GUIDE.md) — how the Keycloak initializer works, customizing the serverkit
+- [Workflow Guide](docs/WORKFLOW_GUIDE.md) — step-by-step: login, create users, manage roles, add new services
+- [API Documentation](docs/API.md) — all endpoint references
+- [Authorization Guide](docs/AUTHORIZATION_GUIDE.md) — how roles, policies, and permissions work; how to add new roles/endpoints/services
+- [Serverkit & Initializer Guide](docs/SERVERKIT_GUIDE.md) — how the Keycloak initializer works, customizing the serverkit
 - [Postman Collection](postman_collection.json) — import into Postman to test all endpoints
 
 ---
@@ -90,9 +91,13 @@ auth-gateway-fastapi-keycloak/
 |-- .env                              # Local dev environment variables
 |-- .env.docker                       # Docker environment variables
 |-- docker-compose.yml                # All services orchestration
-|-- API.md                            # API endpoint reference
-|-- AUTHORIZATION_GUIDE.md            # Role & permission guide
 |-- postman_collection.json           # Postman collection
+|
+|-- docs/                             # Documentation
+|   |-- API.md                        # API endpoint reference
+|   |-- AUTHORIZATION_GUIDE.md        # Role & permission guide
+|   |-- WORKFLOW_GUIDE.md             # Usage workflow guide
+|   |-- SERVERKIT_GUIDE.md            # Serverkit & initializer guide
 |
 |-- deployment/
 |   |-- docker/
@@ -172,7 +177,7 @@ Three default roles: `user`, `admin`, `systemAdmin`.
 - `systemAdmin` is created automatically and cannot be assigned through the API
 - Roles, policies, and permissions are defined in JSON files under `iam/src/authorization/`
 
-For full details on how to add roles, restrict endpoints, and add new services, see the [Authorization Guide](AUTHORIZATION_GUIDE.md).
+For full details on how to add roles, restrict endpoints, and add new services, see the [Authorization Guide](docs/AUTHORIZATION_GUIDE.md).
 
 ---
 
