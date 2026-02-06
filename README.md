@@ -17,9 +17,9 @@ A complete **IAM (Identity & Access Management)** solution with **Keycloak**. Pr
 ## Documentation
 
 - [API Documentation](API.md) — all endpoint references
-- [Authorization Guide](AUTHORIZATION_GUIDE.md) — how roles, policies, and permissions work; how to add new roles/endpoints/services
-- [Serverkit & Initializer Guide](SERVERKIT_GUIDE.md) — how the Keycloak initializer works, customizing the serverkit, local dev without publishing
-- [Postman Collection](postman_collection.json) — import into Postman to test all endpoints
+- [Authorization Guide](AUTHORIZATION_GUIDE.md): how roles, policies, and permissions work; how to add new roles/endpoints/services
+- [Serverkit & Initializer Guide](SERVERKIT_GUIDE.md): how the Keycloak initializer works, customizing the serverkit
+- [Postman Collection](postman_collection.json): import into Postman to test all endpoints
 
 ---
 
