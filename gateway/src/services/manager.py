@@ -8,7 +8,7 @@ from core.config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
 from auth_gateway_serverkit.logger import init_logger
-from auth_gateway_serverkit.keycloak.client_api import retrieve_client_token
+from auth_gateway_serverkit.keycloak.client_api import retrieve_client_token, refresh_client_token, revoke_client_token
 
 logger = init_logger("gateway.manager")
 
@@ -153,4 +153,20 @@ async def handle_login(login_data):
         return await retrieve_client_token(login_data.username, login_data.password)
     except Exception as e:
         logger.error(f"Error during login: {str(e)}")
+        raise
+
+
+async def handle_refresh(refresh_token: str):
+    try:
+        return await refresh_client_token(refresh_token)
+    except Exception as e:
+        logger.error(f"Error during refresh: {str(e)}")
+        raise
+
+
+async def handle_logout(refresh_token: str):
+    try:
+        return await revoke_client_token(refresh_token)
+    except Exception as e:
+        logger.error(f"Error during logout: {str(e)}")
         raise
