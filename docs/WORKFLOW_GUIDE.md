@@ -235,7 +235,101 @@ This deletes the user from both Keycloak and MongoDB.
 
 ---
 
-## 9. Refresh Token
+## 9. MFA / Two-Factor Authentication
+
+### Create a User with MFA Enabled
+
+Add `"enable_mfa": true` when creating a user:
+
+```
+POST http://localhost:8080/api/user/create
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "user_name": "secure_user",
+  "first_name": "Secure",
+  "last_name": "User",
+  "roles": ["user"],
+  "email": "secure@example.com",
+  "enable_mfa": true
+}
+```
+
+The user will have a `CONFIGURE_TOTP` required action in Keycloak.
+
+### First Login (MFA Setup)
+
+**Step 1** — User logs in normally:
+
+```
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{ "username": "secure_user", "password": "<password>" }
+```
+
+**Response** — QR code for authenticator app:
+
+```json
+{
+  "mfa_required": true,
+  "mfa_action": "setup",
+  "qr_code": "data:image/png;base64,...",
+  "message": "Scan QR code with your authenticator app"
+}
+```
+
+**Step 2** — User scans the QR code with Google Authenticator / Authy, then sends the OTP:
+
+```
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{ "username": "secure_user", "password": "<password>", "totp": "123456" }
+```
+
+**Response:**
+
+```json
+{
+  "mfa_required": true,
+  "mfa_action": "setup_complete",
+  "message": "MFA setup complete. Please login again with your OTP code."
+}
+```
+
+**Step 3** — User logs in again with a fresh OTP:
+
+```
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{ "username": "secure_user", "password": "<password>", "totp": "654321" }
+```
+
+**Response** — normal login response with tokens.
+
+### Regular Login with MFA
+
+After setup, every login requires all three fields:
+
+```
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{ "username": "secure_user", "password": "<password>", "totp": "123456" }
+```
+
+If `totp` is omitted, the gateway returns:
+
+```json
+{ "mfa_required": true, "mfa_action": "verify", "message": "OTP code required" }
+```
+
+---
+
+## 10. Refresh Token
 
 Access tokens expire (default: 10 hours). Use the refresh token to get a new access token without logging in again:
 
@@ -252,7 +346,7 @@ Content-Type: application/json
 
 ---
 
-## 10. Logout
+## 11. Logout
 
 Invalidates the refresh token so it cannot be used again:
 
@@ -267,7 +361,7 @@ Content-Type: application/json
 
 ---
 
-## 11. Add a New Service to the Gateway
+## 12. Add a New Service to the Gateway
 
 The gateway forwards requests based on a **service map**. To add a new backend service (e.g. an `orders` service):
 
@@ -332,10 +426,10 @@ The gateway handles JWT validation and Keycloak permission checks **before** for
 | Action | Method | Endpoint | Who Can Do It |
 |--------|--------|----------|---------------|
 | Health check | `GET` | `/ping` | Anyone |
-| Login | `POST` | `/api/login` | Anyone |
+| Login | `POST` | `/api/login` | Anyone (optional `totp` for MFA) |
 | Refresh token | `POST` | `/api/refresh` | Anyone (with valid refresh token) |
 | Logout | `POST` | `/api/logout` | Anyone (with valid refresh token) |
-| Create user | `POST` | `/api/user/create` | `admin`, `systemAdmin` |
+| Create user | `POST` | `/api/user/create` | `admin`, `systemAdmin` (optional `enable_mfa`) |
 | Update self | `PUT` | `/api/user/update` | Any logged-in user |
 | Update other user | `PUT` | `/api/user/update` | `admin`, `systemAdmin` |
 | Change roles | `PUT` | `/api/user/update` | `admin`, `systemAdmin` |

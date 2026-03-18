@@ -8,7 +8,8 @@ from core.config import settings
 from starlette.datastructures import UploadFile as StarletteUploadFile
 from auth_gateway_serverkit.request_handler import parse_request
 from auth_gateway_serverkit.logger import init_logger
-from auth_gateway_serverkit.keycloak.client_api import retrieve_client_token, refresh_client_token, revoke_client_token
+from auth_gateway_serverkit.keycloak.client import retrieve_client_token, refresh_client_token, revoke_client_token, get_admin_token
+from auth_gateway_serverkit.keycloak.config import settings as kc_settings
 
 logger = init_logger("gateway.manager")
 
@@ -149,11 +150,163 @@ async def check_unauthorized_access(request_data, user_id, path_segment):
 
 
 async def handle_login(login_data):
+    """
+    Handle login with MFA support.
+
+    Flow:
+    1. Try Keycloak login (with totp if provided)
+    2. If 200 -> return token response
+    3. If "not fully set up" -> CONFIGURE_TOTP required action
+       - No totp: enroll user, return QR code
+       - With totp: verify OTP, remove required action, return setup_complete
+    4. If login failed without totp -> validate password separately
+       - Password valid -> user needs OTP -> return mfa_required
+       - Password invalid -> return the original Keycloak error
+    """
     try:
-        return await retrieve_client_token(login_data.username, login_data.password)
+        response = await retrieve_client_token(login_data.username, login_data.password, login_data.totp)
+
+        if response is None:
+            return {"error": True, "message": "Authentication service unavailable", "status_code": status.HTTP_503_SERVICE_UNAVAILABLE}
+
+        if response.status_code == 200:
+            return response
+
+        error_data = response.json() if response.headers.get("content-type", "").startswith("application/json") else {}
+        error_description = error_data.get("error_description", "")
+
+        if "not fully set up" in error_description.lower():
+            return await _handle_account_not_setup(login_data)
+
+        if login_data.totp is None and response.status_code == 401:
+            password_valid = await _validate_password(login_data.username, login_data.password)
+            if password_valid:
+                return {"mfa_required": True, "mfa_action": "verify", "message": "OTP code required"}
+
+        return response
+
     except Exception as e:
         logger.error(f"Error during login: {str(e)}")
         raise
+
+
+async def _handle_account_not_setup(login_data):
+    """Handle CONFIGURE_TOTP required action flow."""
+    admin_token = await get_admin_token()
+    if not admin_token:
+        return {"error": True, "message": "Authentication service error", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
+
+    keycloak_uid = await _get_keycloak_uid_by_username(admin_token, login_data.username)
+    if not keycloak_uid:
+        return {"error": True, "message": "User not found", "status_code": status.HTTP_404_NOT_FOUND}
+
+    required_actions = await _get_user_required_actions(admin_token, keycloak_uid)
+
+    if "CONFIGURE_TOTP" not in required_actions:
+        return {"error": True, "message": f"Account setup required: {', '.join(required_actions)}", "status_code": status.HTTP_400_BAD_REQUEST}
+
+    if login_data.totp:
+        verified = await _verify_mfa_otp(keycloak_uid, login_data.totp)
+        if not verified:
+            return {"error": True, "message": "Invalid OTP code", "status_code": status.HTTP_400_BAD_REQUEST}
+        await _remove_required_action(admin_token, keycloak_uid, "CONFIGURE_TOTP")
+        return {"mfa_required": True, "mfa_action": "setup_complete", "message": "MFA setup complete. Please login again with your OTP code."}
+
+    qr_data = await _enroll_mfa(keycloak_uid)
+    if not qr_data:
+        return {"error": True, "message": "Failed to generate QR code", "status_code": status.HTTP_500_INTERNAL_SERVER_ERROR}
+
+    return {"mfa_required": True, "mfa_action": "setup", "qr_code": qr_data.get("qrCodeDataUrl"), "message": "Scan QR code with your authenticator app"}
+
+
+async def _validate_password(username: str, password: str) -> bool:
+    """Validate password via the custom MFA auth endpoint."""
+    url = f"{kc_settings.SERVER_URL}/realms/{kc_settings.REALM}/mfa/auth/validate"
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(url, json={"username": username, "password": password})
+            if response.status_code == 200:
+                return response.json().get("valid", False)
+            return False
+    except Exception as e:
+        logger.error(f"Error validating password: {e}")
+        return False
+
+
+async def _get_keycloak_uid_by_username(admin_token: str, username: str) -> str | None:
+    """Look up a user's Keycloak UID by username via admin API."""
+    url = f"{kc_settings.SERVER_URL}/admin/realms/{kc_settings.REALM}/users?username={username}&exact=true"
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(url, headers=headers)
+            if response.status_code == 200:
+                users = response.json()
+                if users:
+                    return users[0]["id"]
+            return None
+    except Exception as e:
+        logger.error(f"Error looking up user: {e}")
+        return None
+
+
+async def _get_user_required_actions(admin_token: str, keycloak_uid: str) -> list:
+    """Get a user's required actions from Keycloak."""
+    url = f"{kc_settings.SERVER_URL}/admin/realms/{kc_settings.REALM}/users/{keycloak_uid}"
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(url, headers=headers)
+            if response.status_code == 200:
+                return response.json().get("requiredActions", [])
+            return []
+    except Exception as e:
+        logger.error(f"Error getting required actions: {e}")
+        return []
+
+
+async def _remove_required_action(admin_token: str, keycloak_uid: str, action: str) -> bool:
+    """Remove a required action from a user in Keycloak."""
+    url = f"{kc_settings.SERVER_URL}/admin/realms/{kc_settings.REALM}/users/{keycloak_uid}"
+    headers = {"Authorization": f"Bearer {admin_token}", "Content-Type": "application/json"}
+    try:
+        current_actions = await _get_user_required_actions(admin_token, keycloak_uid)
+        updated_actions = [a for a in current_actions if a != action]
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.put(url, headers=headers, json={"requiredActions": updated_actions})
+            return response.status_code == 204
+    except Exception as e:
+        logger.error(f"Error removing required action: {e}")
+        return False
+
+
+async def _enroll_mfa(keycloak_uid: str) -> dict | None:
+    """Enroll a user in MFA via the custom Keycloak endpoint."""
+    url = f"{kc_settings.SERVER_URL}/realms/{kc_settings.REALM}/mfa/totp/enroll"
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(url, json={"userId": keycloak_uid})
+            if response.status_code == 200:
+                return response.json()
+            logger.error(f"MFA enrollment failed: {response.text}")
+            return None
+    except Exception as e:
+        logger.error(f"Error enrolling MFA: {e}")
+        return None
+
+
+async def _verify_mfa_otp(keycloak_uid: str, otp: str) -> bool:
+    """Verify an OTP code via the custom Keycloak endpoint."""
+    url = f"{kc_settings.SERVER_URL}/realms/{kc_settings.REALM}/mfa/totp/verify"
+    try:
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.post(url, json={"userId": keycloak_uid, "otp": otp})
+            if response.status_code == 200:
+                return response.json().get("verified", False)
+            return False
+    except Exception as e:
+        logger.error(f"Error verifying OTP: {e}")
+        return False
 
 
 async def handle_refresh(refresh_token: str):

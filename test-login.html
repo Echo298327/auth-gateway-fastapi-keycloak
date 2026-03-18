@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login MFA Test</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .container { width: 420px; }
+        .card { background: #1e293b; border-radius: 12px; padding: 32px; box-shadow: 0 4px 24px rgba(0,0,0,0.3); }
+        h2 { font-size: 22px; margin-bottom: 24px; text-align: center; color: #f8fafc; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 6px; font-weight: 500; }
+        input { width: 100%; padding: 10px 14px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; color: #f1f5f9; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: #3b82f6; }
+        input::placeholder { color: #475569; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-primary { background: #3b82f6; color: #fff; }
+        .btn-primary:hover { background: #2563eb; }
+        .btn-primary:disabled { background: #334155; cursor: not-allowed; }
+        .btn-secondary { background: #334155; color: #e2e8f0; margin-top: 8px; }
+        .btn-secondary:hover { background: #475569; }
+        .response-box { margin-top: 20px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 16px; max-height: 300px; overflow-y: auto; font-size: 13px; font-family: 'Consolas', monospace; white-space: pre-wrap; word-break: break-all; display: none; }
+        .response-box.show { display: block; }
+        .status { font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+        .status-ok { background: #065f46; color: #6ee7b7; }
+        .status-err { background: #7f1d1d; color: #fca5a5; }
+        .status-mfa { background: #713f12; color: #fde68a; }
+        .qr-section { text-align: center; margin-top: 16px; }
+        .qr-section img { border-radius: 8px; border: 2px solid #334155; }
+        .qr-section p { font-size: 13px; color: #94a3b8; margin-top: 8px; }
+        .otp-section { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #334155; }
+        .otp-section.show { display: block; }
+        .step-indicator { text-align: center; font-size: 12px; color: #64748b; margin-bottom: 16px; }
+        .settings { margin-bottom: 20px; }
+        .settings summary { cursor: pointer; font-size: 13px; color: #64748b; margin-bottom: 8px; }
+        .settings .form-group { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h2>Login MFA Test</h2>
+
+            <details class="settings">
+                <summary>Gateway URL</summary>
+                <div class="form-group">
+                    <input type="text" id="gatewayUrl" value="http://localhost:8080" placeholder="http://localhost:8080">
+                </div>
+            </details>
+
+            <div id="stepIndicator" class="step-indicator"></div>
+
+            <div id="loginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" placeholder="Enter username" autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" placeholder="Enter password">
+                </div>
+                <button class="btn-primary" id="loginBtn" onclick="doLogin()">Login</button>
+            </div>
+
+            <div id="otpSection" class="otp-section">
+                <div id="qrContainer" class="qr-section"></div>
+                <div class="form-group">
+                    <label>OTP Code</label>
+                    <input type="text" id="otpCode" placeholder="6-digit code" maxlength="6" autocomplete="off">
+                </div>
+                <button class="btn-primary" id="otpBtn" onclick="submitOtp()">Verify OTP</button>
+                <button class="btn-secondary" onclick="resetForm()">Back to Login</button>
+            </div>
+
+            <div id="responseBox" class="response-box"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentState = 'login';
+        let savedUsername = '';
+        let savedPassword = '';
+
+        function getUrl() { return document.getElementById('gatewayUrl').value.replace(/\/+$/, ''); }
+
+        function showResponse(data, statusCode) {
+            const box = document.getElementById('responseBox');
+            box.classList.add('show');
+
+            let statusClass = 'status-err';
+            let statusText = `${statusCode} ERROR`;
+            if (statusCode === 200) {
+                if (data.mfa_required) {
+                    statusClass = 'status-mfa';
+                    statusText = '200 MFA';
+                } else {
+                    statusClass = 'status-ok';
+                    statusText = '200 OK';
+                }
+            }
+
+            box.innerHTML = `<span class="status ${statusClass}">${statusText}</span>\n${JSON.stringify(data, null, 2)}`;
+        }
+
+        function setStep(text) {
+            document.getElementById('stepIndicator').textContent = text;
+        }
+
+        function setLoading(btn, loading) {
+            btn.disabled = loading;
+            btn.textContent = loading ? 'Loading...' : btn.dataset.label;
+        }
+
+        document.getElementById('loginBtn').dataset.label = 'Login';
+        document.getElementById('otpBtn').dataset.label = 'Verify OTP';
+
+        async function doLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            if (!username || !password) return;
+
+            savedUsername = username;
+            savedPassword = password;
+
+            const btn = document.getElementById('loginBtn');
+            setLoading(btn, true);
+
+            try {
+                const res = await fetch(`${getUrl()}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+                showResponse(data, res.status);
+
+                if (data.mfa_required) {
+                    if (data.mfa_action === 'setup') {
+                        setStep('Step: Scan QR code, then enter OTP');
+                        showOtpSection(data.qr_code);
+                    } else if (data.mfa_action === 'verify') {
+                        setStep('Step: Enter OTP from authenticator app');
+                        showOtpSection(null);
+                    } else if (data.mfa_action === 'setup_complete') {
+                        setStep('MFA setup complete! Login again with OTP.');
+                        showOtpSection(null);
+                    }
+                } else if (data.access_token) {
+                    setStep('Login successful!');
+                    currentState = 'done';
+                }
+            } catch (e) {
+                showResponse({ error: e.message }, 0);
+            } finally {
+                setLoading(btn, false);
+            }
+        }
+
+        function showOtpSection(qrCodeDataUrl) {
+            document.getElementById('loginForm').style.display = 'none';
+            const otpSection = document.getElementById('otpSection');
+            otpSection.classList.add('show');
+
+            const qrContainer = document.getElementById('qrContainer');
+            if (qrCodeDataUrl) {
+                qrContainer.innerHTML = `<img src="${qrCodeDataUrl}" width="220" height="220" alt="QR Code"><p>Scan with Google Authenticator / Authy</p>`;
+            } else {
+                qrContainer.innerHTML = '';
+            }
+
+            document.getElementById('otpCode').value = '';
+            document.getElementById('otpCode').focus();
+        }
+
+        async function submitOtp() {
+            const otp = document.getElementById('otpCode').value.trim();
+            if (!otp) return;
+
+            const btn = document.getElementById('otpBtn');
+            setLoading(btn, true);
+
+            try {
+                const res = await fetch(`${getUrl()}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: savedUsername, password: savedPassword, totp: otp })
+                });
+                const data = await res.json();
+                showResponse(data, res.status);
+
+                if (data.mfa_action === 'setup_complete') {
+                    setStep('MFA setup complete! Enter a fresh OTP to login.');
+                    document.getElementById('otpCode').value = '';
+                    document.getElementById('qrContainer').innerHTML = '';
+                } else if (data.access_token) {
+                    setStep('Login successful!');
+                    currentState = 'done';
+                } else if (data.mfa_required && data.mfa_action === 'verify') {
+                    setStep('Enter OTP from authenticator app');
+                }
+            } catch (e) {
+                showResponse({ error: e.message }, 0);
+            } finally {
+                setLoading(btn, false);
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('otpSection').classList.remove('show');
+            document.getElementById('qrContainer').innerHTML = '';
+            document.getElementById('responseBox').classList.remove('show');
+            setStep('');
+            currentState = 'login';
+        }
+
+        document.getElementById('otpCode').addEventListener('keydown', (e) => { if (e.key === 'Enter') submitOtp(); });
+        document.getElementById('password').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+    </script>
+</body>
+</html>

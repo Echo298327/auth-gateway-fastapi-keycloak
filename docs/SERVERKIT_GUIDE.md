@@ -10,7 +10,8 @@
 | `keycloak/client_api.py` | Low-level Keycloak REST API calls (tokens, resources, policies, permissions, user operations) |
 | `keycloak/cleanup_api.py` | Deletes existing authorization config from Keycloak (permissions, policies, resources) |
 | `keycloak/roles_api.py` | Keycloak realm role operations |
-| `keycloak/user_api.py` | Keycloak user operations (create, get, update, delete) |
+| `keycloak/user_api.py` | Keycloak user operations (create, get, update, delete). Supports `required_actions` parameter for MFA |
+| `keycloak/client.py` | Keycloak OpenID Connect token operations (login, refresh). Supports optional `totp` parameter |
 | `keycloak/config.py` | Keycloak settings loaded from environment variables |
 | `keycloak/utils.py` | Utilities (dynamic permission naming) |
 | `middleware/auth.py` | JWT authentication middleware |

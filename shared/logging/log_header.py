@@ -18,21 +18,9 @@ RESET = "\033[0m"
 LINE = "─" * 45
 
 
-def log_header(service_name: str, version: str) -> None:
-    """
-    Print the startup header banner (call at the very start).
-    """
-    header = f"""
-{CYAN}{LINE}{RESET}
-{CYAN}  ▪  {BOLD}{service_name.upper()}{RESET}
-{DIM}     v{version}{RESET}
-{CYAN}{LINE}{RESET}
-"""
-    print(header, flush=True)
-
-
-def log_ready(
+def log_startup(
     service_name: str,
+    version: str,
     environment: str,
     host: str,
     port: int,
@@ -40,26 +28,31 @@ def log_ready(
     db_name: Optional[str] = None
 ) -> None:
     """
-    Print the ready confirmation (call after all initialization is complete).
+    Print the full startup banner with configuration and ready status.
     """
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     url = f"http://{host}:{port}"
-    
+
     env_color = GREEN if environment == "production" else YELLOW
-    
+
     config_lines = [
         f"     Environment : {env_color}{environment}{RESET}",
         f"     Host        : {host}",
         f"     Port        : {port}",
         f"     Workers     : {workers}",
     ]
-    
+
     if db_name:
         config_lines.append(f"     Database    : {db_name}")
-    
+
     config_section = "\n".join(config_lines)
-    
-    ready_msg = f"""
+
+    msg = f"""
+{CYAN}{LINE}{RESET}
+{CYAN}  ▪  {BOLD}{service_name.upper()}{RESET}
+{DIM}     v{version}{RESET}
+{CYAN}{LINE}{RESET}
+
 {DIM}  ▸  Configuration{RESET}
 {config_section}
 
@@ -71,7 +64,7 @@ def log_ready(
      Started : {timestamp}
 {GREEN}{LINE}{RESET}
 """
-    print(ready_msg, flush=True)
+    print(msg, flush=True)
 
 
 def log_shutdown(service_name: str) -> None:

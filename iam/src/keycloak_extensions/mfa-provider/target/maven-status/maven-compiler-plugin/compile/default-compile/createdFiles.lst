@@ -1,0 +1,16 @@
+com\authgateway\keycloak\mfa\utils\TotpManager.class
+com\authgateway\keycloak\mfa\models\ValidatePasswordRequest.class
+com\authgateway\keycloak\mfa\models\EnrollmentResponse.class
+com\authgateway\keycloak\mfa\models\ValidatePasswordResponse.class
+com\authgateway\keycloak\mfa\models\VerifyRequest.class
+com\authgateway\keycloak\mfa\models\VerifyResponse.class
+com\authgateway\keycloak\mfa\MfaResourceProvider$MfaRootResource.class
+com\authgateway\keycloak\mfa\TotpResource$ErrorResponse.class
+com\authgateway\keycloak\mfa\TotpResource.class
+com\authgateway\keycloak\mfa\MfaResourceProviderFactory.class
+com\authgateway\keycloak\mfa\models\RemoveRequest.class
+com\authgateway\keycloak\mfa\models\ErrorResponse.class
+com\authgateway\keycloak\mfa\models\RemoveResponse.class
+com\authgateway\keycloak\mfa\models\EnrollmentRequest.class
+com\authgateway\keycloak\mfa\AuthenticationResource.class
+com\authgateway\keycloak\mfa\MfaResourceProvider.class

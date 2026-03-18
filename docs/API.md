@@ -16,15 +16,17 @@ This document provides an overview of the API endpoints. All endpoints go throug
 - **Response:** `"pong!"`
 
 ### `POST /api/login`
-- **Description:** Authenticate a user and obtain JWT tokens.
+- **Description:** Authenticate a user and obtain JWT tokens. Supports MFA/TOTP.
 - **Request Body:**
   ```json
   {
     "username": "john_doe",
-    "password": "password123"
+    "password": "password123",
+    "totp": "123456"
   }
   ```
-- **Response:**
+  `totp` is optional. Required only for users with MFA configured.
+- **Response (success):**
   ```json
   {
     "access_token": "...",
@@ -32,6 +34,31 @@ This document provides an overview of the API endpoints. All endpoints go throug
     "refresh_expires_in": 1800,
     "refresh_token": "...",
     "user": { ... }
+  }
+  ```
+- **Response (MFA setup required):** Returned when user has `CONFIGURE_TOTP` required action.
+  ```json
+  {
+    "mfa_required": true,
+    "mfa_action": "setup",
+    "qr_code": "data:image/png;base64,...",
+    "message": "Scan QR code with your authenticator app"
+  }
+  ```
+- **Response (MFA setup complete):** Returned after verifying OTP during first-time setup.
+  ```json
+  {
+    "mfa_required": true,
+    "mfa_action": "setup_complete",
+    "message": "MFA setup complete. Please login again with your OTP code."
+  }
+  ```
+- **Response (OTP required):** Returned when user has MFA configured but no `totp` was provided.
+  ```json
+  {
+    "mfa_required": true,
+    "mfa_action": "verify",
+    "message": "OTP code required"
   }
   ```
 
@@ -75,10 +102,11 @@ All IAM endpoints require `Authorization: Bearer <access_token>` header.
     "first_name": "John",
     "last_name": "Doe",
     "roles": ["user"],
-    "email": "john.doe@example.com"
+    "email": "john.doe@example.com",
+    "enable_mfa": true
   }
   ```
-- **Note:** `roles` is required. Allowed values: `"user"`, `"admin"`.
+- **Note:** `roles` is required. Allowed values: `"user"`, `"admin"`. `enable_mfa` is optional (default `false`). When `true`, the user will be required to set up TOTP on first login.
 
 ### `PUT /api/user/update`
 - **Description:** Update an existing user. If `user_id` is not provided, updates the requesting user's information. Only admins can change roles or update other users.

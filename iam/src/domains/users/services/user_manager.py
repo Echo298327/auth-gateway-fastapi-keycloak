@@ -1,9 +1,9 @@
 from auth_gateway_serverkit.logger import init_logger
 from auth_gateway_serverkit.password import generate_password
-from auth_gateway_serverkit.keycloak.user_api import (
+from auth_gateway_serverkit.keycloak.user import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
-from auth_gateway_serverkit.keycloak.roles_api import get_all_roles, get_role_by_name
+from auth_gateway_serverkit.keycloak.role import get_all_roles, get_role_by_name
 
 from core.config import settings
 from domains.users.db.mongo.user import (
@@ -108,7 +108,8 @@ class UserManager:
         role_ids = [role['id'] for role in realm_roles.get('roles', []) if role['name'] in role_names]
 
         password = generate_password()
-        response = await add_user_to_keycloak(user_name, first_name, last_name, email, password, roles)
+        required_actions = ["CONFIGURE_TOTP"] if getattr(data, "enable_mfa", False) else []
+        response = await add_user_to_keycloak(user_name, first_name, last_name, email, password, roles, required_actions=required_actions)
 
         if response.get('status') != 'success':
             raise Exception(f"Error creating user in Keycloak: {response.get('message')}")
