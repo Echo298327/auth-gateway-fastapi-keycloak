@@ -1,1 +1,1 @@
-com.kalsense.keycloak.mfa.MfaResourceProviderFactory
+com.authgateway.keycloak.mfa.MfaResourceProviderFactory
