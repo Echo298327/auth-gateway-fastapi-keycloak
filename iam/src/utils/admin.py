@@ -13,10 +13,8 @@ def is_admins(roles: list[str]) -> bool:
     :return: bool
     """
     if not settings.has_system_admin_role_id() or not settings.has_admin_role_id():
-        logger.warning(
-            "System admin or admin role IDs are not set in settings. Attempting to set them."
-        )
-        set_admins_role_ids()
+        logger.error("Admin role IDs are not set. Denying access. Check lifespan initialization.")
+        return False
     return bool({settings.SYSTEM_ADMIN_ROLE_ID, settings.ADMIN_ROLE_ID} & set(roles))
 
 
