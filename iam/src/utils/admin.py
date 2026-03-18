@@ -36,7 +36,7 @@ async def set_admins_role_ids() -> bool:
     Set the system admin and admin role IDs in the settings.
     """
     try:
-        from auth_gateway_serverkit.keycloak.roles_api import get_all_roles
+        from auth_gateway_serverkit.keycloak.role import get_all_roles
         roles = await get_all_roles()
         if not roles or roles.get("status") != "success":
             return False

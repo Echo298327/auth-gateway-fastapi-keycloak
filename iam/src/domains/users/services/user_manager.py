@@ -1,9 +1,9 @@
 from auth_gateway_serverkit.logger import init_logger
 from auth_gateway_serverkit.password import generate_password
-from auth_gateway_serverkit.keycloak.user_api import (
+from auth_gateway_serverkit.keycloak.user import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
-from auth_gateway_serverkit.keycloak.roles_api import get_all_roles, get_role_by_name
+from auth_gateway_serverkit.keycloak.role import get_all_roles, get_role_by_name
 
 from core.config import settings
 from domains.users.db.mongo.user import (

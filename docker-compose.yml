@@ -28,8 +28,8 @@ services:
   keycloak:
       container_name: keycloak
       build:
-        context: ./deployment/docker
-        dockerfile: keycloak_dockerfile
+        context: .
+        dockerfile: deployment/docker/keycloak_dockerfile
       command: ["start"]
       ports:
         - "9000:9000"

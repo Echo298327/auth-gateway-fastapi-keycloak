@@ -7,7 +7,7 @@ from utils.admin import set_admins_role_ids
 from domains.service_versions.db.mongo.service_version import KEYCLOAK_KEY, get_version, set_version
 from domains.users.services import manager
 from api import init_routes
-from shared.logging import log_header, log_ready, log_shutdown
+from shared.logging import log_startup, log_shutdown
 
 SERVICE_NAME = "IAM Service"
 VERSION = "1.0.0"
@@ -17,7 +17,6 @@ logger = init_logger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    log_header(SERVICE_NAME, VERSION)
     is_set_admins_role_ids = False
     try:
         await settings.init_db()
@@ -39,8 +38,9 @@ async def lifespan(app: FastAPI):
         if not is_set_admins_role_ids:
             raise Exception("Failed to set admin role IDs")
 
-        log_ready(
+        log_startup(
             service_name=SERVICE_NAME,
+            version=VERSION,
             environment=settings.ENVIRONMENT,
             host=settings.HOST,
             port=settings.PORT,

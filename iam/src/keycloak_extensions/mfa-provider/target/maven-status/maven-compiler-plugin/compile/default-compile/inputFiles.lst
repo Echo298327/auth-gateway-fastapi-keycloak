@@ -1,0 +1,14 @@
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\RemoveResponse.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\TotpResource.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\EnrollmentResponse.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\RemoveRequest.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\VerifyResponse.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\utils\TotpManager.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\AuthenticationResource.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\MfaResourceProvider.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\ValidatePasswordRequest.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\VerifyRequest.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\MfaResourceProviderFactory.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\EnrollmentRequest.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\ErrorResponse.java
+C:\Users\shalo\PycharmProjects\auth-gateway-fastapi-keycloak\iam\src\keycloak_extensions\mfa-provider\src\main\java\com\authgateway\keycloak\mfa\models\ValidatePasswordResponse.java
