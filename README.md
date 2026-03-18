@@ -11,6 +11,7 @@ A complete **IAM (Identity & Access Management)** solution with **Keycloak**. Pr
 - **PostgreSQL** — Keycloak's database
 - **PgAdmin** — PostgreSQL admin UI
 - **auth-gateway-serverkit** — shared library for auth middleware, Keycloak API, request handling
+- **MFA / 2FA** — optional TOTP-based multi-factor authentication via a custom Keycloak extension
 - **Configurable RBAC** — define roles, policies, and per-endpoint permissions in JSON files
 - **CI/CD Pipeline** — linting, security scanning, and tests on pull requests
 
@@ -73,6 +74,8 @@ Body: {
 ```
 
 The response contains `access_token`, `refresh_token`, and user data. Use the access token in the `Authorization: Bearer <token>` header for all subsequent requests.
+
+> **Note:** If the user has MFA enabled, an optional `"totp"` field is required. See the [MFA section](#mfa--two-factor-authentication) for the full flow.
 
 ### Postman
 
@@ -148,10 +151,15 @@ auth-gateway-fastapi-keycloak/
 |       |   |-- organizations/        # Placeholder for future domain
 |       |   |-- licenses/             # Placeholder for future domain
 |       |-- utils/
-|           |-- admin.py              # System admin helpers
-|           |-- roles.py              # Role validation
-|           |-- validation.py         # Input validation
-|           |-- exception_handler.py
+|       |    |-- admin.py              # System admin helpers
+|       |    |-- roles.py              # Role validation
+|       |    |-- validation.py         # Input validation
+|       |    |-- exception_handler.py
+|       |-- keycloak_extensions/      # Custom Keycloak SPI extensions
+|           |-- mfa-provider/         # TOTP/2FA REST API (Java/Maven)
+|               |-- pom.xml
+|               |-- src/main/java/com/authgateway/keycloak/mfa/
+|               |-- target/mfa-provider-1.0.0.jar
 ```
 
 ---
@@ -178,6 +186,38 @@ Three default roles: `user`, `admin`, `systemAdmin`.
 - Roles, policies, and permissions are defined in JSON files under `iam/src/authorization/`
 
 For full details on how to add roles, restrict endpoints, and add new services, see the [Authorization Guide](docs/AUTHORIZATION_GUIDE.md).
+
+---
+
+## MFA / Two-Factor Authentication
+
+The project includes optional TOTP-based 2FA powered by a custom Keycloak SPI extension (`iam/src/keycloak_extensions/mfa-provider/`).
+
+### How It Works
+
+1. **Enable MFA for a user** — set `"enable_mfa": true` when creating a user via `POST /api/user/create`. This sets the Keycloak `CONFIGURE_TOTP` required action.
+2. **First login** — user logs in with username + password. The gateway detects the required action and returns a QR code.
+3. **Scan & verify** — user scans the QR code with an authenticator app (Google Authenticator, Authy, etc.), then sends the OTP code. The gateway verifies it and completes setup.
+4. **Subsequent logins** — user sends `username`, `password`, and `totp` in the login request. Keycloak validates all three.
+
+### Login Response States
+
+| `mfa_action` | Meaning | Frontend should... |
+|---|---|---|
+| `"setup"` | First-time MFA setup | Show QR code, ask for OTP |
+| `"setup_complete"` | OTP verified, setup done | Ask user to login again with a fresh OTP |
+| `"verify"` | User has MFA, needs OTP | Show OTP input |
+
+### Building the MFA Extension
+
+The Keycloak extension is a Java JAR built with Maven. It is automatically included in the Keycloak Docker image via the Dockerfile.
+
+```bash
+cd iam/src/keycloak_extensions/mfa-provider
+mvn clean package -DskipTests
+```
+
+For full MFA extension documentation see [mfa-provider/README.md](iam/src/keycloak_extensions/mfa-provider/README.md).
 
 ---
 
