@@ -108,7 +108,8 @@ class UserManager:
         role_ids = [role['id'] for role in realm_roles.get('roles', []) if role['name'] in role_names]
 
         password = generate_password()
-        response = await add_user_to_keycloak(user_name, first_name, last_name, email, password, roles)
+        required_actions = ["CONFIGURE_TOTP"] if getattr(data, "enable_mfa", False) else []
+        response = await add_user_to_keycloak(user_name, first_name, last_name, email, password, roles, required_actions=required_actions)
 
         if response.get('status') != 'success':
             raise Exception(f"Error creating user in Keycloak: {response.get('message')}")

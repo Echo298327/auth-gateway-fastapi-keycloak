@@ -19,8 +19,19 @@ async def ping():
 async def login(request: Login):
     try:
         login_response = await handle_login(request)
+
+        # MFA or error dict response (not an httpx Response)
+        if isinstance(login_response, dict):
+            if login_response.get("mfa_required"):
+                return JSONResponse(content=login_response, status_code=status.HTTP_200_OK)
+            if login_response.get("error"):
+                return JSONResponse(
+                    content={"message": login_response.get("message")},
+                    status_code=login_response.get("status_code", status.HTTP_400_BAD_REQUEST)
+                )
+
+        # Standard httpx Keycloak response
         if login_response.status_code == status.HTTP_200_OK:
-            # Extract the token from the response
             res = login_response.json()
             user_payload = await get_user_info(res.get("access_token"))
             user = await get_by_keycloak_uid(user_payload.id)

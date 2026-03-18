@@ -14,6 +14,7 @@ class CreateUser(BaseModel):
     last_name: str
     roles: List[AllowedRoles]
     email: EmailStr
+    enable_mfa: Optional[bool] = False
 
     class Config:
         extra = 'forbid'
