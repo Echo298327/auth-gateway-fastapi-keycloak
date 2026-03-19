@@ -133,8 +133,12 @@ auth-gateway-fastapi-keycloak/
 |       |   |-- config.py             # Service map, app settings
 |       |-- schemas/
 |       |   |-- gateway.py            # Login, Refresh request models
+|       |-- middleware/
+|       |   |-- security_headers.py   # Security headers middleware
 |       |-- services/
-|           |-- manager.py            # Request forwarding, auth handlers
+|       |   |-- proxy.py              # Request forwarding, access control
+|       |   |-- auth.py               # Login, refresh, logout handlers
+|       |   |-- mfa.py                # MFA helpers: enroll, verify, Keycloak calls
 |
 |-- iam/                              # IAM Service (Identity & Access Management)
 |   |-- requirements.txt
@@ -165,10 +169,10 @@ auth-gateway-fastapi-keycloak/
 |       |    |-- validation.py         # Input validation
 |       |    |-- exception_handler.py
 |       |-- keycloak_extensions/      # Custom Keycloak SPI extensions
-|           |-- mfa-provider/         # TOTP/2FA REST API (Java/Maven)
-|               |-- pom.xml
-|               |-- src/main/java/com/authgateway/keycloak/mfa/
-|               |-- target/mfa-provider-1.0.0.jar
+|       |    |-- mfa-provider/         # TOTP/2FA REST API (Java/Maven)
+|       |       |-- pom.xml
+|       |       |-- src/main/java/com/authgateway/keycloak/mfa/
+|       |       |-- target/mfa-provider-1.0.0.jar
 ```
 
 ---
