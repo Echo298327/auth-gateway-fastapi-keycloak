@@ -100,8 +100,8 @@ The response contains `access_token`, `refresh_token`, and user data. Use the ac
 ```
 auth-gateway-fastapi-keycloak/
 |
-|-- .env                              # Local dev environment variables
-|-- .env.docker                       # Docker environment variables
+|-- .env.example                      # Local dev environment template
+|-- .env.docker.example               # Docker environment template
 |-- docker-compose.yml                # All services orchestration
 |-- postman_collection.json           # Postman collection
 |
@@ -265,6 +265,24 @@ Runs automatically on pull requests to `main`:
 | Security (Dependencies) | Trivy vulnerability scan |
 | Security (Docker) | Trivy Docker image scan |
 | Tests | pytest |
+
+---
+
+## Production Checklist
+
+Before deploying to production, review the following:
+
+- [ ] Set `CORS_ORIGINS` to specific trusted domains (not `*`)
+- [ ] Set `ENVIRONMENT=production` to enable HSTS headers
+- [ ] Use a secrets manager (e.g. Docker Secrets, Vault, AWS Secrets Manager) instead of `.env` files for credentials
+- [ ] Place a reverse proxy (Nginx / Caddy) in front for HTTPS termination
+- [ ] Use managed databases (e.g. MongoDB Atlas, AWS RDS for PostgreSQL) instead of containerized ones
+- [ ] Remove or restrict `pgadmin` from the compose file
+- [ ] Set Keycloak `hostname` to your actual domain in `keycloak.conf`
+- [ ] Review and restrict Keycloak admin credentials (`KC_BOOTSTRAP_ADMIN_*`)
+- [ ] Ensure `.env` and `.env.docker` are never committed (already in `.gitignore`)
+
+The Dockerfiles, health endpoints (`/health`, `/readyz`), and environment-based configuration are designed to be portable — they work with Docker Compose, Kubernetes, or any container orchestrator.
 
 ---
 
