@@ -209,8 +209,8 @@ class UserManager:
         # Update user in database
         updated_user = await update_user(user, **update_fields)
 
-        # Update in Keycloak if needed
-        if any(field in data.dict() for field in ["user_name", "first_name", "last_name", "email", "roles"]):
+        # Update in Keycloak if needed        if any(field in data.dict() 
+        if any(field in data.model_dump() for field in ["user_name", "first_name", "last_name", "email", "roles"]):
             is_keycloak_update_needed = True
             response = await update_user_in_keycloak(
                 updated_user.keycloak_uid,
