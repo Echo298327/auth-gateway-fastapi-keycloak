@@ -13,6 +13,8 @@ from auth_gateway_serverkit.keycloak.config import settings as kc_settings
 
 logger = init_logger(__name__)
 
+_mfa_client = httpx.AsyncClient(timeout=20)
+
 
 async def process_request(
         service: Union[str, None] = None,
@@ -221,11 +223,10 @@ async def _validate_password(username: str, password: str) -> bool:
     """Validate password via the custom MFA auth endpoint."""
     url = f"{kc_settings.SERVER_URL}/realms/{kc_settings.REALM}/mfa/auth/validate"
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post(url, json={"username": username, "password": password})
-            if response.status_code == 200:
-                return response.json().get("valid", False)
-            return False
+        response = await _mfa_client.post(url, json={"username": username, "password": password})
+        if response.status_code == 200:
+            return response.json().get("valid", False)
+        return False
     except Exception as e:
         logger.error(f"Error validating password: {e}")
         return False
@@ -236,13 +237,12 @@ async def _get_keycloak_uid_by_username(admin_token: str, username: str) -> str 
     url = f"{kc_settings.SERVER_URL}/admin/realms/{kc_settings.REALM}/users?username={username}&exact=true"
     headers = {"Authorization": f"Bearer {admin_token}"}
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.get(url, headers=headers)
-            if response.status_code == 200:
-                users = response.json()
-                if users:
-                    return users[0]["id"]
-            return None
+        response = await _mfa_client.get(url, headers=headers)
+        if response.status_code == 200:
+            users = response.json()
+            if users:
+                return users[0]["id"]
+        return None
     except Exception as e:
         logger.error(f"Error looking up user: {e}")
         return None
@@ -253,11 +253,10 @@ async def _get_user_required_actions(admin_token: str, keycloak_uid: str) -> lis
     url = f"{kc_settings.SERVER_URL}/admin/realms/{kc_settings.REALM}/users/{keycloak_uid}"
     headers = {"Authorization": f"Bearer {admin_token}"}
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.get(url, headers=headers)
-            if response.status_code == 200:
-                return response.json().get("requiredActions", [])
-            return []
+        response = await _mfa_client.get(url, headers=headers)
+        if response.status_code == 200:
+            return response.json().get("requiredActions", [])
+        return []
     except Exception as e:
         logger.error(f"Error getting required actions: {e}")
         return []
@@ -270,9 +269,8 @@ async def _remove_required_action(admin_token: str, keycloak_uid: str, action: s
     try:
         current_actions = await _get_user_required_actions(admin_token, keycloak_uid)
         updated_actions = [a for a in current_actions if a != action]
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.put(url, headers=headers, json={"requiredActions": updated_actions})
-            return response.status_code == 204
+        response = await _mfa_client.put(url, headers=headers, json={"requiredActions": updated_actions})
+        return response.status_code == 204
     except Exception as e:
         logger.error(f"Error removing required action: {e}")
         return False
@@ -282,12 +280,11 @@ async def _enroll_mfa(keycloak_uid: str) -> dict | None:
     """Enroll a user in MFA via the custom Keycloak endpoint."""
     url = f"{kc_settings.SERVER_URL}/realms/{kc_settings.REALM}/mfa/totp/enroll"
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post(url, json={"userId": keycloak_uid})
-            if response.status_code == 200:
-                return response.json()
-            logger.error(f"MFA enrollment failed: {response.text}")
-            return None
+        response = await _mfa_client.post(url, json={"userId": keycloak_uid})
+        if response.status_code == 200:
+            return response.json()
+        logger.error(f"MFA enrollment failed: {response.text}")
+        return None
     except Exception as e:
         logger.error(f"Error enrolling MFA: {e}")
         return None
@@ -297,11 +294,10 @@ async def _verify_mfa_otp(keycloak_uid: str, otp: str) -> bool:
     """Verify an OTP code via the custom Keycloak endpoint."""
     url = f"{kc_settings.SERVER_URL}/realms/{kc_settings.REALM}/mfa/totp/verify"
     try:
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post(url, json={"userId": keycloak_uid, "otp": otp})
-            if response.status_code == 200:
-                return response.json().get("verified", False)
-            return False
+        response = await _mfa_client.post(url, json={"userId": keycloak_uid, "otp": otp})
+        if response.status_code == 200:
+            return response.json().get("verified", False)
+        return False
     except Exception as e:
         logger.error(f"Error verifying OTP: {e}")
         return False
