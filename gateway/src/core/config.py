@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     HOST: str = Field(alias="GATEWAY_HOST")
     WORKERS: int = Field(default=1, alias="GATEWAY_WORKERS")
     ENVIRONMENT: str = Field(default="local", alias="ENVIRONMENT")
+    CORS_ORIGINS: str = Field(default="*", alias="CORS_ORIGINS")
 
     # environment-specific URLs
     IAM_URL: str
