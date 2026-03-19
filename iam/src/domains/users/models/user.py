@@ -1,5 +1,5 @@
 from pydantic import Field, EmailStr
-from datetime import datetime
+from datetime import datetime, timezone
 from beanie import Document
 from pymongo import IndexModel, ASCENDING, DESCENDING
 from typing import List, Optional
@@ -13,8 +13,8 @@ class User(Document):
     last_name: str = Field(..., description="Last name")
     email: EmailStr = Field(..., description="Email address")
     roles: List[str] = Field(..., description="List of role IDs")
-    created_at: datetime = Field(default_factory=datetime.utcnow, description="System creation timestamp")
-    updated_at: datetime = Field(default_factory=datetime.utcnow, description="Last update timestamp")
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="System creation timestamp")
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Last update timestamp")
 
     class Settings:
         name = "users"

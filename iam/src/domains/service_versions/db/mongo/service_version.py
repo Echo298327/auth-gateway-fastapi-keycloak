@@ -1,7 +1,7 @@
 """Database operations for service_versions collection."""
 
 from domains.service_versions.models import ServiceVersion
-from datetime import datetime
+from datetime import datetime, timezone
 
 DEFAULT_VERSION = "0.0.0"
 KEYCLOAK_KEY = "keycloak"
@@ -35,7 +35,7 @@ async def set_version(key: str, version: str) -> ServiceVersion:
     doc = await ServiceVersion.find_one({"service": key})
     if doc:
         doc.version = version
-        doc.updated_at = datetime.utcnow()
+        doc.updated_at = datetime.now(timezone.utc)
         await doc.save()
         return doc
     doc = ServiceVersion(service=key, version=version)
