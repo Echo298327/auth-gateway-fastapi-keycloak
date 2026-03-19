@@ -11,9 +11,12 @@ This document provides an overview of the API endpoints. All endpoints go throug
 
 ## Gateway Service
 
-### `GET /ping`
-- **Description:** Health check.
-- **Response:** `"pong!"`
+### `GET /health`
+- **Description:** Liveness check — confirms the Gateway process is running.
+- **Response:**
+  ```json
+  { "status": "ok" }
+  ```
 
 ### `POST /api/login`
 - **Description:** Authenticate a user and obtain JWT tokens. Supports MFA/TOTP.
@@ -91,7 +94,25 @@ This document provides an overview of the API endpoints. All endpoints go throug
 
 ## IAM Service
 
-All IAM endpoints require `Authorization: Bearer <access_token>` header.
+### `GET /health`
+- **Description:** Liveness check — confirms the IAM process is running.
+- **Response:**
+  ```json
+  { "status": "ok" }
+  ```
+
+### `GET /readyz`
+- **Description:** Readiness check — verifies MongoDB and Keycloak are reachable.
+- **Response (ready):**
+  ```json
+  { "status": "ready", "checks": { "mongodb": true, "keycloak": true } }
+  ```
+- **Response (not ready):** Returns `503` with failed checks.
+  ```json
+  { "status": "not_ready", "checks": { "mongodb": true, "keycloak": false } }
+  ```
+
+All user endpoints below require `Authorization: Bearer <access_token>` header.
 
 ### `POST /api/user/create`
 - **Description:** Create a new user. Requires admin role.

@@ -425,7 +425,9 @@ The gateway handles JWT validation and Keycloak permission checks **before** for
 
 | Action | Method | Endpoint | Who Can Do It |
 |--------|--------|----------|---------------|
-| Health check | `GET` | `/ping` | Anyone |
+| Health (Gateway) | `GET` | `/health` | Anyone |
+| Health (IAM) | `GET` | `/health` | Anyone |
+| Readiness (IAM) | `GET` | `/readyz` | Anyone |
 | Login | `POST` | `/api/login` | Anyone (optional `totp` for MFA) |
 | Refresh token | `POST` | `/api/refresh` | Anyone (with valid refresh token) |
 | Logout | `POST` | `/api/logout` | Anyone (with valid refresh token) |
