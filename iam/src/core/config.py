@@ -9,7 +9,7 @@ import sys
 
 load_dotenv()
 
-logger = init_logger("iam.config")
+logger = init_logger(__name__)
 
 
 class Settings(BaseSettings):

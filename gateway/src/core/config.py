@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-logger = init_logger("gateway.config")
+logger = init_logger(__name__)
 
 
 class Settings(BaseSettings):
