@@ -5,6 +5,9 @@ from services.manager import process_request, get_by_keycloak_uid, handle_login,
 from schemas.gateway import Login, Refresh
 from auth_gateway_serverkit.middleware.auth import auth
 from auth_gateway_serverkit.middleware.auth import get_user_info
+from auth_gateway_serverkit.logger import init_logger
+
+logger = init_logger(__name__)
 
 
 router = APIRouter()
@@ -51,8 +54,9 @@ async def login(request: Login):
         else:
             return JSONResponse(content=login_response.json(), status_code=login_response.status_code)
     except Exception as e:
+        logger.error(f"Login error: {str(e)}")
         return JSONResponse(
-            content={"message": f"Internal Server Error: {str(e)}"},
+            content={"message": "Internal Server Error"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -88,8 +92,9 @@ async def refresh(request: Refresh):
             status_code=refresh_response.status_code
         )
     except Exception as e:
+        logger.error(f"Refresh error: {str(e)}")
         return JSONResponse(
-            content={"message": f"Internal Server Error: {str(e)}"},
+            content={"message": "Internal Server Error"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -113,8 +118,9 @@ async def logout(request: Refresh):
             status_code=logout_response.status_code
         )
     except Exception as e:
+        logger.error(f"Logout error: {str(e)}")
         return JSONResponse(
-            content={"message": f"Internal Server Error: {str(e)}"},
+            content={"message": "Internal Server Error"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 
@@ -141,8 +147,8 @@ async def handle_request(
         # Return the JSON response with the appropriate status code
         return JSONResponse(content=data, status_code=status_code)
     except Exception as e:
-
+        logger.error(f"Request error: {str(e)}")
         return JSONResponse(
-            content={"message": f"Internal Server Error: {str(e)}"},
+            content={"message": "Internal Server Error"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
