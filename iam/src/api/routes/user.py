@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends
 from typing import Tuple, List, Any, Dict
 from core.config import settings
 from domains.users.schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
