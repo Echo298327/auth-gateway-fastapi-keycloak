@@ -125,28 +125,11 @@
 			  }
 			},
 			"response": []
-		  },
-		  {
-			"name": "ping",
-			"request": {
-			  "method": "GET",
-			  "header": [],
-			  "url": {
-				"raw": "{{GatewayApp}}/ping",
-				"host": [
-				  "{{GatewayApp}}"
-				],
-				"path": [
-				  "ping"
-				]
-			  }
-			},
-			"response": []
 		  }
 		]
 	  },
 	  {
-		"name": "users",
+		"name": "IAM",
 		"item": [
 		  {
 			"name": "create",
@@ -163,7 +146,8 @@
 					""
 				  ],
 				  "type": "text/javascript",
-				  "packages": {}
+				  "packages": {},
+				  "requests": {}
 				}
 			  }
 			],
@@ -182,7 +166,7 @@
 			  "header": [],
 			  "body": {
 				"mode": "raw",
-				"raw": "{\r\n    \"user_name\": \"{{$randomUserName}}\",\r\n    \"first_name\": \"{{$randomFirstName}}\",\r\n    \"last_name\": \"{{$randomLastName}}\",\r\n    \"roles\": [\"user\"],\r\n    \"email\": \"{{$randomEmail}}\"\r\n}\r\n",
+				"raw": "{\r\n    \"user_name\": \"{{$randomUserName}}\",\r\n    \"first_name\": \"{{$randomFirstName}}\",\r\n    \"last_name\": \"{{$randomLastName}}\",\r\n    \"roles\": [\"admin\"],\r\n    \"email\": \"{{$randomEmail}}\",\r\n    \"enable_mfa\": true\r\n}\r\n",
 				"options": {
 				  "raw": {
 					"language": "json"
@@ -370,271 +354,6 @@
 				  "api",
 				  "user",
 				  "roles"
-				]
-			  }
-			},
-			"response": []
-		  }
-		]
-	  },
-	  {
-		"name": "authentication",
-		"item": [
-		  {
-			"name": "obtain access token",
-			"event": [
-			  {
-				"listen": "test",
-				"script": {
-				  "exec": [
-					"// Parse the response to JSON\r",
-					"const response = pm.response.json();\r",
-					"\r",
-					"// Save the token to a collection variable\r",
-					"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
-					""
-				  ],
-				  "type": "text/javascript",
-				  "packages": {}
-				}
-			  }
-			],
-			"request": {
-			  "method": "POST",
-			  "header": [],
-			  "body": {
-				"mode": "urlencoded",
-				"urlencoded": [
-				  {
-					"key": "username",
-					"value": "Felipa_Koepp0",
-					"type": "text"
-				  },
-				  {
-					"key": "password",
-					"value": "password",
-					"type": "text"
-				  },
-				  {
-					"key": "grant_type",
-					"value": "password",
-					"type": "text"
-				  },
-				  {
-					"key": "client_id",
-					"value": "{{client}}",
-					"type": "text"
-				  },
-				  {
-					"key": "client_secret",
-					"value": "{{client_secret}}",
-					"type": "text"
-				  }
-				]
-			  },
-			  "url": {
-				"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
-				"host": [
-				  "{{KeycloakApp}}"
-				],
-				"path": [
-				  "realms",
-				  "{{realm}}",
-				  "protocol",
-				  "openid-connect",
-				  "token"
-				]
-			  }
-			},
-			"response": []
-		  },
-		  {
-			"name": "obtain sys admin token",
-			"event": [
-			  {
-				"listen": "test",
-				"script": {
-				  "exec": [
-					"// Parse the response to JSON\r",
-					"const response = pm.response.json();\r",
-					"\r",
-					"// Save the token to a collection variable\r",
-					"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
-					""
-				  ],
-				  "type": "text/javascript",
-				  "packages": {}
-				}
-			  }
-			],
-			"request": {
-			  "method": "POST",
-			  "header": [],
-			  "body": {
-				"mode": "urlencoded",
-				"urlencoded": [
-				  {
-					"key": "username",
-					"value": "sysadmin",
-					"type": "text"
-				  },
-				  {
-					"key": "password",
-					"value": "sysadminpassword",
-					"type": "text"
-				  },
-				  {
-					"key": "grant_type",
-					"value": "password",
-					"type": "text"
-				  },
-				  {
-					"key": "client_id",
-					"value": "{{client}}",
-					"type": "text"
-				  },
-				  {
-					"key": "client_secret",
-					"value": "{{client_secret}}",
-					"type": "text"
-				  }
-				]
-			  },
-			  "url": {
-				"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
-				"host": [
-				  "{{KeycloakApp}}"
-				],
-				"path": [
-				  "realms",
-				  "{{realm}}",
-				  "protocol",
-				  "openid-connect",
-				  "token"
-				]
-			  }
-			},
-			"response": []
-		  },
-		  {
-			"name": "obtain key admin token",
-			"event": [
-			  {
-				"listen": "test",
-				"script": {
-				  "exec": [
-					"// Parse the response to JSON\r",
-					"const response = pm.response.json();\r",
-					"\r",
-					"// Save the token to a collection variable\r",
-					"pm.collectionVariables.set(\"access_token\", response.access_token);\r",
-					""
-				  ],
-				  "type": "text/javascript",
-				  "packages": {}
-				}
-			  }
-			],
-			"request": {
-			  "method": "POST",
-			  "header": [],
-			  "body": {
-				"mode": "urlencoded",
-				"urlencoded": [
-				  {
-					"key": "username",
-					"value": "admin",
-					"type": "text"
-				  },
-				  {
-					"key": "password",
-					"value": "admin",
-					"type": "text"
-				  },
-				  {
-					"key": "grant_type",
-					"value": "password",
-					"type": "text"
-				  },
-				  {
-					"key": "client_id",
-					"value": "admin-cli",
-					"type": "text"
-				  }
-				]
-			  },
-			  "url": {
-				"raw": "{{KeycloakApp}}/realms/master/protocol/openid-connect/token",
-				"host": [
-				  "{{KeycloakApp}}"
-				],
-				"path": [
-				  "realms",
-				  "master",
-				  "protocol",
-				  "openid-connect",
-				  "token"
-				]
-			  }
-			},
-			"response": []
-		  },
-		  {
-			"name": "check entitlement",
-			"request": {
-			  "auth": {
-				"type": "bearer",
-				"bearer": [
-				  {
-					"key": "token",
-					"value": "{{access_token}}",
-					"type": "string"
-				  }
-				]
-			  },
-			  "method": "POST",
-			  "header": [],
-			  "body": {
-				"mode": "urlencoded",
-				"urlencoded": [
-				  {
-					"key": "grant_type",
-					"value": "urn:ietf:params:oauth:grant-type:uma-ticket",
-					"type": "text"
-				  },
-				  {
-					"key": "client_id",
-					"value": "{{client}}",
-					"type": "text"
-				  },
-				  {
-					"key": "client_secret",
-					"value": "{{client_secret}}",
-					"type": "text"
-				  },
-				  {
-					"key": "audience",
-					"value": "{{client}}",
-					"type": "text"
-				  },
-				  {
-					"key": "permission",
-					"value": "user/create",
-					"type": "text"
-				  }
-				]
-			  },
-			  "url": {
-				"raw": "{{KeycloakApp}}/realms/{{realm}}/protocol/openid-connect/token",
-				"host": [
-				  "{{KeycloakApp}}"
-				],
-				"path": [
-				  "realms",
-				  "{{realm}}",
-				  "protocol",
-				  "openid-connect",
-				  "token"
 				]
 			  }
 			},
