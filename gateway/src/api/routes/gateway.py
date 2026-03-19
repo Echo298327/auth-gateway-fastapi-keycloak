@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request, status
 from starlette.responses import JSONResponse
 from typing import Union
-from services.manager import process_request, get_by_keycloak_uid, handle_login, handle_refresh, handle_logout
+from services.proxy import process_request, get_by_keycloak_uid
+from services.auth import handle_login, handle_refresh, handle_logout
 from schemas.gateway import Login, Refresh
 from auth_gateway_serverkit.middleware.auth import auth
 from auth_gateway_serverkit.middleware.auth import get_user_info
