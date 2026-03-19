@@ -30,11 +30,6 @@ async def handle_request(
         return response(error=str(e))
 
 
-@router.get("/ping")
-async def ping():
-    return JSONResponse(content="pong!", status_code=status.HTTP_200_OK)
-
-
 @router.post("/create")
 async def create_user(data_errors: Tuple[CreateUser, List[str]] = Depends(parse_request_body_to_model(CreateUser))):
     return await handle_request(data_errors, manager.create_user)

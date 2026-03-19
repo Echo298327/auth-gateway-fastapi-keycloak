@@ -45,8 +45,9 @@ class Settings(BaseSettings):
     KC_BOOTSTRAP_ADMIN_USERNAME: str
     KC_BOOTSTRAP_ADMIN_PASSWORD: str
 
-    # Static class var (shared across instances)
+    # Static class vars (shared across instances)
     SYSTEM_ADMIN_ID: ClassVar[Optional[str]] = None
+    _motor_client: ClassVar[Optional[AsyncIOMotorClient]] = None
 
     _system_admin_role_id: Optional[str] = None
     _admin_role_id: Optional[str] = None
@@ -63,15 +64,19 @@ class Settings(BaseSettings):
         from domains.users.models import User
         from domains.service_versions.models import ServiceVersion
         
-        client = AsyncIOMotorClient(self.MONGO_CONNECTION_STRING)
-        database = client[self.DB_NAME]
+        type(self)._motor_client = AsyncIOMotorClient(
+            self.MONGO_CONNECTION_STRING,
+            serverSelectionTimeoutMS=2000,
+            connectTimeoutMS=2000,
+            socketTimeoutMS=2000,
+        )
+        database = type(self)._motor_client[self.DB_NAME]
         
         await init_beanie(database=database, document_models=[User, ServiceVersion])
-        return client
 
-    def get_motor_client(self) -> AsyncIOMotorClient:
-        """Get an async MongoDB client instance."""
-        return AsyncIOMotorClient(self.MONGO_CONNECTION_STRING)
+    def get_motor_client(self) -> Optional[AsyncIOMotorClient]:
+        """Get the existing async MongoDB client instance."""
+        return type(self)._motor_client
 
     @property
     def reload(self) -> bool:

@@ -3,19 +3,22 @@ services:
     container_name: gateway
     build:
       context: .
-      dockerfile: deployment/docker/gateway_dockerfile
+      dockerfile: deployment/docker/gateway.Dockerfile
     ports:
       - "8080:8080"
     env_file:
       - .env.docker
     networks:
       - app-network
+    depends_on:
+      iam:
+        condition: service_healthy
 
   iam:
     container_name: iam
     build:
       context: .
-      dockerfile: deployment/docker/iam_dockerfile
+      dockerfile: deployment/docker/iam.Dockerfile
     ports:
       - "8081:8081"
     env_file:
@@ -23,24 +26,32 @@ services:
     networks:
       - app-network
     depends_on:
-        - keycloak
+      keycloak:
+        condition: service_healthy
 
   keycloak:
-      container_name: keycloak
-      build:
-        context: .
-        dockerfile: deployment/docker/keycloak_dockerfile
-      command: ["start"]
-      ports:
-        - "9000:9000"
-      env_file:
-        - .env.docker
-      volumes:
-        - keycloak_data:/opt/keycloak/data
-      depends_on:
-        - postgres
-      networks:
-        - app-network
+    container_name: keycloak
+    build:
+      context: .
+      dockerfile: deployment/docker/keycloak.Dockerfile
+    command: ["start"]
+    ports:
+      - "9000:9000"
+    env_file:
+      - .env.docker
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/9000"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
 
   postgres:
     container_name: postgresP
@@ -53,6 +64,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d keycloakDB"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
 
   pgadmin:
     container_name: pgadmin
