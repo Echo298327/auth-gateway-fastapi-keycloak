@@ -43,7 +43,15 @@ A complete **IAM (Identity & Access Management)** solution with **Keycloak**. Pr
    ```
 
 2. Configure environment variables:
-   - `.env.docker` — used by Docker Compose (pre-configured, works out of the box)
+
+   ```bash
+   cp .env.docker.example .env.docker
+   cp .env.example .env
+   ```
+
+   The `.example` files come pre-configured with default dev values that work out of the box. Change passwords/secrets as needed for your environment.
+
+   - `.env.docker` — used by Docker Compose (not committed to git)
    - `.env` — used for local development without Docker
 
 3. Start all services:

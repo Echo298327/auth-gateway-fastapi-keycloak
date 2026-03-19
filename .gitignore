@@ -27,6 +27,8 @@ htmlcov/
 .tox/
 
 # Environment variables
+.env
+.env.docker
 .env.local
 *.local
 
