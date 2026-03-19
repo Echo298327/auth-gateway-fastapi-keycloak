@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends
 from typing import Tuple, List, Any, Dict
 from core.config import settings
 from domains.users.schemas import CreateUser, UpdateUser, DeleteUser, GetUser, GetUserByKeycloakUid
@@ -28,11 +27,6 @@ async def handle_request(
         return response(res=res)
     except Exception as e:
         return response(error=str(e))
-
-
-@router.get("/ping")
-async def ping():
-    return JSONResponse(content="pong!", status_code=status.HTTP_200_OK)
 
 
 @router.post("/create")

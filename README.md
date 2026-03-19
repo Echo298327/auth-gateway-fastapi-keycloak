@@ -113,9 +113,9 @@ auth-gateway-fastapi-keycloak/
 |
 |-- deployment/
 |   |-- docker/
-|   |   |-- gateway_dockerfile
-|   |   |-- iam_dockerfile
-|   |   |-- keycloak_dockerfile
+|   |   |-- gateway.Dockerfile
+|   |   |-- iam.Dockerfile
+|   |   |-- keycloak.Dockerfile
 |   |   |-- keycloak.conf
 |   |-- pgadmin_server.json
 |

@@ -14,9 +14,9 @@ logger = init_logger(__name__)
 router = APIRouter()
 
 
-@router.get("/ping")
-async def ping():
-    return JSONResponse(content="pong!", status_code=status.HTTP_200_OK)
+@router.get("/health")
+async def health():
+    return JSONResponse(content={"status": "ok"}, status_code=status.HTTP_200_OK)
 
 
 @router.post("/api/login")
