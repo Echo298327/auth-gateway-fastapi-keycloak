@@ -20,15 +20,28 @@ This project implements the following security mechanisms:
   - Middleware validates tokens for authentication and enforces role-based access control.
   - Secure token handling and user entitlement checks are implemented.
 
+- **Security Headers:**  
+  The Gateway service includes a `SecurityHeadersMiddleware` (`gateway/src/middleware/security_headers.py`) that adds the following headers to every response:
+  - `X-Content-Type-Options: nosniff` — prevents MIME-type sniffing
+  - `X-XSS-Protection: 1; mode=block` — enables browser XSS filter
+  - `Referrer-Policy: strict-origin-when-cross-origin` — limits referrer info leakage
+  - `Permissions-Policy: camera=(), geolocation=(), microphone=()` — disables sensitive browser APIs
+  - `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` — blocks resource loading and iframe embedding
+  - `Strict-Transport-Security: max-age=31536000; includeSubDomains` — forces HTTPS (production only, skipped when `ENVIRONMENT=local`)
+
+- **CORS:**  
+  - Configurable via the `CORS_ORIGINS` environment variable (comma-separated list of allowed origins). Defaults to `*` for local development.
+
 - **Environment Variables:**  
-  - Sensitive data, like credentials and keys, are managed through environment variables. Ensure these are not exposed in production environments.
+  - Sensitive data, like credentials and keys, are managed through environment variables.
+  - `.env` and `.env.docker` are excluded from version control via `.gitignore`. Use the provided `.env.example` and `.env.docker.example` files as templates.
 
 - **Docker Compose Setup:**  
   - The `docker-compose.yml` file is configured for local development. For production, ensure secure configurations, such as enabling HTTPS with a reverse proxy.
 
 ## Recommendations for Users
 - **Do not commit `.env` files to GitHub**, especially if they contain sensitive information like credentials, connection strings, or API keys.  
-  - In this project, `.env` files contain only examples and ports, but in other cases, sensitive data could be included. Always use `.gitignore` to prevent such files from being uploaded.  
+  - `.env` and `.env.docker` are already in `.gitignore`. Use the `.example` files as templates.  
 - Always use HTTPS in production to secure communication.
 - Regularly review and update the environment variables used in your setup.
 - Follow best practices for securing your Keycloak server and managing its credentials.

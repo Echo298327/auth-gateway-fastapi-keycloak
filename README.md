@@ -12,6 +12,7 @@ A complete **IAM (Identity & Access Management)** solution with **Keycloak**. Pr
 - **PgAdmin** — PostgreSQL admin UI
 - **auth-gateway-serverkit** — shared library for auth middleware, Keycloak API, request handling
 - **MFA / 2FA** — optional TOTP-based multi-factor authentication via a custom Keycloak extension
+- **Security Headers** — X-Content-Type-Options, CSP, HSTS, Referrer-Policy, Permissions-Policy
 - **Configurable RBAC** — define roles, policies, and per-endpoint permissions in JSON files
 - **CI/CD Pipeline** — linting, security scanning, and tests on pull requests
 
