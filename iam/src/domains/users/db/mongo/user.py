@@ -7,7 +7,7 @@ decoupling the service layer from MongoDB-specific implementations.
 from domains.users.models import User
 from typing import Optional, Union, List
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
 
@@ -97,8 +97,8 @@ async def create_user(
         last_name=last_name,
         email=email,
         roles=roles,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow(),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     return await user.insert()
 
@@ -124,7 +124,7 @@ async def update_user(user: User, **kwargs) -> User:
             setattr(user, field, value)
     
     # Update timestamp
-    user.updated_at = datetime.utcnow()
+    user.updated_at = datetime.now(timezone.utc)
     
     await user.save()
     return user
