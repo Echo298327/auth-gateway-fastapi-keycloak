@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from core.config import settings
 from api import init_routes
+from middleware.security_headers import SecurityHeadersMiddleware
 from shared.logging import log_startup, log_shutdown
 
 SERVICE_NAME = "Gateway"
@@ -24,9 +25,11 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=SERVICE_NAME, lifespan=lifespan)
+cors_origins = [o.strip() for o in settings.CORS_ORIGINS.split(",")]
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
