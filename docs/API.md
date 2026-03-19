@@ -124,10 +124,11 @@ All user endpoints below require `Authorization: Bearer <access_token>` header.
     "last_name": "Doe",
     "roles": ["user"],
     "email": "john.doe@example.com",
-    "enable_mfa": true
+    "enable_mfa": true,
+    "organization_id": "optional-org-id"
   }
   ```
-- **Note:** `roles` is required. Allowed values: `"user"`, `"admin"`. `enable_mfa` is optional (default `false`). When `true`, the user will be required to set up TOTP on first login.
+- **Note:** `roles` is required. Allowed values: `"user"`, `"admin"`, `"orgAdmin"`. `enable_mfa` is optional (default `false`). When `true`, the user will be required to set up TOTP on first login. `organization_id` is optional — when omitted the user is assigned to the default organization. systemAdmin users are not assigned to any organization.
 
 ### `PUT /api/user/update`
 - **Description:** Update an existing user. If `user_id` is not provided, updates the requesting user's information. Only admins can change roles or update other users.
@@ -171,4 +172,98 @@ All user endpoints below require `Authorization: Bearer <access_token>` header.
 - **Request Example:**
   ```
   /api/user/roles
+  ```
+
+---
+
+## Organization Endpoints
+
+All organization endpoints require `Authorization: Bearer <access_token>` header.
+
+### `POST /api/organization/create`
+- **Description:** Create a new organization. Requires systemAdmin role.
+- **Request Body:**
+  ```json
+  {
+    "name": "Acme Corp",
+    "description": "Main organization",
+    "domains": ["acme.com"]
+  }
+  ```
+- **Note:** `name` is required. `description` and `domains` are optional. A URL-friendly `slug` is generated from the name automatically.
+
+### `PUT /api/organization/update`
+- **Description:** Update an organization. Requires admin or orgAdmin role.
+- **Request Body:**
+  ```json
+  {
+    "org_id": "...",
+    "name": "Acme Corp Updated",
+    "description": "Updated description",
+    "domains": ["acme.com", "acme.io"],
+    "settings": {}
+  }
+  ```
+- **Note:** All fields except `org_id` are optional.
+
+### `DELETE /api/organization/delete/<org_id>`
+- **Description:** Delete an organization. Requires systemAdmin role. The default organization cannot be deleted.
+
+### `GET /api/organization/get` or `GET /api/organization/get/<org_id>`
+- **Description:** Get an organization by ID, or list all organizations if no ID is provided.
+- **Response (single):**
+  ```json
+  {
+    "status": "success",
+    "data": {
+      "id": "...",
+      "keycloak_org_id": "...",
+      "name": "Acme Corp",
+      "slug": "acme-corp",
+      "description": "...",
+      "domains": ["acme.com"],
+      "is_default": false,
+      "settings": {},
+      "created_at": "...",
+      "updated_at": "..."
+    }
+  }
+  ```
+
+### `POST /api/organization/add_user`
+- **Description:** Add a user to an organization. Requires admin or orgAdmin role.
+- **Request Body:**
+  ```json
+  {
+    "org_id": "...",
+    "user_id": "..."
+  }
+  ```
+
+### `POST /api/organization/remove_user`
+- **Description:** Remove a user from an organization. Requires admin or orgAdmin role.
+- **Request Body:**
+  ```json
+  {
+    "org_id": "...",
+    "user_id": "..."
+  }
+  ```
+
+### `GET /api/organization/members/<org_id>`
+- **Description:** Get all members of an organization. Requires admin or orgAdmin role.
+- **Response:**
+  ```json
+  {
+    "status": "success",
+    "data": [
+      {
+        "id": "...",
+        "user_name": "john_doe",
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john@example.com"
+      }
+    ]
+  }
   ```

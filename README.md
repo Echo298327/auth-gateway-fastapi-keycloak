@@ -7,7 +7,8 @@ A complete **IAM (Identity & Access Management)** solution with **Keycloak**. Pr
 - **Gateway Service** — routes all API requests, validates JWT tokens, checks permissions via Keycloak
 - **IAM Service** — user management (CRUD), role assignment, Keycloak initialization
 - **Keycloak** — authentication, token issuing, role-based permission evaluation
-- **MongoDB** — stores users, service versions
+- **Organizations / Multi-tenancy** — create organizations, assign users, org-scoped roles, JWT org claims
+- **MongoDB** — stores users, organizations, service versions
 - **PostgreSQL** — Keycloak's database
 - **PgAdmin** — PostgreSQL admin UI
 - **auth-gateway-serverkit** — shared library for auth middleware, Keycloak API, request handling
@@ -158,10 +159,14 @@ auth-gateway-fastapi-keycloak/
 |       |   |   |-- schemas/user.py   # Pydantic schemas + AllowedRoles
 |       |   |   |-- services/user_manager.py
 |       |   |   |-- db/mongo/user.py  # DB operations
+|       |   |-- organizations/        # Organization domain (multi-tenancy)
+|       |   |   |-- models/organization.py  # Beanie document model
+|       |   |   |-- schemas/organization.py # Pydantic schemas
+|       |   |   |-- services/organization_manager.py
+|       |   |   |-- db/mongo/organization.py # DB operations
 |       |   |-- service_versions/     # Config version tracking
 |       |   |   |-- models/service_version.py
 |       |   |   |-- db/mongo/service_version.py
-|       |   |-- organizations/        # Placeholder for future domain
 |       |   |-- licenses/             # Placeholder for future domain
 |       |-- utils/
 |       |    |-- admin.py              # System admin helpers
@@ -191,11 +196,12 @@ auth-gateway-fastapi-keycloak/
 
 ## Role System
 
-Three default roles: `user`, `admin`, `systemAdmin`.
+Four default roles: `user`, `admin`, `orgAdmin`, `systemAdmin`.
 
 - Users can have **multiple roles** at the same time
 - Roles are assigned when creating a user and can be changed via update
 - `systemAdmin` is created automatically and cannot be assigned through the API
+- `orgAdmin` can manage users within their organization
 - Roles, policies, and permissions are defined in JSON files under `iam/src/authorization/`
 
 For full details on how to add roles, restrict endpoints, and add new services, see the [Authorization Guide](docs/AUTHORIZATION_GUIDE.md).

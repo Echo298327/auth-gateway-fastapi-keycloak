@@ -51,6 +51,7 @@ class Settings(BaseSettings):
 
     _system_admin_role_id: Optional[str] = None
     _admin_role_id: Optional[str] = None
+    _org_admin_role_id: Optional[str] = None
 
     # Load environment variables from .env file
     model_config = SettingsConfigDict(
@@ -63,6 +64,7 @@ class Settings(BaseSettings):
         """Initialize the MongoDB database using Beanie."""
         from domains.users.models import User
         from domains.service_versions.models import ServiceVersion
+        from domains.organizations.models import Organization
         
         type(self)._motor_client = AsyncIOMotorClient(
             self.MONGO_CONNECTION_STRING,
@@ -72,7 +74,7 @@ class Settings(BaseSettings):
         )
         database = type(self)._motor_client[self.DB_NAME]
         
-        await init_beanie(database=database, document_models=[User, ServiceVersion])
+        await init_beanie(database=database, document_models=[User, ServiceVersion, Organization])
 
     def get_motor_client(self) -> Optional[AsyncIOMotorClient]:
         """Get the existing async MongoDB client instance."""
@@ -91,11 +93,18 @@ class Settings(BaseSettings):
     def ADMIN_ROLE_ID(self) -> Optional[str]:
         return self._admin_role_id
 
+    @property
+    def ORG_ADMIN_ROLE_ID(self) -> Optional[str]:
+        return self._org_admin_role_id
+
     def set_system_admin_role_id(self, role_id: str):
         self._system_admin_role_id = role_id
 
     def set_admin_role_id(self, role_id: str):
         self._admin_role_id = role_id
+
+    def set_org_admin_role_id(self, role_id: str):
+        self._org_admin_role_id = role_id
 
     def has_system_admin_role_id(self) -> bool:
         return self._system_admin_role_id is not None

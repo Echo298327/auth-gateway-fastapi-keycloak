@@ -13,6 +13,7 @@ class User(Document):
     last_name: str = Field(..., description="Last name")
     email: EmailStr = Field(..., description="Email address")
     roles: List[str] = Field(..., description="List of role IDs")
+    organizations: List[str] = Field(default_factory=list, description="List of Organization ObjectId strings")
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="System creation timestamp")
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Last update timestamp")
 

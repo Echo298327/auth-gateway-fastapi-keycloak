@@ -9,6 +9,10 @@
         "description": "Administrator with elevated privileges"
     },
     {
+        "name": "orgAdmin",
+        "description": "Organization administrator who manages users within their org"
+    },
+    {
         "name": "systemAdmin",
         "description": "System administrator with full access"
     }
@@ -22,12 +26,12 @@
     {
       "name": "Administrators-Access",
       "description": "Access restricted to admins and system administrators",
-      "roles": ["admin", "systemAdmin"]
+      "roles": ["admin", "orgAdmin", "systemAdmin"]
     },
     {
       "name": "Public-Access",
       "description": "Access available to all users",
-      "roles": ["user", "admin", "systemAdmin"]
+      "roles": ["user", "admin", "orgAdmin", "systemAdmin"]
     }
   ]
 }

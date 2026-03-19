@@ -18,6 +18,14 @@ def is_admins(roles: list[str]) -> bool:
     return bool({settings.SYSTEM_ADMIN_ROLE_ID, settings.ADMIN_ROLE_ID} & set(roles))
 
 
+def is_org_admin(roles: list[str]) -> bool:
+    """Check if the user has the orgAdmin role (or higher)."""
+    org_admin_id = settings.ORG_ADMIN_ROLE_ID
+    if not org_admin_id:
+        return is_admins(roles)
+    return org_admin_id in roles or is_admins(roles)
+
+
 async def fetch_system_admin_id() -> str:
     """
     Fetch the system admin user id
@@ -43,6 +51,8 @@ async def set_admins_role_ids() -> bool:
                 settings.set_system_admin_role_id(role["id"])
             elif role["name"] == "admin":
                 settings.set_admin_role_id(role["id"])
+            elif role["name"] == "orgAdmin":
+                settings.set_org_admin_role_id(role["id"])
         return True
     except Exception as e:
         logger.error(f"Failed to set admin role IDs: {str(e)}")

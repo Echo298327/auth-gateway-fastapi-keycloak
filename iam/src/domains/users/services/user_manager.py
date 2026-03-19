@@ -4,6 +4,7 @@ from auth_gateway_serverkit.keycloak.user import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
 from auth_gateway_serverkit.keycloak.role import get_all_roles, get_role_by_name
+from auth_gateway_serverkit.keycloak.organization import add_member_to_organization as kc_add_member
 
 from core.config import settings
 from domains.users.db.mongo.user import (
@@ -11,6 +12,7 @@ from domains.users.db.mongo.user import (
     create_user, update_user, delete_user, check_username_exists,
     check_email_exists, user_exists
 )
+from domains.organizations.db.mongo.organization import find_by_id as find_org_by_id, find_default_org
 from domains.users.schemas import AllowedRoles
 from utils.roles import is_valid_roles
 from utils.validation import is_valid_names
@@ -134,6 +136,20 @@ class UserManager:
             if rollback_response.get('status') != 'success':
                 self.logger.error(f"Failed to rollback Keycloak user {keycloak_uid}: {rollback_response.get('message')}")
             raise e
+
+        # Assign organization membership (skip for systemAdmin)
+        is_system_admin = "systemAdmin" in role_names
+        if not is_system_admin:
+            org_id_str = getattr(data, "organization_id", None)
+            if org_id_str:
+                org = await find_org_by_id(org_id_str)
+            else:
+                org = await find_default_org()
+            if org:
+                user.organizations.append(str(org.id))
+                await update_user(user, organizations=user.organizations)
+                if org.keycloak_org_id and keycloak_uid:
+                    await kc_add_member(org.keycloak_org_id, keycloak_uid)
 
         self.logger.info(f"User created: {user.id}")
         return {"status": "success", "user_id": str(user.id), "message": "User created successfully"}
@@ -294,6 +310,7 @@ class UserManager:
             "last_name": user.last_name,
             "roles": user.roles,
             "email": user.email,
+            "organizations": user.organizations,
             "created_at": user.created_at.isoformat() if user.created_at else None,
         }
         return {"status": "success", "data": user_data}
@@ -321,10 +338,10 @@ class UserManager:
             "last_name": user.last_name,
             "roles": user.roles,
             "email": user.email,
+            "organizations": user.organizations,
             "created_at": user.created_at.isoformat() if user.created_at else None,
             "updated_at": user.updated_at.isoformat() if user.updated_at else None,
         }
-        # Remove keycloak_uid for security reasons - it's not included in the dict
         return {"status": "success", "data": user_dict}
 
     @exception_handler("error getting roles")

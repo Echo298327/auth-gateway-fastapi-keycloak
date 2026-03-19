@@ -5,7 +5,9 @@
       "description": "Permission for system administrators actions",
       "policies": ["SystemAdmin-Access"],
       "resources": [
-        "user/get_by_keycloak_uid"
+        "user/get_by_keycloak_uid",
+        "organization/create",
+        "organization/delete"
       ]
     },
     {
@@ -15,7 +17,11 @@
       "resources":
       [
         "user/create",
-        "user/delete"
+        "user/delete",
+        "organization/update",
+        "organization/add_user",
+        "organization/remove_user",
+        "organization/members"
       ]
     },
     {
@@ -25,7 +31,8 @@
       "resources": [
         "user/update",
         "user/get",
-        "user/roles"
+        "user/roles",
+        "organization/get"
       ]
     }
 
@@ -60,6 +67,41 @@
       "name": "user/roles",
       "displayName": "Get User Roles Endpoint",
       "url": "/api/user/roles"
+    },
+    {
+      "name": "organization/create",
+      "displayName": "Create Organization Endpoint",
+      "url": "/api/organization/create"
+    },
+    {
+      "name": "organization/update",
+      "displayName": "Update Organization Endpoint",
+      "url": "/api/organization/update"
+    },
+    {
+      "name": "organization/delete",
+      "displayName": "Delete Organization Endpoint",
+      "url": "/api/organization/delete"
+    },
+    {
+      "name": "organization/get",
+      "displayName": "Get Organization Endpoint",
+      "url": "/api/organization/get"
+    },
+    {
+      "name": "organization/add_user",
+      "displayName": "Add User to Organization Endpoint",
+      "url": "/api/organization/add_user"
+    },
+    {
+      "name": "organization/remove_user",
+      "displayName": "Remove User from Organization Endpoint",
+      "url": "/api/organization/remove_user"
+    },
+    {
+      "name": "organization/members",
+      "displayName": "Get Organization Members Endpoint",
+      "url": "/api/organization/members"
     }
   ]
 }

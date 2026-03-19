@@ -6,6 +6,7 @@ from enum import Enum
 class AllowedRoles(str, Enum):
     user = "user"
     admin = "admin"
+    orgAdmin = "orgAdmin"
 
 
 class CreateUser(BaseModel):
@@ -15,6 +16,7 @@ class CreateUser(BaseModel):
     roles: List[AllowedRoles]
     email: EmailStr
     enable_mfa: Optional[bool] = False
+    organization_id: Optional[str] = None
 
     class Config:
         extra = 'forbid'
