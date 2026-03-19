@@ -24,16 +24,14 @@ async def process_request(
     request_data, content_type = await parse_request(request)
     user = request.state.user
 
-    # Construct the URL path, including additional path segments if any
-    path_segment = f"/{path}" if path else ""
-    url = f"{settings.SERVICE_MAP.get(service)}/{action}{path_segment}"
-
-    # Check for invalid service mapping
-    if 'None' in url:
+    if service not in settings.SERVICE_MAP:
         return {
             "message": "Service not found",
             "status_code": status.HTTP_404_NOT_FOUND
         }
+
+    path_segment = f"/{path}" if path else ""
+    url = f"{settings.SERVICE_MAP[service]}/{action}{path_segment}"
 
     # check if user try to access/modify system admin details
     if await check_unauthorized_access(request_data, user.get("id"), path_segment[1:]):
