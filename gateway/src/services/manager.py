@@ -137,8 +137,8 @@ async def check_unauthorized_access(request_data, user_id, path_segment):
     try:
         system_admin_id = await settings.get_system_admin_id()
         if not system_admin_id:
-            logger.error("Failed to get system admin ID")
-            return False
+            logger.error("Failed to get system admin ID, denying access")
+            return True
         if (request_data.get("id") == system_admin_id or path_segment == system_admin_id or
                 request_data.get("user_id") == system_admin_id):
             if user_id != system_admin_id:
@@ -146,7 +146,7 @@ async def check_unauthorized_access(request_data, user_id, path_segment):
         return False
     except Exception as e:
         logger.error(f"Error checking unauthorized access: {str(e)}")
-        return False
+        return True
 
 
 async def handle_login(login_data):
