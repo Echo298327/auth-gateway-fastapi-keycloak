@@ -55,7 +55,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Build IAM Docker image
-      run: docker build -t iam:test -f deployment/docker/iam_dockerfile .
+      run: docker build -t iam:test -f deployment/docker/iam.Dockerfile .
     - name: Scan IAM Docker image
       uses: aquasecurity/trivy-action@master
       with:
@@ -64,7 +64,7 @@ jobs:
         exit-code: '1'
         severity: 'CRITICAL'
     - name: Build Gateway Docker image
-      run: docker build -t gateway:test -f deployment/docker/gateway_dockerfile .
+      run: docker build -t gateway:test -f deployment/docker/gateway.Dockerfile .
     - name: Scan Gateway Docker image
       uses: aquasecurity/trivy-action@master
       with:
