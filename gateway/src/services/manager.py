@@ -11,7 +11,7 @@ from auth_gateway_serverkit.logger import init_logger
 from auth_gateway_serverkit.keycloak.client import retrieve_client_token, refresh_client_token, revoke_client_token, get_admin_token
 from auth_gateway_serverkit.keycloak.config import settings as kc_settings
 
-logger = init_logger("gateway.manager")
+logger = init_logger(__name__)
 
 
 async def process_request(
