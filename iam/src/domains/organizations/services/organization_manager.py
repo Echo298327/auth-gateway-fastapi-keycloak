@@ -10,7 +10,6 @@ from auth_gateway_serverkit.keycloak.organization import (
 from core.config import settings
 from domains.organizations.db.mongo.organization import (
     find_by_id,
-    find_by_slug,
     find_default_org,
     create_organization,
     update_organization,
@@ -21,7 +20,7 @@ from domains.organizations.db.mongo.organization import (
     get_users_without_org,
 )
 from domains.users.db.mongo.user import find_by_user_id, update_user
-from utils.admin import is_admins, is_system_admin, check_org_scope
+from utils.admin import is_system_admin, check_org_scope
 from utils.exception_handler import exception_handler
 
 
