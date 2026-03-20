@@ -30,8 +30,11 @@ async def handle_request(
 
 
 @router.post("/create")
-async def create_user(data_errors: Tuple[CreateUser, List[str]] = Depends(parse_request_body_to_model(CreateUser))):
-    return await handle_request(data_errors, manager.create_user)
+async def create_user(
+        data_errors: Tuple[CreateUser, List[str]] = Depends(parse_request_body_to_model(CreateUser)),
+        user: Dict[str, Any] = Depends(get_request_user)
+):
+    return await handle_request(data_errors, manager.create_user, user)
 
 
 @router.put("/update")
@@ -43,8 +46,8 @@ async def update_user(
 
 
 @router.delete("/delete/{user_id}")
-async def delete_user(user_id: str):
-    return await handle_request((DeleteUser(user_id=user_id), []), manager.delete_user)
+async def delete_user(user_id: str, user: Dict[str, Any] = Depends(get_request_user)):
+    return await handle_request((DeleteUser(user_id=user_id), []), manager.delete_user, user)
 
 
 @router.get("/get")

@@ -51,7 +51,6 @@ class Settings(BaseSettings):
 
     _system_admin_role_id: Optional[str] = None
     _admin_role_id: Optional[str] = None
-    _org_admin_role_id: Optional[str] = None
 
     # Load environment variables from .env file
     model_config = SettingsConfigDict(
@@ -93,18 +92,11 @@ class Settings(BaseSettings):
     def ADMIN_ROLE_ID(self) -> Optional[str]:
         return self._admin_role_id
 
-    @property
-    def ORG_ADMIN_ROLE_ID(self) -> Optional[str]:
-        return self._org_admin_role_id
-
     def set_system_admin_role_id(self, role_id: str):
         self._system_admin_role_id = role_id
 
     def set_admin_role_id(self, role_id: str):
         self._admin_role_id = role_id
-
-    def set_org_admin_role_id(self, role_id: str):
-        self._org_admin_role_id = role_id
 
     def has_system_admin_role_id(self) -> bool:
         return self._system_admin_role_id is not None

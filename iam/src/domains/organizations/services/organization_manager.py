@@ -21,7 +21,7 @@ from domains.organizations.db.mongo.organization import (
     get_users_without_org,
 )
 from domains.users.db.mongo.user import find_by_user_id, update_user
-from utils.admin import is_admins
+from utils.admin import is_admins, is_system_admin, check_org_scope
 from utils.exception_handler import exception_handler
 
 
@@ -65,10 +65,13 @@ class OrganizationManager:
         }
 
     @exception_handler("error updating organization")
-    async def update_org(self, data) -> dict:
+    async def update_org(self, data, request_user=None) -> dict:
         org = await find_by_id(data.org_id)
         if not org:
             raise Exception(f"Organization not found: {data.org_id}")
+
+        if request_user and not check_org_scope(request_user, str(org.id)):
+            raise Exception("Insufficient permissions: requester is not a member of this organization")
 
         update_fields = {}
         if data.name is not None:
@@ -112,21 +115,31 @@ class OrganizationManager:
         return {"status": "success", "message": "Organization deleted successfully"}
 
     @exception_handler("error getting organization")
-    async def get_org(self, data) -> dict:
+    async def get_org(self, data, request_user=None) -> dict:
         if data.org_id:
             org = await find_by_id(data.org_id)
             if not org:
                 raise Exception(f"Organization not found: {data.org_id}")
+            if request_user and not check_org_scope(request_user, str(org.id)):
+                raise Exception("Insufficient permissions: requester is not a member of this organization")
             return {"status": "success", "data": _org_to_dict(org)}
 
-        orgs = await get_all_organizations()
+        if request_user and not is_system_admin(request_user.get("roles", [])):
+            user_orgs = request_user.get("organizations", [])
+            orgs = [await find_by_id(oid) for oid in user_orgs]
+            orgs = [o for o in orgs if o is not None]
+        else:
+            orgs = await get_all_organizations()
         return {"status": "success", "data": [_org_to_dict(o) for o in orgs]}
 
     @exception_handler("error adding user to organization")
-    async def add_user_to_org(self, data) -> dict:
+    async def add_user_to_org(self, data, request_user=None) -> dict:
         org = await find_by_id(data.org_id)
         if not org:
             raise Exception(f"Organization not found: {data.org_id}")
+
+        if request_user and not check_org_scope(request_user, str(org.id)):
+            raise Exception("Insufficient permissions: requester is not a member of this organization")
 
         user = await find_by_user_id(data.user_id)
         if not user:
@@ -146,10 +159,13 @@ class OrganizationManager:
         return {"status": "success", "message": "User added to organization"}
 
     @exception_handler("error removing user from organization")
-    async def remove_user_from_org(self, data) -> dict:
+    async def remove_user_from_org(self, data, request_user=None) -> dict:
         org = await find_by_id(data.org_id)
         if not org:
             raise Exception(f"Organization not found: {data.org_id}")
+
+        if request_user and not check_org_scope(request_user, str(org.id)):
+            raise Exception("Insufficient permissions: requester is not a member of this organization")
 
         user = await find_by_user_id(data.user_id)
         if not user:
@@ -169,10 +185,13 @@ class OrganizationManager:
         return {"status": "success", "message": "User removed from organization"}
 
     @exception_handler("error getting organization members")
-    async def get_members(self, data) -> dict:
+    async def get_members(self, data, request_user=None) -> dict:
         org = await find_by_id(data.org_id)
         if not org:
             raise Exception(f"Organization not found: {data.org_id}")
+
+        if request_user and not check_org_scope(request_user, str(org.id)):
+            raise Exception("Insufficient permissions: requester is not a member of this organization")
 
         users = await get_org_users(str(org.id))
         members = [
