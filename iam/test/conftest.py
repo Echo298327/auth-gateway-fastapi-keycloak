@@ -1,6 +1,5 @@
 import sys
 import os
-from types import ModuleType
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -63,8 +62,23 @@ sys.modules["auth_gateway_serverkit.logger"].init_logger = MagicMock(return_valu
 sys.modules["auth_gateway_serverkit.string"].is_valid_user_name = MagicMock(return_value=True)
 sys.modules["auth_gateway_serverkit.string"].is_valid_name = MagicMock(return_value=True)
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
+_iam_src = os.path.join(os.path.dirname(__file__), "..", "src")
+_gateway_src = os.path.join(os.path.dirname(__file__), "..", "..", "gateway", "src")
+
+sys.path.insert(0, os.path.abspath(_iam_src))
+sys.path.insert(0, os.path.abspath(_gateway_src))
 sys.path.insert(0, os.path.dirname(__file__))
+
+# Pre-mock core.config to prevent Settings() instantiation (requires env vars not
+# available in CI). Must happen before any module imports core.config.
+_config_mock = MagicMock()
+_config_mock.__name__ = "core.config"
+_config_mock.__path__ = []
+_config_mock.__file__ = None
+_config_mock.__loader__ = None
+_config_mock.__spec__ = None
+_config_mock.__package__ = "core.config"
+sys.modules["core.config"] = _config_mock
 
 from helpers import SYSTEM_ADMIN_ROLE_ID, ADMIN_ROLE_ID
 

@@ -4,7 +4,7 @@ create, update, delete, get, add_user, remove_user, and members.
 """
 
 import pytest
-from uuid import UUID, uuid4
+from uuid import UUID
 from unittest.mock import AsyncMock, patch, MagicMock
 from types import SimpleNamespace
 

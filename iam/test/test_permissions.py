@@ -14,7 +14,7 @@ from uuid import UUID
 from helpers import (
     ORG_A_ID, ORG_B_ID, SYSTEM_ADMIN_ROLE_ID, ADMIN_ROLE_ID,
     SYSTEM_ADMIN_USER_ID,
-    sys_admin_user, admin_user_a, admin_user_b, admin_user_ab, regular_user_a,
+    sys_admin_user, admin_user_a, admin_user_ab, regular_user_a,
     UpdateUserData,
 )
 
@@ -373,72 +373,48 @@ class TestUserManagerPermissions:
 class TestGatewayOrgAccess:
     """Test the gateway-level check_org_access function."""
 
+    @pytest.fixture(autouse=True)
+    def _setup_gateway(self):
+        import sys as _sys
+        _sys.modules["core.config"].settings = MagicMock()
+        _sys.modules["core.config"].settings.get_system_admin_id = AsyncMock(
+            return_value=SYSTEM_ADMIN_USER_ID
+        )
+        from services.proxy import check_org_access
+        self._check_org_access = check_org_access
+
     @pytest.mark.asyncio
     async def test_system_admin_bypasses(self):
-        with patch("core.config.settings") as mock_settings:
-            mock_settings.get_system_admin_id = AsyncMock(return_value=SYSTEM_ADMIN_USER_ID)
-
-            # Import after patching to avoid import-time config issues
-            import importlib
-            import sys as _sys
-            _sys.path.insert(0, "C:\\Users\\shalo\\PycharmProjects\\auth-gateway-fastapi-keycloak\\gateway\\src")
-            from services.proxy import check_org_access
-
-            user = {"id": SYSTEM_ADMIN_USER_ID, "organizations": []}
-            result = await check_org_access({"org_id": ORG_B_ID}, user)
-            assert result is False
+        user = {"id": SYSTEM_ADMIN_USER_ID, "organizations": []}
+        result = await self._check_org_access({"org_id": ORG_B_ID}, user)
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_user_in_org_allowed(self):
-        with patch("core.config.settings") as mock_settings:
-            mock_settings.get_system_admin_id = AsyncMock(return_value=SYSTEM_ADMIN_USER_ID)
-
-            from services.proxy import check_org_access
-
-            user = {"id": "admin-a-id", "organizations": [ORG_A_ID]}
-            result = await check_org_access({"org_id": ORG_A_ID}, user)
-            assert result is False
+        user = {"id": "admin-a-id", "organizations": [ORG_A_ID]}
+        result = await self._check_org_access({"org_id": ORG_A_ID}, user)
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_user_not_in_org_denied(self):
-        with patch("core.config.settings") as mock_settings:
-            mock_settings.get_system_admin_id = AsyncMock(return_value=SYSTEM_ADMIN_USER_ID)
-
-            from services.proxy import check_org_access
-
-            user = {"id": "admin-a-id", "organizations": [ORG_A_ID]}
-            result = await check_org_access({"org_id": ORG_B_ID}, user)
-            assert result is True
+        user = {"id": "admin-a-id", "organizations": [ORG_A_ID]}
+        result = await self._check_org_access({"org_id": ORG_B_ID}, user)
+        assert result is True
 
     @pytest.mark.asyncio
     async def test_org_id_from_path(self):
-        with patch("core.config.settings") as mock_settings:
-            mock_settings.get_system_admin_id = AsyncMock(return_value=SYSTEM_ADMIN_USER_ID)
-
-            from services.proxy import check_org_access
-
-            user = {"id": "admin-a-id", "organizations": [ORG_A_ID]}
-            result = await check_org_access({}, user, path=ORG_B_ID)
-            assert result is True
+        user = {"id": "admin-a-id", "organizations": [ORG_A_ID]}
+        result = await self._check_org_access({}, user, path=ORG_B_ID)
+        assert result is True
 
     @pytest.mark.asyncio
     async def test_no_org_id_passes(self):
-        with patch("core.config.settings") as mock_settings:
-            mock_settings.get_system_admin_id = AsyncMock(return_value=SYSTEM_ADMIN_USER_ID)
-
-            from services.proxy import check_org_access
-
-            user = {"id": "admin-a-id", "organizations": [ORG_A_ID]}
-            result = await check_org_access({}, user)
-            assert result is False
+        user = {"id": "admin-a-id", "organizations": [ORG_A_ID]}
+        result = await self._check_org_access({}, user)
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_user_with_no_orgs_denied(self):
-        with patch("core.config.settings") as mock_settings:
-            mock_settings.get_system_admin_id = AsyncMock(return_value=SYSTEM_ADMIN_USER_ID)
-
-            from services.proxy import check_org_access
-
-            user = {"id": "regular-no-org", "organizations": []}
-            result = await check_org_access({"org_id": ORG_A_ID}, user)
-            assert result is True
+        user = {"id": "regular-no-org", "organizations": []}
+        result = await self._check_org_access({"org_id": ORG_A_ID}, user)
+        assert result is True
