@@ -4,6 +4,7 @@ from auth_gateway_serverkit.keycloak.user import (
     add_user_to_keycloak, update_user_in_keycloak, delete_user_from_keycloak
 )
 from auth_gateway_serverkit.keycloak.role import get_all_roles, get_role_by_name
+from auth_gateway_serverkit.keycloak.organization import add_member_to_organization as kc_add_member
 
 from core.config import settings
 from domains.users.db.mongo.user import (
@@ -11,10 +12,11 @@ from domains.users.db.mongo.user import (
     create_user, update_user, delete_user, check_username_exists,
     check_email_exists, user_exists
 )
+from domains.organizations.db.mongo.organization import find_by_id as find_org_by_id, find_default_org
 from domains.users.schemas import AllowedRoles
 from utils.roles import is_valid_roles
 from utils.validation import is_valid_names
-from utils.admin import is_admins
+from utils.admin import is_admins, is_system_admin, check_org_scope, check_user_org_overlap
 from utils.exception_handler import exception_handler
 
 
@@ -71,13 +73,14 @@ class UserManager:
         return True
 
     @exception_handler("error creating user")
-    async def create_user(self, data) -> dict:
+    async def create_user(self, data, request_user=None) -> dict:
         """
         Create a new user in the database and in Keycloak.
 
         Args:
             data: Data object containing user information such as user_name,
                   first_name, last_name, email, and roles.
+            request_user (optional): The user object (dict) making the request.
 
         Returns:
             dict: A dictionary containing the result of the operation.
@@ -135,6 +138,26 @@ class UserManager:
                 self.logger.error(f"Failed to rollback Keycloak user {keycloak_uid}: {rollback_response.get('message')}")
             raise e
 
+        # Assign organization membership (skip for systemAdmin)
+        is_sys_admin_role = "systemAdmin" in role_names
+        if not is_sys_admin_role:
+            org_id_str = getattr(data, "org_id", None)
+            if org_id_str:
+                if request_user and not check_org_scope(request_user, org_id_str):
+                    raise Exception("Insufficient permissions: requester is not a member of the target organization")
+                org = await find_org_by_id(org_id_str)
+            else:
+                if request_user and not is_system_admin(request_user.get("roles", [])):
+                    requester_orgs = request_user.get("organizations", [])
+                    org = await find_org_by_id(requester_orgs[0]) if requester_orgs else await find_default_org()
+                else:
+                    org = await find_default_org()
+            if org:
+                user.organizations.append(str(org.id))
+                await update_user(user, organizations=user.organizations)
+                if org.id and keycloak_uid:
+                    await kc_add_member(str(org.id), keycloak_uid)
+
         self.logger.info(f"User created: {user.id}")
         return {"status": "success", "user_id": str(user.id), "message": "User created successfully"}
 
@@ -179,6 +202,10 @@ class UserManager:
         user = await find_by_user_id(user_id)
         if not user:
             raise Exception(f"User not found with ID: {user_id}")
+
+        if request_user and data.user_id and data.user_id != request_user.get("id"):
+            if not check_user_org_overlap(request_user, user.organizations):
+                raise Exception("Insufficient permissions: target user is not in the same organization")
 
         if user_name and user_name != user.user_name:
             if await check_username_exists(user_name, exclude_user_id=user_id):
@@ -230,12 +257,13 @@ class UserManager:
         }
 
     @exception_handler("error deleting user")
-    async def delete_user(self, data) -> dict:
+    async def delete_user(self, data, request_user=None) -> dict:
         """
         Delete a user from the database and from Keycloak.
 
         Args:
             data: An object containing the user_id of the user to delete.
+            request_user (optional): The user object (dict) making the request.
 
         Returns:
             dict: A dictionary containing the status and message of the operation.
@@ -245,6 +273,9 @@ class UserManager:
 
         if not user:
             raise Exception(f"User not found with ID: {user_id}")
+
+        if request_user and not check_user_org_overlap(request_user, user.organizations):
+            raise Exception("Insufficient permissions: target user is not in the same organization")
 
         keycloak_response = await delete_user_from_keycloak(user.keycloak_uid)
         if keycloak_response.get('status') != 'success':
@@ -273,19 +304,22 @@ class UserManager:
         Returns:
             dict: A dictionary containing the status and user data if found.
         """
-        # Check if the requester has the necessary permissions
-        if request_user and data.user_id:
-            if request_user.get("id") != data.user_id and not is_admins(request_user.get("roles", [])):
-                raise Exception("Unauthorized access to user data")
-
         if request_user and not data.user_id:
             user_id = request_user.get("id")
         else:
             user_id = data.user_id
-        
+
+        if request_user and data.user_id and data.user_id != request_user.get("id"):
+            if not is_admins(request_user.get("roles", [])):
+                raise Exception("Insufficient permissions: admin role required to access other users")
+
         user = await find_by_user_id(user_id)
         if not user:
             raise Exception(f"User not found with ID: {user_id}")
+
+        if request_user and data.user_id and data.user_id != request_user.get("id"):
+            if not check_user_org_overlap(request_user, user.organizations):
+                raise Exception("Insufficient permissions: target user is not in the same organization")
 
         user_data = {
             "id": str(user.id),
@@ -294,6 +328,7 @@ class UserManager:
             "last_name": user.last_name,
             "roles": user.roles,
             "email": user.email,
+            "organizations": user.organizations,
             "created_at": user.created_at.isoformat() if user.created_at else None,
         }
         return {"status": "success", "data": user_data}
@@ -321,10 +356,10 @@ class UserManager:
             "last_name": user.last_name,
             "roles": user.roles,
             "email": user.email,
+            "organizations": user.organizations,
             "created_at": user.created_at.isoformat() if user.created_at else None,
             "updated_at": user.updated_at.isoformat() if user.updated_at else None,
         }
-        # Remove keycloak_uid for security reasons - it's not included in the dict
         return {"status": "success", "data": user_dict}
 
     @exception_handler("error getting roles")

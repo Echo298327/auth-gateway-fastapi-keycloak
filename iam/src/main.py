@@ -6,6 +6,7 @@ from auth_gateway_serverkit.logger import init_logger
 from utils.admin import set_admins_role_ids
 from domains.service_versions.db.mongo.service_version import KEYCLOAK_KEY, get_version, set_version
 from domains.users.services import manager
+from domains.organizations.services import manager as org_manager
 from api import init_routes
 from shared.logging import log_startup, log_shutdown
 
@@ -37,6 +38,8 @@ async def lifespan(app: FastAPI):
             is_set_admins_role_ids = await set_admins_role_ids()
         if not is_set_admins_role_ids:
             raise Exception("Failed to set admin role IDs")
+
+        await org_manager.create_default_organization()
 
         log_startup(
             service_name=SERVICE_NAME,

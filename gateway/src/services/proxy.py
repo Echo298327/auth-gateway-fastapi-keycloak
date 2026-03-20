@@ -36,6 +36,12 @@ async def process_request(
             "status_code": status.HTTP_403_FORBIDDEN
         }
 
+    if await check_org_access(request_data, user, path):
+        return {
+            "message": "Access denied: not a member of the target organization",
+            "status_code": status.HTTP_403_FORBIDDEN
+        }
+
     logger.info(f"Forwarding request to: {url}")
     return await forward_request_and_process_response(
         url,
@@ -123,6 +129,27 @@ async def get_by_keycloak_uid(uid):
     except Exception as e:
         logger.error(f"Request error: {e}")
         return None
+
+
+async def check_org_access(request_data: dict, user: dict, path: str = None) -> bool:
+    """
+    Returns True if access should be DENIED.
+    Checks if any org_id in body or path belongs to the user's organizations.
+    Only systemAdmin bypasses this check.
+    """
+    system_admin_id = await settings.get_system_admin_id()
+    if user.get("id") == system_admin_id:
+        return False
+
+    org_id = request_data.get("org_id")
+    if not org_id and path:
+        org_id = path
+
+    if not org_id:
+        return False
+
+    user_orgs = user.get("organizations", [])
+    return org_id not in user_orgs
 
 
 async def check_unauthorized_access(request_data, user_id, path_segment):

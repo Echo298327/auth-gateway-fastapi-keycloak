@@ -329,7 +329,101 @@ If `totp` is omitted, the gateway returns:
 
 ---
 
-## 10. Refresh Token
+## 10. Organization Management
+
+Organizations enable multi-tenancy — users belong to one or more organizations.
+
+### How It Works
+
+- A **default organization** is created automatically on first startup
+- New users are assigned to the default organization (unless a specific `organization_id` is provided)
+- `systemAdmin` is org-free — it manages organizations but doesn't belong to any
+- Users can belong to multiple organizations
+- Role hierarchy: `systemAdmin` (platform) → `orgAdmin` (org-level) → `admin` → `user`
+
+### Create an Organization (systemAdmin only)
+
+```
+POST http://localhost:8080/api/organization/create
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "name": "Acme Corp",
+  "description": "Main organization",
+  "domains": ["acme.com"]
+}
+```
+
+### List All Organizations
+
+```
+GET http://localhost:8080/api/organization/get
+Authorization: Bearer <access_token>
+```
+
+### Add a User to an Organization
+
+```
+POST http://localhost:8080/api/organization/add_user
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "org_id": "<org-id>",
+  "user_id": "<user-id>"
+}
+```
+
+### Remove a User from an Organization
+
+```
+POST http://localhost:8080/api/organization/remove_user
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "org_id": "<org-id>",
+  "user_id": "<user-id>"
+}
+```
+
+### Get Organization Members
+
+```
+GET http://localhost:8080/api/organization/members/<org_id>
+Authorization: Bearer <access_token>
+```
+
+### Create a User in a Specific Organization
+
+```
+POST http://localhost:8080/api/user/create
+Authorization: Bearer <access_token>
+Content-Type: application/json
+
+{
+  "user_name": "jane_smith",
+  "first_name": "Jane",
+  "last_name": "Smith",
+  "roles": ["user"],
+  "email": "jane@acme.com",
+  "organization_id": "<org-id>"
+}
+```
+
+### Delete an Organization (systemAdmin only)
+
+```
+DELETE http://localhost:8080/api/organization/delete/<org_id>
+Authorization: Bearer <access_token>
+```
+
+> **Note:** The default organization cannot be deleted.
+
+---
+
+## 11. Refresh Token
 
 Access tokens expire (default: 10 hours). Use the refresh token to get a new access token without logging in again:
 
@@ -346,7 +440,7 @@ Content-Type: application/json
 
 ---
 
-## 11. Logout
+## 12. Logout
 
 Invalidates the refresh token so it cannot be used again:
 
@@ -361,7 +455,7 @@ Content-Type: application/json
 
 ---
 
-## 12. Add a New Service to the Gateway
+## 13. Add a New Service to the Gateway
 
 The gateway forwards requests based on a **service map**. To add a new backend service (e.g. an `orders` service):
 
@@ -431,14 +525,21 @@ The gateway handles JWT validation and Keycloak permission checks **before** for
 | Login | `POST` | `/api/login` | Anyone (optional `totp` for MFA) |
 | Refresh token | `POST` | `/api/refresh` | Anyone (with valid refresh token) |
 | Logout | `POST` | `/api/logout` | Anyone (with valid refresh token) |
-| Create user | `POST` | `/api/user/create` | `admin`, `systemAdmin` (optional `enable_mfa`) |
+| Create user | `POST` | `/api/user/create` | `admin`, `orgAdmin`, `systemAdmin` |
 | Update self | `PUT` | `/api/user/update` | Any logged-in user |
-| Update other user | `PUT` | `/api/user/update` | `admin`, `systemAdmin` |
-| Change roles | `PUT` | `/api/user/update` | `admin`, `systemAdmin` |
+| Update other user | `PUT` | `/api/user/update` | `admin`, `orgAdmin`, `systemAdmin` |
+| Change roles | `PUT` | `/api/user/update` | `admin`, `orgAdmin`, `systemAdmin` |
 | Get own profile | `GET` | `/api/user/get` | Any logged-in user |
-| Get other profile | `GET` | `/api/user/get/<id>` | `admin`, `systemAdmin` |
-| Delete user | `DELETE` | `/api/user/delete/<id>` | `admin`, `systemAdmin` |
+| Get other profile | `GET` | `/api/user/get/<id>` | `admin`, `orgAdmin`, `systemAdmin` |
+| Delete user | `DELETE` | `/api/user/delete/<id>` | `admin`, `orgAdmin`, `systemAdmin` |
 | Get available roles | `GET` | `/api/user/roles` | Any logged-in user |
+| Create organization | `POST` | `/api/organization/create` | `systemAdmin` |
+| Update organization | `PUT` | `/api/organization/update` | `admin`, `orgAdmin`, `systemAdmin` |
+| Delete organization | `DELETE` | `/api/organization/delete/<id>` | `systemAdmin` |
+| Get organization(s) | `GET` | `/api/organization/get[/<id>]` | Any logged-in user |
+| Add user to org | `POST` | `/api/organization/add_user` | `admin`, `orgAdmin`, `systemAdmin` |
+| Remove user from org | `POST` | `/api/organization/remove_user` | `admin`, `orgAdmin`, `systemAdmin` |
+| Get org members | `GET` | `/api/organization/members/<id>` | `admin`, `orgAdmin`, `systemAdmin` |
 
 ---
 

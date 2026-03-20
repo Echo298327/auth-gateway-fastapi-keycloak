@@ -18,6 +18,34 @@ def is_admins(roles: list[str]) -> bool:
     return bool({settings.SYSTEM_ADMIN_ROLE_ID, settings.ADMIN_ROLE_ID} & set(roles))
 
 
+def is_system_admin(roles: list[str]) -> bool:
+    """Check if user has the systemAdmin role specifically."""
+    if not settings.has_system_admin_role_id():
+        return False
+    return settings.SYSTEM_ADMIN_ROLE_ID in roles
+
+
+def check_org_scope(request_user: dict, target_org_id: str) -> bool:
+    """
+    Check if the requesting user has access to the target org.
+    systemAdmin: unrestricted. admin: must be member of target org.
+    """
+    if is_system_admin(request_user.get("roles", [])):
+        return True
+    return target_org_id in request_user.get("organizations", [])
+
+
+def check_user_org_overlap(request_user: dict, target_user_orgs: list) -> bool:
+    """
+    Check if the requesting user shares at least one org with target user.
+    systemAdmin: unrestricted.
+    """
+    if is_system_admin(request_user.get("roles", [])):
+        return True
+    requester_orgs = set(request_user.get("organizations", []))
+    return bool(requester_orgs & set(target_user_orgs))
+
+
 async def fetch_system_admin_id() -> str:
     """
     Fetch the system admin user id

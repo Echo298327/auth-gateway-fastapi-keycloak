@@ -63,6 +63,7 @@ class Settings(BaseSettings):
         """Initialize the MongoDB database using Beanie."""
         from domains.users.models import User
         from domains.service_versions.models import ServiceVersion
+        from domains.organizations.models import Organization
         
         type(self)._motor_client = AsyncIOMotorClient(
             self.MONGO_CONNECTION_STRING,
@@ -72,7 +73,7 @@ class Settings(BaseSettings):
         )
         database = type(self)._motor_client[self.DB_NAME]
         
-        await init_beanie(database=database, document_models=[User, ServiceVersion])
+        await init_beanie(database=database, document_models=[User, ServiceVersion, Organization])
 
     def get_motor_client(self) -> Optional[AsyncIOMotorClient]:
         """Get the existing async MongoDB client instance."""

@@ -1,5 +1,7 @@
 FROM quay.io/keycloak/keycloak:26.5.2 AS builder
 
+ENV KC_FEATURES=organization
+
 COPY deployment/docker/keycloak.conf /opt/keycloak/conf/keycloak.conf
 COPY iam/src/keycloak_extensions/mfa-provider/target/mfa-provider-*.jar /opt/keycloak/providers/
 
