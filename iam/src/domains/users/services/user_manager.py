@@ -140,7 +140,7 @@ class UserManager:
         # Assign organization membership (skip for systemAdmin)
         is_system_admin = "systemAdmin" in role_names
         if not is_system_admin:
-            org_id_str = getattr(data, "organization_id", None)
+            org_id_str = getattr(data, "org_id", None)
             if org_id_str:
                 org = await find_org_by_id(org_id_str)
             else:
@@ -148,8 +148,8 @@ class UserManager:
             if org:
                 user.organizations.append(str(org.id))
                 await update_user(user, organizations=user.organizations)
-                if org.keycloak_org_id and keycloak_uid:
-                    await kc_add_member(org.keycloak_org_id, keycloak_uid)
+                if org.id and keycloak_uid:
+                    await kc_add_member(str(org.id), keycloak_uid)
 
         self.logger.info(f"User created: {user.id}")
         return {"status": "success", "user_id": str(user.id), "message": "User created successfully"}

@@ -44,14 +44,17 @@ class OrganizationManager:
             raise Exception(f"Organization with slug '{slug}' already exists")
 
         kc_result = await kc_create_org(name, description=data.description, domains=data.domains)
-        keycloak_org_id = kc_result["id"] if kc_result else None
+        if not kc_result or "id" not in kc_result:
+            raise Exception("Failed to create organization in Keycloak")
+
+        keycloak_org_id = kc_result["id"]
 
         org = await create_organization(
+            keycloak_org_id=keycloak_org_id,
             name=name,
             slug=slug,
             description=data.description,
             domains=data.domains,
-            keycloak_org_id=keycloak_org_id,
         )
 
         self.logger.info(f"Organization created: {org.id} (slug={slug})")
@@ -70,7 +73,7 @@ class OrganizationManager:
         update_fields = {}
         if data.name is not None:
             new_slug = _slugify(data.name)
-            if new_slug != org.slug and await slug_exists(new_slug, exclude_org_id=data.org_id):
+            if new_slug != org.slug and await slug_exists(new_slug, exclude_org_id=str(org.id)):
                 raise Exception(f"Organization with slug '{new_slug}' already exists")
             update_fields["name"] = data.name.strip()
             update_fields["slug"] = new_slug
@@ -83,16 +86,15 @@ class OrganizationManager:
 
         await update_organization(org, **update_fields)
 
-        if org.keycloak_org_id:
-            kc_data = {}
-            if data.name is not None:
-                kc_data["name"] = data.name.strip()
-            if data.description is not None:
-                kc_data["description"] = data.description
-            if data.domains is not None:
-                kc_data["domains"] = [{"name": d, "verified": True} for d in data.domains]
-            if kc_data:
-                await kc_update_org(org.keycloak_org_id, kc_data)
+        kc_data = {}
+        if data.name is not None:
+            kc_data["name"] = data.name.strip()
+        if data.description is not None:
+            kc_data["description"] = data.description
+        if data.domains is not None:
+            kc_data["domains"] = [{"name": d, "verified": True} for d in data.domains]
+        if kc_data:
+            await kc_update_org(str(org.id), kc_data)
 
         return {"status": "success", "message": "Organization updated successfully"}
 
@@ -104,10 +106,8 @@ class OrganizationManager:
         if org.is_default:
             raise Exception("Cannot delete the default organization")
 
-        if org.keycloak_org_id:
-            await kc_delete_org(org.keycloak_org_id)
-
-        await delete_organization(data.org_id)
+        await kc_delete_org(str(org.id))
+        await delete_organization(str(org.id))
         self.logger.info(f"Organization deleted: {data.org_id}")
         return {"status": "success", "message": "Organization deleted successfully"}
 
@@ -139,8 +139,8 @@ class OrganizationManager:
         user.organizations.append(org_id_str)
         await update_user(user, organizations=user.organizations)
 
-        if org.keycloak_org_id and user.keycloak_uid:
-            await kc_add_member(org.keycloak_org_id, str(user.keycloak_uid))
+        if user.keycloak_uid:
+            await kc_add_member(org_id_str, str(user.keycloak_uid))
 
         self.logger.info(f"User {data.user_id} added to organization {data.org_id}")
         return {"status": "success", "message": "User added to organization"}
@@ -162,8 +162,8 @@ class OrganizationManager:
         user.organizations.remove(org_id_str)
         await update_user(user, organizations=user.organizations)
 
-        if org.keycloak_org_id and user.keycloak_uid:
-            await kc_remove_member(org.keycloak_org_id, str(user.keycloak_uid))
+        if user.keycloak_uid:
+            await kc_remove_member(org_id_str, str(user.keycloak_uid))
 
         self.logger.info(f"User {data.user_id} removed from organization {data.org_id}")
         return {"status": "success", "message": "User removed from organization"}
@@ -191,7 +191,7 @@ class OrganizationManager:
         """
         Create the default organization if it doesn't exist.
         Backfill existing users (except systemAdmin) that have no orgs.
-        Returns the default org ID string.
+        Returns the default org ID string (Keycloak UUID).
         """
         existing = await find_default_org()
         if existing:
@@ -199,14 +199,16 @@ class OrganizationManager:
             default_org_id = str(existing.id)
         else:
             kc_result = await kc_create_org("Default", description="Default organization")
-            keycloak_org_id = kc_result["id"] if kc_result else None
+            if not kc_result or "id" not in kc_result:
+                raise Exception("Failed to create default organization in Keycloak")
 
+            keycloak_org_id = kc_result["id"]
             org = await create_organization(
+                keycloak_org_id=keycloak_org_id,
                 name="Default",
                 slug="default",
                 description="Default organization",
                 is_default=True,
-                keycloak_org_id=keycloak_org_id,
             )
             default_org_id = str(org.id)
             self.logger.info(f"Default organization created: {default_org_id}")
@@ -220,9 +222,8 @@ class OrganizationManager:
             user.organizations.append(default_org_id)
             await update_user(user, organizations=user.organizations)
 
-            existing_org = await find_by_id(default_org_id)
-            if existing_org and existing_org.keycloak_org_id and user.keycloak_uid:
-                await kc_add_member(existing_org.keycloak_org_id, str(user.keycloak_uid))
+            if user.keycloak_uid:
+                await kc_add_member(default_org_id, str(user.keycloak_uid))
             backfilled += 1
 
         if backfilled:
@@ -234,7 +235,6 @@ class OrganizationManager:
 def _org_to_dict(org: "Organization") -> dict:
     return {
         "id": str(org.id),
-        "keycloak_org_id": org.keycloak_org_id,
         "name": org.name,
         "slug": org.slug,
         "description": org.description,

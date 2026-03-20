@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from uuid import UUID
 from beanie import Document
 from pymongo import IndexModel, ASCENDING
 from typing import List, Optional
@@ -6,7 +7,7 @@ from pydantic import Field
 
 
 class Organization(Document):
-    keycloak_org_id: Optional[str] = None
+    id: UUID = Field(default=None, description="Keycloak organization UUID (used as _id)")
     name: str = Field(..., description="Display name")
     slug: str = Field(..., description="URL-friendly unique identifier")
     description: Optional[str] = None
@@ -20,6 +21,5 @@ class Organization(Document):
         name = "organizations"
         indexes = [
             IndexModel([("slug", ASCENDING)], unique=True, name="idx_slug"),
-            IndexModel([("keycloak_org_id", ASCENDING)], unique=True, sparse=True, name="idx_keycloak_org_id"),
             IndexModel([("is_default", ASCENDING)], name="idx_is_default"),
         ]

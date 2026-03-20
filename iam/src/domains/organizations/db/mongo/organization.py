@@ -2,23 +2,23 @@
 Database operations for organizations collection.
 """
 
+from uuid import UUID
 from domains.organizations.models import Organization
 from domains.users.models import User
 from typing import Optional, List
-from bson import ObjectId
 from datetime import datetime, timezone
 
 
 async def find_by_id(org_id: str) -> Optional[Organization]:
-    return await Organization.find_one({"_id": ObjectId(org_id)})
+    try:
+        uid = UUID(org_id) if not isinstance(org_id, UUID) else org_id
+    except (ValueError, AttributeError):
+        return None
+    return await Organization.find_one({"_id": uid})
 
 
 async def find_by_slug(slug: str) -> Optional[Organization]:
     return await Organization.find_one({"slug": slug})
-
-
-async def find_by_keycloak_org_id(keycloak_org_id: str) -> Optional[Organization]:
-    return await Organization.find_one({"keycloak_org_id": keycloak_org_id})
 
 
 async def find_default_org() -> Optional[Organization]:
@@ -26,20 +26,20 @@ async def find_default_org() -> Optional[Organization]:
 
 
 async def create_organization(
+    keycloak_org_id: str,
     name: str,
     slug: str,
     description: Optional[str] = None,
     domains: Optional[List[str]] = None,
     is_default: bool = False,
-    keycloak_org_id: Optional[str] = None,
 ) -> Organization:
     org = Organization(
+        id=UUID(keycloak_org_id),
         name=name,
         slug=slug,
         description=description,
         domains=domains or [],
         is_default=is_default,
-        keycloak_org_id=keycloak_org_id,
         created_at=datetime.now(timezone.utc),
         updated_at=datetime.now(timezone.utc),
     )
@@ -79,7 +79,10 @@ async def get_org_users(org_id: str) -> List[User]:
 async def slug_exists(slug: str, exclude_org_id: Optional[str] = None) -> bool:
     query = {"slug": slug}
     if exclude_org_id:
-        query["_id"] = {"$ne": ObjectId(exclude_org_id)}
+        try:
+            query["_id"] = {"$ne": UUID(exclude_org_id)}
+        except (ValueError, AttributeError):
+            pass
     return await Organization.find_one(query) is not None
 
 

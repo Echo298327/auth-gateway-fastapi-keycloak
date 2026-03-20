@@ -34,8 +34,8 @@ class Settings(BaseSettings):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.SERVICE_MAP = {
-            "user": self.IAM_URL,
-            "organization": self.IAM_URL,
+            "user": self.IAM_URL + "/user",
+            "organization": self.IAM_URL + "/organization",
         }
 
     async def get_system_admin_id(self):
